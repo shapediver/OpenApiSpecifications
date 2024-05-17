@@ -1,0 +1,5915 @@
+openapi: 3.0.3
+
+info:
+  title: "Geometry Backend API v2"
+  description: |-
+    The ShapeDiver Geometry Backend system is used to:
+    * host Grasshopper models in a secure, reliable, scalable, and performant
+      way,
+    * run computations of Grasshopper models,
+    * and cache and output the results of computations and exports.
+  version: 2.13.0
+
+externalDocs:
+  description: ShapeDiver Help Center
+  url: https://help.shapediver.com/doc/
+
+tags:
+  - name: analytics
+  - name: ar-scene
+  - name: assets
+  - name: auth
+  - name: auth-group
+  - name: export
+    externalDocs:
+      url: https://help.shapediver.com/doc/exports-on-the-api
+  - name: file
+  - name: gltf
+  - name: log
+  - name: model
+  - name: output
+    externalDocs:
+      url: https://help.shapediver.com/doc/outputs-on-the-api
+  - name: script
+  - name: sdTF
+    externalDocs:
+      url: https://help.shapediver.com/doc/sdtf-structured-data-transfer-format
+  - name: session
+    externalDocs:
+      url: https://help.shapediver.com/doc/sessions-and-their-lifetime
+  - name: system
+  - name: texture
+
+components:
+  schemas:
+    ###########################################################################
+    # Common data structures                                                  #
+    ###########################################################################
+    CommonsModelStatus:
+      description: Status of a model.
+      type: string
+      enum:
+        - unknown
+        - not_uploaded
+        - uploaded
+        - pending
+        - confirmed
+        - denied
+        - deleted
+    CommonsModelComputationStatus:
+      description: Status of a computation request.
+      type: string
+      enum:
+        - success
+        - timeout
+        - checkconfirmed
+        - checkdenied
+        - checkpending
+        - maxcombinedassetsizeexceeded
+        - maxdbsizeperoutputexceeded
+        - maxpartsperoutputexceeded
+        - maxassetpartsperoutputexceeded
+        - maxtransformationsperoutputexceeded
+        - maxpartsexceeded
+        - maxassetpartsexceeded
+        - recoverableerror
+        - unrecoverableerror
+        - nooutputdatafordefaultparametervalues
+        - modelwithoutgeometryoutput
+        - unknown
+    CommonsGroup:
+      description: Group of a parameter, export or output.
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - name
+    CommonsTicketType:
+      description: Type of a ticket.
+      type: string
+      enum:
+        - backend
+        - "''"
+    CommonsTicket:
+      description: Authorization ticket.
+      type: object
+      properties:
+        accessdomains:
+          description: >-
+            List of domains (origins) this ticket should be limited to; may be
+            empty.
+          type: array
+          items:
+            type: string
+        author:
+          description: >-
+            Should this ticket provide access to model authoring (allows
+            to change configuration)?
+          type: boolean
+        pub:
+          description: >-
+            Should this ticket allow public access (ignore the model's
+            `accessdomains` property)?
+          type: boolean
+        until:
+          description: >-
+            The timestamp until which the ticket should be valid (format
+            `YYYYMMDDhhmmss`).
+          type: string
+          pattern: '^\d{14}$'
+        use_id2:
+          description: >-
+            Does this ticket identify the model via its secondary ID (model
+            property `id2`)?
+          type: boolean
+      required:
+        - pub
+        - until
+
+    ###########################################################################
+    # Request data structures                                                 #
+    ###########################################################################
+    RequestTicketType:
+      allOf:
+        - $ref: "#/components/schemas/CommonsTicketType"
+    RequestTicket:
+      allOf:
+        - $ref: "#/components/schemas/CommonsTicket"
+        - description: Body of a ticket request.
+          type: object
+      properties:
+        type:
+          description: The type of the ticket.
+          $ref: "#/components/schemas/RequestTicketType"
+      required:
+        - type
+    RequestConfigure:
+      description: Body of a configure request.
+    RequestLogMessageLevel:
+      description: Log message level for log requests.
+      type: string
+      enum:
+        - 0
+        - 1
+        - 2
+    RequestLogMessage:
+      description: Body of a log message request.
+      type: object
+      properties:
+        level:
+          $ref: "#/components/schemas/RequestLogMessageLevel"
+        message:
+          description: The message that should be logged.
+          type: string
+      required:
+        - level
+        - message
+    RequestAuthorizationGroup:
+      description: Body of an authorization group request.
+      type: object
+      properties:
+        models:
+          description: >-
+            The model IDs that should form the new authorization group.
+          type: array
+          items:
+            type: string
+            format: uuid
+        users:
+          description: >-
+            The user IDs that should form the new authorization group.
+          type: array
+          items:
+            type: string
+            format: uuid
+        organizations:
+          description: >-
+            The organization IDs that should form the new authorization
+            group.
+          type: array
+          items:
+            type: string
+            format: uuid
+    RequestGltfUploadQueryConversion:
+      description: |-
+        Query values of a gltf upload request.
+        * `none`: no further processing of the file.
+        * `usdz`: converts the glTF into the USDZ format.
+        * `scene`: creates a temporary AR scene that holds both, a glTF and a
+          USDZ file.
+      type: string
+      enum:
+        - none
+        - scene
+        - usdz
+    ShapeDiverRequestModelComputationQueryOrder:
+      description: |-
+        Query values of a model computation statistics request.
+        Specifies the order of the results.
+      type: string
+      enum:
+        - asc
+        - desc
+    ShapeDiverRequestModelComputationQueryStatus:
+      description: |-
+        Query values of a model computation statistics request.
+        Filter by status.
+      type: string
+      enum:
+        - success
+        - timeout
+        - other
+        - "*"
+    ShapeDiverRequestModelComputationQueryType:
+      description: |-
+        Query values of a model computation statistics request.
+        Filter by computation or export request.
+      type: string
+      enum:
+        - computation
+        - export
+        - load
+        - "*"
+    RequestQueryModelStatus:
+      allOf:
+        - $ref: "#/components/schemas/CommonsModelStatus"
+    RequestQueryModelComputationStatus:
+      allOf:
+        - $ref: "#/components/schemas/CommonsModelComputationStatus"
+    RequestAnalyticsModelPart:
+      description: >-
+        Parameters of a single model-session analytics request. When multiple
+        model IDs or timestamps are requested, the resulting response-item
+        represents an aggregation of the requested data.
+      type: object
+      properties:
+        modelid:
+          oneOf:
+            - description: A single model ID.
+              type: string
+            - description: >-
+                Multiple model IDs are aggregated and result in a single
+                statistic object.
+              type: array
+              items:
+                type: string
+        timestamp:
+          oneOf:
+            - description: A single timestamp.
+              type: string
+              pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
+              examples:
+                - year:
+                  summary: YYYY
+                  value: 2021
+                - year-month:
+                  summary: YYYYMM
+                  value: 202112
+                - year-month-day:
+                  summary: YYYYMMDD
+                  value: 20211225
+                - year-month-day-hour:
+                  summary: YYYYMMDDhh
+                  value: 2021122514
+            - description: >-
+                Multiple timestamps are aggregated and result in a single
+                statistic object.
+              type: array
+              items:
+                type: string
+              pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
+              examples:
+                - mixed:
+                  value: ["2021", "2022010101"]
+        timestamp_from:
+          description: >-
+            Allows to define the beginning of a time range, instead of
+            specifying individual timestamps.
+          type: string
+          pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
+          examples:
+            - year:
+              summary: YYYY
+              value: 2021
+            - year-month:
+              summary: YYYYMM
+              value: 202112
+            - year-month-day:
+              summary: YYYYMMDD
+              value: 20211225
+            - year-month-day-hour:
+              summary: YYYYMMDDhh
+              value: 2021122514
+        timestamp_to:
+          description: >-
+            Allows to define the ending of a time range, instead of specifying
+            individual timestamps.
+          type: string
+          pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
+          examples:
+            - year:
+              summary: YYYY
+              value: 2021
+            - year-month:
+              summary: YYYYMM
+              value: 202112
+            - year-month-day:
+              summary: YYYYMMDD
+              value: 20211225
+            - year-month-day-hour:
+              summary: YYYYMMDDhh
+              value: 2021122514
+      required:
+        - modelid
+    RequestAnalyticsModel:
+      description: >-
+        Body of a model statistics request. Every request-item results in
+        exactly one response-item, whereby the order of response-items
+        corresponds to the order of the request-items.
+      type: object
+      properties:
+        parameters:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequestAnalyticsModelPart"
+    RequestAnalyticsCreditMetricsId:
+      describe: >-
+        Either a single or multiple IDs. Multiple IDs are aggregated and result
+        in a single credit metrics object.
+      oneOf:
+        - description: Model metrics
+          type: object
+          properties:
+            modelIds:
+              oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: string
+          required:
+            - modelIds
+        - description: User metrics
+          type: object
+          properties:
+            userIds:
+              oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: string
+          required:
+            - userIds
+        - description: Organization metrics
+          type: object
+          properties:
+            orgIds:
+              oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: string
+          required:
+            - orgIds
+        - description: System-wide metrics
+          type: object
+          properties:
+            systems:
+              type: boolean
+          required:
+            - systems
+        - description: Model-User metrics
+          type: object
+          properties:
+            modelIds:
+              oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: string
+            userIds:
+              oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: string
+          required:
+            - modelIds
+            - userIds
+        - description: Model-Organization metrics
+          type: object
+          properties:
+            modelIds:
+              oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: string
+            orgIds:
+              oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: string
+          required:
+            - modelIds
+            - orgIds
+      required:
+        - id
+    RequestAnalyticsCreditMetricsPart:
+      description: >-
+        Parameters of a credit metrics request. When IDs or timestamps are
+        requested, the resulting response-item represents an aggregation of the
+        requested data.
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/RequestAnalyticsCreditMetricsId"
+        timestamp:
+          oneOf:
+            - description: A single timestamp.
+              type: string
+              pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
+              examples:
+                - year:
+                  summary: YYYY
+                  value: 2021
+                - year-month:
+                  summary: YYYYMM
+                  value: 202112
+                - year-month-day:
+                  summary: YYYYMMDD
+                  value: 20211225
+                - year-month-day-hour:
+                  summary: YYYYMMDDhh
+                  value: 2021122514
+            - description: >-
+                Multiple timestamps are aggregated and result in a single
+                credit metrics object.
+              type: array
+              items:
+                type: string
+              pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
+              examples:
+                - mixed:
+                  value: ["2021", "2022010101"]
+        timestamp_from:
+          description: >-
+            Allows to define the beginning of a time range, instead of
+            specifying individual timestamps.
+          type: string
+          pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
+          examples:
+            - year:
+              summary: YYYY
+              value: 2021
+            - year-month:
+              summary: YYYYMM
+              value: 202112
+            - year-month-day:
+              summary: YYYYMMDD
+              value: 20211225
+            - year-month-day-hour:
+              summary: YYYYMMDDhh
+              value: 2021122514
+        timestamp_to:
+          description: >-
+            Allows to define the ending of a time range, instead of specifying
+            individual timestamps.
+          type: string
+          pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
+          examples:
+            - year:
+              summary: YYYY
+              value: 2021
+            - year-month:
+              summary: YYYYMM
+              value: 202112
+            - year-month-day:
+              summary: YYYYMMDD
+              value: 20211225
+            - year-month-day-hour:
+              summary: YYYYMMDDhh
+              value: 2021122514
+      required:
+        - id
+    RequestAnalyticsCreditMetrics:
+      description: >-
+        Body of a credit metrics request. Every request-item results in exactly
+        one response-item, whereby the order of response-items corresponds to
+        the order of the request-items.
+      type: object
+      properties:
+        parameters:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequestAnalyticsCreditMetricsPart"
+    RequestCustomization:
+      description: |-
+        Body of a customization request, a directory of parameter key and
+        values.
+
+        Supported parameter keys are as follows, whereby the parameter
+        resolution is done in the same order as the keys are listed:
+        * `id`
+        * `name`
+        * `displayname`
+
+        Supported parameter values are:
+        * Basic parameter (`RequestParameterBasic`)
+        * S-type parameter (`RequestParameterSType`)
+      type: object
+      additionalProperties:
+        oneOf:
+          - $ref: "#/components/schemas/RequestParameterBasic"
+          - $ref: "#/components/schemas/RequestParameterSType"
+    RequestParameterBasic:
+      description: Definition of a basic ShapeDiver parameter.
+      oneOf:
+        - type: string
+        - type: number
+        - type: boolean
+    RequestParameterSType:
+      description: Definition of the value to use for s-type parameters.
+      type: object
+      properties:
+        value:
+          description: >-
+            Optional embedded value. If this is set the asset is ignored.
+          type: string
+        asset:
+          description: Reference to the asset to be used.
+          type: object
+          properties:
+            id:
+              description: String ID of the asset.
+              type: string
+            chunk:
+              description: >-
+                Describing which chunk to use, instead of the default one,
+                which would get chosen based on parameter ID and name.
+              type: object
+              properties:
+                id:
+                  description: ID of the chunk to be used.
+                  type: string
+                name:
+                  description: Name attribute of the chunk to be used.
+                  type: string
+          required:
+            - id
+    RequestExport:
+      description: Body of an export request.
+      type: object
+      properties:
+        parameters:
+          $ref: "#/components/schemas/RequestCustomization"
+        exports:
+          oneOf:
+            - type: object
+              properties:
+                id:
+                  type: string
+            - type: array
+              items:
+                type: string
+        outputs:
+          type: array
+          items:
+            type: string
+        max_wait_time:
+          description: >-
+            Maximum amount of milliseconds to wait for completion of export
+            request before responding.
+          type: number
+      required:
+        - parameters
+        - exports
+    RequestCache:
+      description: |-
+        Body of an export or output cache request.
+        A directory of export-/output-IDs and version-IDs.
+      type: object
+      additionalProperties:
+        type: string
+      examples:
+        - ids:
+          value:
+            "96ce38f8-e197-416a-b78b-18d8376f5903": "62b3e13f-7b78-4a59-86f9-4a51f83feb21"
+    RequestExportDefinition:
+      description: |-
+        Definition of a exports.
+        A directory of export-IDs and export-definitions.
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/RequestExportDefinitionPart"
+    RequestExportDefinitionPart:
+      description: Data for a single export definition.
+      type: object
+      properties:
+        displayname:
+          description: Parameter name to display instead of _name_.
+          type: string
+        group:
+          anyOf:
+            - $ref: "#/components/schemas/RequestExportDefinitionGroup"
+            - description: >-
+                Set to `null` to remove the export from the currently assigned
+                group.
+              type: "null"
+        hidden:
+          description: Controls whether the export should be hidden in the UI.
+          type: boolean
+        order:
+          description: Ordering of the export in client applications.
+          type: number
+        tooltip:
+          description: Description that is shown as a tooltip in the clients.
+          type: string
+    RequestExportDefinitionGroup:
+      allOf:
+        - $ref: "#/components/schemas/CommonsGroup"
+        - description: Group information of an export definition.
+          type: object
+    RequestOutputDefinition:
+      description: |-
+        Definition of outputs.
+        A directory of output-IDs and output-definitions.
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/RequestOutputDefinitionPart"
+    RequestOutputDefinitionPart:
+      description: Data for a single output definition.
+      type: object
+      properties:
+        displayname:
+          description: Parameter name to display instead of `name`.
+          type: string
+        group:
+          anyOf:
+            - $ref: "#/components/schemas/RequestOutputDefinitionGroup"
+            - description: >-
+                Set to `null` to remove the output from the currently assigned
+                group.
+              type: "null"
+        hidden:
+          description: Controls whether the output should be hidden in the UI.
+          type: boolean
+        order:
+          description: Ordering of the output in client applications.
+          type: number
+        tooltip:
+          description: Description that is shown as a tooltip in the clients.
+          type: string
+        chunks:
+          description: >-
+            The chunk definitions of the sdTF file that is generated by the
+            output. If specified, all existing sdTF chunks of the output must
+            be given. The order of the given chunk items determines the order
+            in that the chunks will be shown in the UI.
+          type: array
+          items:
+            $ref: "#/components/schemas/RequestOutputDefinitionChunk"
+    RequestOutputDefinitionGroup:
+      allOf:
+        - $ref: "#/components/schemas/CommonsGroup"
+        - description: Group information of an output definition.
+          type: object
+    RequestOutputDefinitionChunk:
+      description: >-
+        Definition of a single "chunk" of data in an sdTF file that is
+        generated by the output component.
+      type: object
+      properties:
+        id:
+          description: ID of the chunk.
+          type: string
+        displayname:
+          description: >-
+            Chunk name to display instead of the chunk `name`. This value can
+            be unset by specifying an empty string.
+          type: string
+        hidden:
+          description: Controls whether the chunk should be hidden in the UI.
+          type: boolean
+      required:
+        - id
+    RequestModelFiletype:
+      description: Supported file types for models.
+      type: string
+      enum:
+        - gh
+        - ghx
+    RequestModelTrustlevel:
+      description: Level of trust granted for a model.
+      type: string
+      enum:
+        - "''"
+        - none
+        - full
+    RequestModel:
+      description: Body of a template request.
+      type: object
+      properties:
+        accessdomains:
+          description: >-
+            List of domains (origins) this model is limited to (is ignored
+            in case `pub` is true).
+          type: array
+          items:
+            type: string
+        auth_groups:
+          description: List of allowed auth-groups.
+          type: array
+          items:
+            type: string
+        backendaccess:
+          description: Should backend access to the model be allowed.
+          type: boolean
+        filename:
+          description: Original name of the model's grasshopper file.
+          type: string
+        ftype:
+          description: File type of the model.
+          $ref: "#/components/schemas/RequestModelFiletype"
+        initial_warmup:
+          description: >-
+            Allows to control whether the model should be warmed up immediately
+            after loading by running a computation. This increases the
+            likelihood of following computation requests to be faster.
+          type: boolean
+        id2:
+          description: Optional second model ID.
+          type: string
+          format: uuid
+        max_comp_time:
+          description: >-
+            Maximum number of milliseconds allowed for computations of this
+            model.
+          type: number
+        max_export_size:
+          description: >-
+            Maximum number of bytes allowed to be exported from a model for a
+            specific set of parameter values.
+          type: number
+        max_idle_minutes:
+          description: |-
+            Maximum amount of minutes a loaded model may be unused before
+            it gets unloaded.
+            Note: Models may get unloaded earlier than that.
+          type: number
+        max_model_size:
+          description: >-
+            Maximum number of bytes allowed for the model's Grasshopper file
+            size.
+          type: number
+        max_output_size:
+          description: >-
+            Maximum number of bytes allowed for an output of a model for a
+            specific set of parameter values.
+          type: number
+        webhook_token:
+          description: >-
+            Allows to control whether the model's Grasshopper file can contain
+            scripts.
+          type: boolean
+        max_wait_time:
+          description: >-
+            Maximum time a computation request may stay waiting before a
+            further worker goes ahead regardless of whether it already has the
+            model loaded, and regardless of `num_loaded_max`. This allows to
+            configure a soft or a hard upper boundary for the number of loaded
+            models.
+          type: number
+        name:
+          description: Name of the model.
+          type: string
+        num_loaded_max:
+          description: >-
+            Maximum number of workers that should have the model loaded at the
+            same time.
+          type: number
+        num_loaded_min:
+          description: >-
+            Minimum number of workers which should have the model loaded once a
+            session to the model gets opened.
+          type: number
+        num_preloaded_min:
+          description: >-
+            Minimum number of workers that should always have the model loaded,
+            regardless of session activity. This allows to minimise the
+            likelihood of computation requests being slower due to model
+            loading.
+          type: number
+        org_id:
+          description: Optional organization ID.
+          type: string
+        prev_id:
+          description: Model ID of this model's previous version.
+          type: string
+        pub:
+          description: Allows public access (ignore `accessdomains`).
+          type: boolean
+        require_iframe:
+          description: Enforces iframe embedding instead of direct embedding.
+          type: boolean
+        require_token:
+          description: Enforces token-based authentication for this model.
+          type: boolean
+        session_rate_limit:
+          description: >-
+            Limits the number of sessions that can be created by a specific
+            IP address in one hour.
+          type: number
+        trust:
+          description: >-
+            Can this model be trusted (controls whether failed computations
+            will be retried).
+          $ref: "#/components/schemas/RequestModelTrustlevel"
+        use_cdn:
+          description: >-
+            Allows the usage of the CDN for fast content distribution.
+          type: boolean
+        user_id:
+          description: Optional user ID.
+          type: string
+        webhook_url:
+          description: >-
+            The webhook-url for updating the platform backend about model
+            status changes.
+          type: string
+      required:
+        - pub
+    RequestParameterDefinition:
+      description: |-
+        Definition of model parameters.
+        A directory of parameter-IDs and parameter-definitions.
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/RequestParameterDefinitionPart"
+    RequestParameterDefinitionPart:
+      description: Data for a single parameter definition.
+      type: object
+      properties:
+        displayname:
+          description: Parameter name to display instead of `name`.
+          type: string
+        group:
+          anyOf:
+            - $ref: "#/components/schemas/RequestParameterDefinitionGroup"
+            - description: >-
+                Set to `null` to remove the parameter from the currently
+                assigned group.
+              type: "null"
+        hidden:
+          description: >-
+            Controls whether the parameter should be hidden in the UI.
+          type: boolean
+        order:
+          description: Ordering of the parameter in client applications.
+          type: number
+        tooltip:
+          description: Description that is shown as a tooltip in the clients.
+          type: string
+    RequestParameterDefinitionGroup:
+      allOf:
+        - $ref: "#/components/schemas/CommonsGroup"
+        - description: Group information of a parameter definition.
+          type: object
+    RequestFileUpload:
+      description: |-
+        Body of a file upload request.
+        A directory of file-parameter-IDs and upload-definitions.
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/RequestFileUploadPart"
+      examples:
+        - JPEG:
+          value:
+            "e6a576af-2e16-43cc-a78f-d74ae1154205":
+              format: "image/jpeg"
+              size: 1234
+    RequestFileUploadPart:
+      description: >-
+        Data for a single file parameter part of a file upload request.
+      type: object
+      properties:
+        filename:
+          description: |-
+            Name of the file to be uploaded.
+
+            When this property is set, then the actual file upload request must
+            contain a Content-Disposition HTTP header with the value
+            "attachment; filename=`{filename}`". Otherwise, a signature
+            mismatch will occur.
+          type: string
+        format:
+          description: Content-Type (MIME type) of the file to be uploaded.
+          type: string
+        size:
+          description: Size of the file to be uploaded, in bytes.
+          type: number
+      required:
+        - format
+        - size
+    RequestSdtfUpload:
+      description: Body of a sdTF upload request.
+      type: array
+      items:
+        $ref: "#/components/schemas/RequestSdtfUploadPart"
+    RequestSdtfUploadPart:
+      description: >-
+        Data for a single file parameter part of a sdTF upload request.
+      type: object
+      properties:
+        content_encoding:
+          description: Encoding of the sdTF to be uploaded.
+          type: string
+        content_length:
+          description: Size of the sdTF to be uploaded, in bytes.
+          type: number
+        content_type:
+          description: Content-type of the sdTF to be uploaded.
+          $ref: "#/components/schemas/RequestSdtfUploadPartType"
+        namespace:
+          description: Namespace the asset shall be created in.
+          type: string
+      required:
+        - content_length
+        - content_type
+        - namespace
+    RequestSdtfUploadPartType:
+      description: Content-Type (MIME type) of the sdTF to be uploaded.
+      type: string
+      enum:
+        - model/vnd.sdtf
+
+    ###########################################################################
+    # Response data structures                                                #
+    ###########################################################################
+    ResponseDtoVersion:
+      type: object
+      properties:
+        version:
+          description: Version of the response format.
+          type: string
+      required:
+        - version
+    ResponseDtoMessage:
+      type: object
+      properties:
+        message:
+          description: Contains urgent information about the system.
+          type: string
+    ResponseDtoTicket:
+      type: object
+      properties:
+        ticket:
+          description: The ticket to create a model session.
+          type: string
+    ResponseDtoSessionId:
+      type: object
+      properties:
+        sessionId:
+          description: The ID of the created session.
+          type: string
+    ResponseDtoViewerSettingsVersion:
+      type: object
+      properties:
+        viewerSettingsVersion:
+          description: The current version of the viewer settings.
+          type: string
+    ResponseDecryptTicket:
+      allOf:
+        - $ref: "#/components/schemas/ResponseTicket"
+        - description: Decrypted ticket details.
+          type: object
+    ResponseDtoAuthorizationGroup:
+      type: object
+      properties:
+        auth_group:
+          description: The auth-group to use for ticked-based authentication.
+          type: string
+    ResponseDtoActions:
+      type: object
+      properties:
+        actions:
+          description: Actions the client may take.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseAction"
+    ResponseDtoTemplates:
+      type: object
+      properties:
+        templates:
+          description: Request templates for actions.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseTemplate"
+    ResponseDtoModel:
+      type: object
+      properties:
+        model:
+          description: The definitions of a ShapeDiver model.
+          $ref: "#/components/schemas/ResponseModel"
+    ResponseDtoFile:
+      type: object
+      properties:
+        file:
+          description: Links regarding the model file.
+          $ref: "#/components/schemas/ResponseFile"
+    ResponseDtoStatistic:
+      type: object
+      properties:
+        statistic:
+          description: Statistics of a model.
+          $ref: "#/components/schemas/ResponseStatistic"
+    ResponseDtoSetting:
+      type: object
+      properties:
+        setting:
+          description: Various settings.
+          $ref: "#/components/schemas/ResponseSettings"
+    ResponseDtoParameters:
+      type: object
+      properties:
+        parameters:
+          description: |-
+            Parameter definitions, not contained with every response.
+            A directory of parameter-IDs and parameters.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ResponseParameter"
+    ResponseDtoPlugins:
+      type: object
+      properties:
+        plugins:
+          description: Information about Grasshopper plugins.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ResponsePlugins"
+    ResponseDtoViewer:
+      type: object
+      properties:
+        viewer:
+          description: Viewer specific data.
+          $ref: "#/components/schemas/ResponseViewer"
+    ResponseDtoOutputs:
+      type: object
+      properties:
+        outputs:
+          description: |-
+            Outputs of the model for the given parameter values.
+            A directory of output-IDs and outputs.
+          type: object
+          additionalProperties:
+            oneOf:
+              - $ref: "#/components/schemas/ResponseOutput"
+              - $ref: "#/components/schemas/ResponseOutputDefinition"
+    ResponseDtoExports:
+      type: object
+      properties:
+        exports:
+          description: |-
+            Exports of the model for the given parameter values.
+            A directory of export-IDs and exports.
+          type: object
+          additionalProperties:
+            oneOf:
+              - $ref: "#/components/schemas/ResponseExport"
+              - $ref: "#/components/schemas/ResponseExportDefinition"
+    ResponseDtoAsset:
+      type: object
+      properties:
+        asset:
+          description: File or sdTF assets.
+          $ref: "#/components/schemas/ResponseAsset"
+    ResponseDtoAnalytics:
+      type: object
+      properties:
+        analytics:
+          description: Statistics of the model for the given timespan.
+          $ref: "#/components/schemas/ResponseAnalytics"
+    ResponseDtoList:
+      type: object
+      properties:
+        list:
+          description: Response of a list API call.
+          $ref: "#/components/schemas/ResponseList"
+    ResponseDtoGltfUpload:
+      type: object
+      properties:
+        gltf:
+          description: glTF information.
+          $ref: "#/components/schemas/ResponseGltfUpload"
+    ResponseDtoModelComputation:
+      type: object
+      properties:
+        computations:
+          description: Statistics about model computations.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseModelComputation"
+    ResponseDtoPagination:
+      type: object
+      properties:
+        pagination:
+          description: Pagination information.
+          $ref: "#/components/schemas/ResponsePagination"
+    ResponseDtoSystem:
+      type: object
+      properties:
+        system:
+          description: System information.
+          $ref: "#/components/schemas/ResponseSystem"
+    ResponseDtoCleanup:
+      type: object
+      properties:
+        cleanup:
+          description: Model cleanup information.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseModelCleanupProcess"
+    ResponsePagination:
+      description: Pagination component.
+      type: object
+      properties:
+        limit:
+          description: The query limit that has been used in the request.
+          type: number
+        next_offset:
+          description: >-
+            The offset that can be used in the next request to query the
+            remaining items. This property is missing when all items have been
+            processed.
+          type: string
+      required:
+        - limit
+    ResponseAnalytics:
+      description: Analytics components.
+      type: object
+      properties:
+        models:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseAnalyticsModel"
+        creditMetrics:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/ResponseAnalyticsModelCreditMetrics"
+              - $ref: "#/components/schemas/ResponseAnalyticsUserCreditMetrics"
+              - $ref: "#/components/schemas/ResponseAnalyticsOrganizationCreditMetrics"
+              - $ref: "#/components/schemas/ResponseAnalyticsSystemCreditMetrics"
+              - $ref: "#/components/schemas/ResponseAnalyticsModelUserCreditMetrics"
+              - $ref: "#/components/schemas/ResponseAnalyticsModelOrganizationCreditMetrics"
+      required:
+        - models
+        - creditMetrics
+    ResponseAnalyticsModel:
+      description: Aggregated model session statistics.
+      type: object
+      properties:
+        modelid:
+          description: Requested model ID.
+          type: string
+        timestamp:
+          description: Requested timestamp (hourly, daily, monthly, yearly).
+          type: string
+        isCompilationDone:
+          description: Aggregation for this timestamp has finished.
+          type: boolean
+        count:
+          description: |-
+            Number of (technical) sessions for the given model and timestamp.
+            A technical session may last up to two hours, after which it will
+            get cancelled by the backend.
+
+            CAUTION: Not to be confused with credits!
+          type: number
+        billableCount:
+          description: >-
+            Billable duration-based credit count, based on maximum duration
+            of 10 minutes per credit.
+          type: number
+        duration:
+          description: Statistics on the duration of all sessions.
+          $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
+        app:
+          description: Statistics on the duration of app sessions.
+          $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
+        backend:
+          description: Statistics on the duration of backend sessions.
+          $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
+        embedded:
+          description: Statistics on the duration of embedded sessions.
+          $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
+        desktop:
+          description: Statistics on the duration of desktop sessions.
+          $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
+        customize:
+          description: Statistics on customization requests per session.
+          $ref: "#/components/schemas/ResponseAnalyticsModelOnAction"
+        export:
+          description: Statistics on export requests per session.
+          $ref: "#/components/schemas/ResponseAnalyticsModelOnAction"
+      required:
+        - modelid
+        - timestamp
+        - isCompilationDone
+        - count
+        - billableCount
+        - duration
+        - app
+        - backend
+        - embedded
+        - desktop
+        - customize
+        - export
+    ResponseAnalyticsModelOnDuration:
+      type: object
+      properties:
+        count:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Number of
+              (technical) sessions from all sources (duration) or from one
+              specific source (app, embedded, backend, desktop), for the given
+              model and timestamp.
+            * `export`, `customize`: Number of sessions which have export
+              requests.
+          type: number
+        billableCount:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Billable
+              duration-based credit count for all sessions, based on maximum
+              duration of 10 minutes per credit.
+            * `export`, `customize`: Billable duration-based credit count for
+              sessions which have export requests, based on maximum duration of
+              10 minutes per credit.
+          type: number
+        min:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative
+              distribution function of the duration, for all sessions for the
+              given model and timestamp.
+            * `export`, `customize`: Cumulative distribution function of the
+              number of export requests per session, for sessions which have
+              export requests.
+          type: number
+        max:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative
+              distribution function of the duration, for all sessions for the
+              given model and timestamp.
+            * `export`, `customize`: Cumulative distribution function of the
+              number of export requests per session, for sessions which have
+              export requests.
+          type: number
+        avg:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Average
+              duration of all sessions for the given model and timestamp.
+            * `export`, `customize`: Average number of export requests per
+              session, for sessions which have export requests.
+          type: number
+        sum:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Total
+              duration of all sessions for the given model and timestamp.
+            * `export`, `customize`: Total number of export requests
+              for all sessions which have export requests.
+          type: number
+      required:
+        - count
+        - billableCount
+        - min
+        - max
+        - avg
+        - sum
+    ResponseAnalyticsModelOnAction:
+      allOf:
+        - $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
+        - type: object
+      properties:
+        count:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Number of
+              (technical) sessions from all sources (duration) or from one
+              specific source (app, embedded, backend, desktop), for the given
+              model and timestamp.
+            * `export`, `customize`: Number of sessions which have export
+              requests.
+          type: number
+        billableCount:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Billable
+              duration-based credit count for all sessions, based on maximum
+              duration of 10 minutes per credit.
+            * `export`, `customize`: Billable duration-based credit count for
+              sessions which have export requests, based on maximum duration of
+              10 minutes per credit.
+          type: number
+        min:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative
+              distribution function of the duration, for all sessions for the
+              given model and timestamp.
+            * `export`, `customize`: Cumulative distribution function of the
+              number of export requests per session, for sessions which have
+              export requests.
+          type: number
+        max:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative
+              distribution function of the duration, for all sessions for the
+              given model and timestamp.
+            * `export`, `customize`: Cumulative distribution function of the
+              number of export requests per session, for sessions which have
+              export requests.
+          type: number
+        avg:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Average
+              duration of all sessions for the given model and timestamp.
+            * `export`, `customize`: Average number of export requests per
+              session, for sessions which have export requests.
+          type: number
+        sum:
+          description: |-
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Total
+              duration of all sessions for the given model and timestamp.
+            * `export`, `customize`: Total number of export requests for all
+              sessions which have export requests.
+          type: number
+        sumApp:
+          description: |-
+            `customize`: Total number of actions, for ShapeDiver Platform
+            sessions for which the type of action happened.
+
+            Note: New property - will contain `0` for entries before November
+            2019.
+          type: number
+        sumBackend:
+          description: |-
+            `customize`: Total number of customization requests for backend
+            sessions which have customization requests.
+
+            `export`: Total number of export requests for backend sessions
+            which have export requests.
+
+            Note: New property - will contain `0` for entries before November
+            2019.
+          type: number
+        sumEmbedded:
+          description: |-
+            `customize`: Total number of customization requests for embedded
+            sessions which have customization requests.
+
+            `export`: Total number of export requests for embedded sessions
+            which have export requests.
+
+            Note: New property - will contain `0` for entries before November
+            2019.
+          type: number
+        sumDesktop:
+          description: |-
+            `customize`: Total number of actions, for desktop client sessions
+            for which the type of action happened.
+
+            Note: New property - will contain `0` for entries before January
+            2021.
+          type: number
+      required:
+        - count
+        - billableCount
+        - min
+        - max
+        - avg
+        - sum
+        - sumApp
+        - sumBackend
+        - sumEmbedded
+        - sumDesktop
+    ResponseAnalyticsModelCreditMetrics:
+      allOf:
+        - description: Aggregated credit metrics for a model.
+          type: object
+        - $ref: "#/components/schemas/ResponseAnalyticsBaseCreditMetrics"
+      properties:
+        modelId:
+          description: Requested model ID.
+          type: string
+      required:
+        - modelId
+    ResponseAnalyticsUserCreditMetrics:
+      allOf:
+        - description: Aggregated credit metrics for a user.
+          type: object
+        - $ref: "#/components/schemas/ResponseAnalyticsBaseCreditMetrics"
+      properties:
+        userId:
+          description: Requested user ID.
+          type: string
+      required:
+        - userId
+    ResponseAnalyticsOrganizationCreditMetrics:
+      allOf:
+        - description: Aggregated credit metrics for a organization.
+          type: object
+        - $ref: "#/components/schemas/ResponseAnalyticsBaseCreditMetrics"
+      properties:
+        orgId:
+          description: Requested organization ID.
+          type: string
+      required:
+        - orgId
+    ResponseAnalyticsSystemCreditMetrics:
+      allOf:
+        - description: Aggregated credit metrics for a system.
+          type: object
+        - $ref: "#/components/schemas/ResponseAnalyticsBaseCreditMetrics"
+      properties:
+        system:
+          description: Requested system.
+          type: boolean
+      required:
+        - system
+    ResponseAnalyticsModelUserCreditMetrics:
+      allOf:
+        - description: Aggregated credit metrics for a model-user.
+          type: object
+        - $ref: "#/components/schemas/ResponseAnalyticsBaseCreditMetrics"
+      properties:
+        modelId:
+          description: Requested model ID.
+          type: string
+        userId:
+          description: Requested user ID.
+          type: string
+      required:
+        - modelId
+        - userId
+    ResponseAnalyticsModelOrganizationCreditMetrics:
+      allOf:
+        - description: Aggregated credit metrics for a model-organization.
+          type: object
+        - $ref: "#/components/schemas/ResponseAnalyticsBaseCreditMetrics"
+      properties:
+        modelId:
+          description: Requested model ID.
+          type: string
+        orgId:
+          description: Requested organization ID.
+          type: string
+      required:
+        - modelId
+        - orgId
+    ResponseAnalyticsBaseCreditMetrics:
+      type: object
+      properties:
+        timestamp:
+          description: Requested timestamp (hourly, daily, monthly, yearly).
+          type: string
+        isCompilationDone:
+          description: Aggregation for this timestamp has finished.
+          type: boolean
+        loading:
+          $ref: "#/components/schemas/ResponseAnalyticsCreditMetricsLoading"
+        limited:
+          $ref: "#/components/schemas/ResponseAnalyticsCreditMetricsRateLimited"
+        default:
+          $ref: "#/components/schemas/ResponseAnalyticsCreditMetricsDefaultSession"
+      required:
+        - timestamp
+        - isCompilationDone
+        - loading
+        - limited
+        - default
+    ResponseAnalyticsCreditMetricsLoading:
+      description: Information about loading times on the Geometry Workers.
+      type: object
+      properties:
+        credits:
+          description: Number of started 10-second chunks charged.
+          type: number
+        count:
+          description: Number of load requests.
+          type: number
+      required:
+        - credits
+        - count
+    ResponseAnalyticsCreditMetricsRateLimited:
+      description: Aggregated metrics for 'rate-limited timeslot' sessions.
+      type: object
+      properties:
+        outputs:
+          description: Pure output requests.
+          type: object
+          properties:
+            count:
+              description: Number of pure output requests.
+              type: number
+          required:
+            - count
+        exports:
+          description: Pure export requests.
+          type: object
+          properties:
+            credits:
+              description: Number of pure export requests charged.
+              type: number
+          required:
+            - credits
+        combined:
+          description: Combined output and export requests.
+          type: object
+          properties:
+            credits:
+              description: >-
+                Number of combined output and export requests charged.
+              type: number
+          required:
+            - credits
+        sessions:
+          description: Session information.
+          type: object
+          properties:
+            count:
+              description: Number of sessions.
+              type: number
+            credits:
+              description: >-
+                Number of started 10-minute periods of sessions charged.
+              type: number
+            duration:
+              description: The total duration of all sessions, in milliseconds.
+              type: number
+          required:
+            - count
+            - credits
+            - duration
+        ar:
+          description: Downloads of AR scenes.
+          type: object
+          properties:
+            credits:
+              description: The number of AR requests charged.
+              type: number
+          required:
+            - credits
+        computations:
+          description: Computations information.
+          type: object
+          properties:
+            count:
+              description: Number of computations.
+              type: number
+            credits:
+              description: Number of finished 10-second chunks charged.
+              type: number
+            duration:
+              description: Total duration of computation time, in milliseconds.
+              type: number
+            countPerChunks:
+              description: >-
+                Count of computations per computation time expressed in started
+                10-second chunks.
+              type: number
+          required:
+            - count
+            - credits
+            - duration
+            - countPerChunks
+      required:
+        - outputs
+        - exports
+        - combined
+        - sessions
+        - ar
+        - computations
+    ResponseAnalyticsCreditMetricsDefaultSession:
+      description: Aggregated metrics for 'default' sessions.
+      type: object
+      properties:
+        outputs:
+          description: Pure output requests.
+          type: object
+          properties:
+            credits:
+              description: Number of pure output requests charged.
+              type: number
+          required:
+            - credits
+        exports:
+          description: Pure export requests.
+          type: object
+          properties:
+            credits:
+              description: Number of pure export requests charged.
+              type: number
+          required:
+            - credits
+        combined:
+          description: Combined output and export requests.
+          type: object
+          properties:
+            credits:
+              description: >-
+                Number of combined output and export requests charged.
+              type: number
+          required:
+            - credits
+        sessions:
+          description: Session information.
+          type: object
+          properties:
+            count:
+              description: Number of sessions.
+              type: number
+            duration:
+              description: The total duration of all sessions, in milliseconds.
+              type: number
+          required:
+            - count
+            - duration
+        ar:
+          description: Downloads of AR scenes.
+          type: object
+          properties:
+            credits:
+              description: Number of AR downloads charged.
+              type: number
+          required:
+            - credits
+        computations:
+          description: Computations information.
+          type: object
+          properties:
+            count:
+              description: Number of computations.
+              type: number
+            credits:
+              description: Number of finished 10-second chunks charged.
+              type: number
+            duration:
+              description: Total duration of computation time, in milliseconds.
+              type: number
+            countPerChunks:
+              description: >-
+                Count of computations per computation time expressed in started
+                10-second chunks.
+              type: number
+          required:
+            - count
+            - credits
+            - duration
+            - countPerChunks
+      required:
+        - outputs
+        - exports
+        - combined
+        - sessions
+        - ar
+        - computations
+    ResponseAsset:
+      description: ShapeDiver API response for asset upload requests.
+      type: object
+      properties:
+        file:
+          description: A directory of parameter-IDs and asset-definitions.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ResponseAssetDefinition"
+        sdtf:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseAssetDefinition"
+    ResponseAssetDefinition:
+      description: >-
+        Result part for the response to an upload request for file/sdTF
+        parameters.
+      type: object
+      properties:
+        id:
+          description: ID of the file to be uploaded.
+          type: string
+        href:
+          description: >-
+            href the file should be uploaded to (typically a time-limited
+            pre-signed url).
+          type: string
+      required:
+        - id
+        - href
+    ResponseError:
+      description: Body of an error object.
+      type: object
+      properties:
+        error:
+          description: The type of the error.
+          $ref: "#/components/schemas/ResponseErrorType"
+        desc:
+          description: General description of the error type.
+          type: string
+        message:
+          description: Detailed error description.
+          type: string
+      required:
+        - error
+        - desc
+    ResponseErrorType:
+      description: Possible error types.
+      type: string
+      enum:
+        - "''"
+        - SdAssertionError
+        - SdCacheErrorGeneric
+        - SdConnectorError
+        - SdDatabaseErrorFilterInvalid
+        - SdDatabaseErrorGeneric
+        - SdDatabaseErrorSelectorInvalid
+        - SdDatabaseErrorSelectorNotUnique
+        - SdEmailingError
+        - SdErrorEntityNotFound
+        - SdErrorForbidden
+        - SdErrorGenericClient
+        - SdErrorGenericInternal
+        - SdErrorUnauthorized
+        - SdIllegalArgumentError
+        - SdJwtValidationError
+        - SdModelValidationError
+        - SdNotAcceptable
+        - SdNotFoundError
+        - SdParameterValidationError
+        - SdRateLimitErrorGeneric
+        - SdRequestTimeout
+        - SdRequestValidationError
+        - SdResourceGoneError
+        - SdSessionGoneError
+        - SdSessionValidationError
+        - SdStorageErrorGeneric
+        - SdTextureUrlError
+        - SdTicketValidationError
+        - SdTokenMissingError
+        - SdTransformContentArrayError
+        - SdUnconfirmedModelError
+    ResponseExportDefinitionType:
+      description: Types of exports.
+      type: string
+      enum:
+        - unknown
+        - download
+        - email
+        - shapeways
+    ResponseExportDefinitionGroup:
+      allOf:
+        - $ref: "#/components/schemas/CommonsGroup"
+        - description: Group information of an export definition.
+          type: object
+    ResponseExportDefinition:
+      description: Export definition WITHOUT results as exposed on the API.
+      type: object
+      properties:
+        id:
+          description: >-
+            ID of the export, dependent on model ID, and therefore changing
+            each time a model gets uploaded.
+          type: string
+        uid:
+          description: >-
+            Constant ID of the export, not dependent on model ID, and therefore
+            NOT changing each time a model gets uploaded. Might be undefined
+            because this property was introduced in summer 2020 and does not
+            exist for exports of older models.
+          type: string
+        name:
+          description: Name of the export.
+          type: string
+        type:
+          description: Type of export.
+          $ref: "#/components/schemas/ResponseExportDefinitionType"
+        dependency:
+          description: List of IDs of parameters influencing this export.
+          type: array
+          items:
+            type: string
+        group:
+          description: Group of an export.
+          $ref: "#/components/schemas/ResponseExportDefinitionGroup"
+        order:
+          description: Ordering of the export in client applications.
+          type: number
+        tooltip:
+          description: Description that is shown as a tooltip in the clients.
+          type: string
+        displayname:
+          description: Parameter name to display instead of `name`.
+          type: string
+        hidden:
+          description: >-
+            Controls whether the parameter should be hidden in the UI.
+          type: boolean
+      required:
+        - id
+        - name
+        - type
+        - dependency
+        - hidden
+    ResponseExport:
+      allOf:
+        - $ref: "#/components/schemas/ResponseExportDefinition"
+        - description: Export definition WITH results as exposed on the API.
+          type: object
+      properties:
+        version:
+          description: Requested version of the export.
+          type: string
+        delay:
+          description: |-
+            The delay in milliseconds after which an export cache request
+            shall be sent to check again for this export version. This property
+            is used ONLY if the export version has not been computed yet.
+
+            Note that the existence of this property does not necessarily imply
+            the presence of an active or queued computation for the respective
+            export version.
+          type: number
+        content:
+          description: >-
+            Result parts. In case this array does not exist, this means that
+            the workers have not finished computation for this output version.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseExportContent"
+        msg:
+          description: >-
+            In case computation of the export version (temporarily) failed.
+            Contains a message explaining what went wrong.
+          type: string
+        filename:
+          description: >-
+            Optional suggested filename for the files to be downloaded.
+          type: string
+        result:
+          description: >-
+            Optional result object for exports of type `email` and `shapeways`.
+          $ref: "#/components/schemas/ResponseExportResult"
+        status_computation:
+          description: >-
+            Status of the computation which resulted in the export version.
+          $ref: "#/components/schemas/ResponseModelComputationStatus"
+        status_collect:
+          description: Status of collecting results for the export version.
+          $ref: "#/components/schemas/ResponseModelComputationStatus"
+    ResponseExportContent:
+      description: An item of the `content` array for exports.
+      type: object
+      properties:
+        format:
+          description: Format of export result (file extension).
+          type: string
+        href:
+          description: Link for download of exported asset.
+          type: string
+        size:
+          description: Optional size of exported asset, in bytes.
+          type: number
+        contentType:
+          description: Optional Content-Type for parts of type `asset`.
+          type: string
+      required:
+        - format
+        - href
+    ResponseExportResult:
+      description: >-
+        Optional result object for exports of type `email` and `shapeways`.
+      type: object
+      properties:
+        msg:
+          description: Optional success message for user.
+          type: string
+        err:
+          description: Optional error message for user.
+          type: string
+        href:
+          description: Optional href to redirect user to for download.
+          type: string
+        modelId:
+          description: Optional shapeways model ID.
+          type: string
+    ResponseList:
+      description: ShapeDiver API response of a list-request.
+      type: object
+      properties:
+        file:
+          description: A directory of file objects.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseListFile"
+        sdtf:
+          description: A directory of sdTF objects.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseListSdtf"
+        model:
+          description: A directory of ShapeDiver models.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseModel"
+        output:
+          description: A directory of output versions.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseOutput"
+        export:
+          description: A directory of export versions.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseExport"
+        texture:
+          description: A directory of model textures.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseModelTexture"
+    ResponseListFile:
+      description: >-
+        Result part for the response to a list request for file objects.
+      type: object
+      properties:
+        id:
+          description: ID of the file.
+          type: string
+        parameterId:
+          description: ID of the parameter that the file is assigned to.
+          type: string
+        size:
+          description: The size of the file in bytes.
+          type: number
+      required:
+        - id
+        - parameterId
+        - size
+    ResponseListSdtf:
+      description: >-
+        Result part for the response to a list request for sdTF objects.
+      type: object
+      properties:
+        id:
+          description: ID of the sdTF.
+          type: string
+        namespace:
+          description: The namespace of the sdTF.
+          type: string
+        size:
+          description: The size of the sdTF in bytes.
+          type: number
+      required:
+        - id
+        - namespace
+        - size
+    ResponseAction:
+      description: Defines the actions to be taken on the response data.
+      type: object
+      properties:
+        name:
+          description: Name of the action, e.g. customize, close, default, etc.
+          type: string
+        title:
+          description: >-
+            Title of the action, e.g. 'Customize model', 'Close session', etc.
+          type: string
+        href:
+          description: Hyperlink to make the request to.
+          type: string
+        method:
+          description: HTTP method to use.
+          type: string
+        template:
+          description: >-
+            Template for the request body, references into the 'templates'
+            array of the response (e.g. 'customize-request').
+          type: string
+      required:
+        - name
+        - title
+        - href
+        - method
+    ResponseTemplate:
+      description: Provides templates for actions.
+      type: object
+      properties:
+        name:
+          description: Name of the template, e.g. 'customize-request'.
+          type: string
+        title:
+          description: >-
+            Title of the template, e.g. 'Template for model customization
+            request'.
+          type: string
+        data:
+          description: Template for the request body.
+          type: object
+          properties: {}
+      required:
+        - name
+        - titel
+        - data
+    ResponseModel:
+      description: Definition of a ShapeDiver model.
+      type: object
+      properties:
+        backlinkurl:
+          description: Link to view the model on the ShapeDiver Platform.
+          type: string
+        checkurl:
+          description: >-
+            Link to continue the checking process of the model on the
+            ShapeDiver Platform.
+          type: string
+        createdate:
+          description: Timestamp of creation of the model, in ISO-8601 format.
+          type: string
+        documentid:
+          description: ID of the Grasshopper document.
+          type: string
+          format: uuid
+        filename:
+          description: Original name of the model's grasshopper file.
+          type: string
+        id:
+          description: ID of the model.
+          type: string
+          format: uuid
+        id2:
+          description: >-
+            Optional second ID of the model. This value can be unset via an
+            empty string.
+          type: string
+          format: uuid
+        msg:
+          description: Optional message, used in case the model was denied.
+          type: string
+        name:
+          description: Model name.
+          type: string
+        org_id:
+          description: Organization ID of the user that owns the model.
+          type: string
+        stat:
+          description: Status of the model.
+          $ref: "#/components/schemas/ResponseModelStatus"
+        user_id:
+          description: ShapeDiver User ID of the model owner.
+          type: string
+        webhook_url:
+          description: >-
+            The webhook-url for updating the platform backend about model
+            status changes.
+          type: string
+        webhook_token:
+          description: >-
+            The webhook-token for authentication used by the webhook-url.
+          type: string
+      required:
+        - id
+        - stat
+    ResponseModelStatus:
+      allOf:
+        - $ref: "#/components/schemas/CommonsModelStatus"
+    ResponseFile:
+      description: Definitions of a model file.
+      type: object
+      properties:
+        upload:
+          description: href to upload a model file.
+          type: string
+        download:
+          description: href to download a model file.
+          type: string
+    ResponsePlugins:
+      description: Information about Grasshopper plugins.
+      type: object
+      properties:
+        libraries:
+          description: Libraries used by the model.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponsePluginsLibrary"
+    ResponsePluginsLibrary:
+      description: Definition of a model library.
+      type: object
+      properties:
+        id:
+          description: Library ID.
+          type: string
+        version:
+          description: Library version.
+          type: string
+        name:
+          description: Library name.
+          type: string
+        author:
+          description: Library author.
+          type: string
+        assemblyFullName:
+          description: Assembly name (not present in Rhino 5).
+          type: string
+        assemblyVersion:
+          description: Assembly version (not present in Rhino 5).
+          type: string
+      required:
+        - id
+        - version
+        - name
+        - author
+    ResponseStatistic:
+      description: Model statistic object.
+      type: object
+      properties:
+        comptime:
+          description: >-
+            Cumulative time (msec) which has been spent for processing
+            computation requests by the workers (pure computation time).
+          type: number
+        lastsession:
+          description: >-
+            Timestamp of last session created for the model, in ISO-8601
+            format.
+          type: string
+        lastview:
+          description: Timestamp of last view of the model, in ISO-8601 format.
+          type: string
+        memUsage:
+          description: Approximate memory usage of model on workers, in bytes.
+          type: number
+        numcomp:
+          description: >-
+            Number of computations which have been carried out for the model by
+            the workers so far.
+          type: number
+        numsessions:
+          description: >-
+            Number of sessions which have been opened for the model so far.
+          type: number
+        requesttime:
+          description: >-
+            Cumulative time (msec) which has been spent for processing
+            computation requests by the workers (computation time plus
+            overheads).
+          type: number
+        size:
+          description: File size of the model file in bytes.
+          type: number
+    ResponseParameter:
+      description: Definition of a parameter of a ShapeDiver Model.
+      type: object
+      properties:
+        id:
+          description: >-
+            Unique ID of parameter, stays constant each time a model gets
+            uploaded.
+          type: string
+        choices:
+          description: Choice of parameter values for types `STRINGLIST`.
+          type: array
+          items:
+            type: string
+        decimalplaces:
+          description: Number of decimal places for numeric types.
+          type: number
+        defval:
+          description: Default value of parameter, stringified.
+          type: string
+        expression:
+          description: >-
+            Optional expression to be applied to value for visualisation.
+          type: string
+        format:
+          description: >-
+            List of file formats (content types) supported, used for type
+            `FILE`.
+          type: array
+          items:
+            type: string
+        min:
+          description: Minimum value (stringified) for numeric types.
+          type: number
+        max:
+          description: |-
+            Maximum:
+            * value (stringified) for numeric types.
+            * string length for type `STRING`.
+            * file size allowed (stringified) for type FILE.
+          type: number
+        umin:
+          description: Minimum `u` value for two dimensional domain parameters.
+          type: number
+        umax:
+          description: Maximum `u` value for two dimensional domain parameters.
+          type: number
+        vmin:
+          description: Minimum `v` value for two dimensional domain parameters.
+          type: number
+        vmax:
+          description: Maximum `v` value for two dimensional domain parameters.
+          type: number
+        interval:
+          description: Step size used for domain parameters.
+          type: number
+        name:
+          description: Name of the parameter.
+          type: string
+        type:
+          description: Type of parameter.
+          $ref: "#/components/schemas/ResponseParameterType"
+        visualization:
+          description: >-
+            Optional preferred visualization for parameters of type `FILE` and
+            `STRINGLIST`.
+          $ref: "#/components/schemas/ResponseParameterVisualization"
+        structure:
+          description: Structure of a parameter.
+          $ref: "#/components/schemas/ResponseParameterStructure"
+        group:
+          description: Group of a parameter.
+          $ref: "#/components/schemas/ResponseParameterGroup"
+        hint:
+          description: Technical hint for the UI implementation.
+          type: string
+        order:
+          description: Ordering of the parameter in client applications.
+          type: number
+        tooltip:
+          description: Description that is shown as a tooltip in the clients.
+          type: string
+        displayname:
+          description: Parameter name to display instead of `name`.
+          type: string
+        hidden:
+          description: >-
+            Controls whether the parameter should be hidden in the UI.
+          type: boolean
+      required:
+        - id
+        - defvali
+        - name
+        - type
+        - hidden
+    ResponseParameterType:
+      description: |-
+        Type of parameter.
+
+        All types starting with 's' are s-type parameters while the others are
+        basic parameter types.
+      type: string
+      enum:
+        - sBitmap
+        - sBool
+        - sBox
+        - sBrep
+        - sCircle
+        - sColor
+        - sCurve
+        - sDomain
+        - sDomain2D
+        - sInteger
+        - sLine
+        - sMesh
+        - sNumber
+        - sPlane
+        - sPoint
+        - sRectangle
+        - sString
+        - sSubdiv
+        - sSurface
+        - sTime
+        - sVector
+        - Bool
+        - Color
+        - Even
+        - File
+        - Float
+        - Int
+        - Odd
+        - String
+        - StringList
+        - Time
+        - unknown
+    ResponseParameterVisualization:
+      description: >-
+        Optional preferred visualization for parameters of type
+        `FILE` and `STRINGLIST`.
+      type: string
+      enum:
+        - unknown
+        - button
+        - calendar
+        - checklist
+        - clock
+        - cycle
+        - dial
+        - dropdown
+        - geometry
+        - image
+        - sequence
+        - slider
+        - swatch
+        - text
+        - toggle
+    ResponseParameterStructure:
+      description: Structural information of a parameter.
+      type: string
+      enum:
+        - item
+        - list
+        - tree
+    ResponseParameterGroup:
+      allOf:
+        - $ref: "#/components/schemas/CommonsGroup"
+        - description: Group information of a parameter.
+          type: object
+    ResponseViewer:
+      description: Viewer config object.
+      type: object
+      properties:
+        config:
+          description: >-
+            The config is currently NOT typed, but this will be added sooner or
+            later.
+          type: object
+          properties: {}
+      required:
+        - config
+    ResponseTicketType:
+      allOf:
+        - $ref: "#/components/schemas/CommonsTicketType"
+    ResponseTicket:
+      allOf:
+        - $ref: "#/components/schemas/CommonsTicket"
+        - description: Decrypted ticket details.
+          type: object
+          required:
+            - accessdomains
+            - author
+            - use_id2
+      properties:
+        type:
+          description: The type of the ticket.
+          $ref: "#/components/schemas/ResponseTicketType"
+        model_id:
+          description: >-
+            Either the model's `id` or `id2` property, depending on
+            the ticket property `use_id2`.
+          type: string
+      required:
+        - type
+        - model_id
+    ResponseGltfUpload:
+      description: Information about uploaded glTF object.
+      type: object
+      properties:
+        href:
+          description: The URL to download the glTF file.
+          type: string
+        sceneId:
+          description: >-
+            Contains the unique ID of the uploaded scene. Only present for
+            uploads with the conversion type `scene`.
+          type: string
+      required:
+        - href
+    ResponseModelCleanupProcess:
+      description: Information about a model cleanup process.
+      type: object
+      properties:
+        type:
+          description: Type of the model cleanup process.
+          $ref: "#/components/schemas/ResponseModelCleanupProcessType"
+        timestamp_enqueued:
+          description: >-
+            The timestamp when the deletion job has been enqueued (format
+            `YYYYMMDDhhmmssZZZ`).
+          type: string
+          pattern: '^\d{17}$'
+        total:
+          description: >-
+            The total number of items of this type that are going to be
+            deleted.
+          type: number
+        deleted:
+          description: The number of already deleted items of this type.
+          type: number
+      required:
+        - type
+        - timestamp_enqueued
+    ResponseModelCleanupProcessType:
+      description: Model cleanup process types.
+      type: string
+      enum:
+        - delete_export_version
+        - delete_model_texture
+        - delete_output_version
+    ResponseModelTexture:
+      description: Information about a model texture.
+      type: object
+      properties:
+        modelId:
+          description: The ID of the ShapeDiver model.
+          type: string
+        textureId:
+          description: The texture ID.
+          type: string
+        url:
+          description: The original URL of the texture asset.
+          type: string
+        width:
+          description: The width of the texture.
+          type: number
+        height:
+          description: The height of the texture.
+          type: number
+        isAssetAvailable:
+          description: >-
+            Is `true` when the texture has been cached, otherwise `false`.
+          type: boolean
+      required:
+        - modelId
+        - textureId
+        - isAssetAvailable
+    ResponseModelComputation:
+      description: Components of a model computation request.
+      type: object
+      properties:
+        id:
+          description: ID of the model.
+          type: string
+          format: uuid
+        timestamp:
+          description: |-
+            Numeric timestamp in format `YYYYMMDDHHMMSSMMM`.
+
+            Deprecated: Use `timestamp_str` instead.
+          type: number
+          deprecated: true
+        timestamp_str:
+          description: Timestamp in format `YYYYMMDDHHMMSSMMM`.
+          type: string
+        compute_request_id:
+          description: The ID of the compute request that was processed.
+          type: string
+        exports:
+          description: Requested export versions.
+          type: object
+          additionalProperties:
+            type: string
+        outputs:
+          description: Requested output versions.
+          type: object
+          additionalProperties:
+            type: string
+        params:
+          description: Parameter values.
+          type: object
+        stats:
+          description: The stats of the computation request.
+          $ref: "#/components/schemas/ResponseModelComputationStats"
+        status:
+          description: Result of processing request.
+          $ref: "#/components/schemas/ResponseModelComputationStatus"
+        timestamp_fin:
+          description: >-
+            Timestamp when the computation request was finished, in format
+            `YYYYMMDDhhmmssmmm`.
+          type: string
+        timestamp_req:
+          description: Timestamp when the work request was filed, UNIX format.
+          type: string
+        timestamp_req_iso:
+          description: >-
+            Timestamp when the computation request was filed, in format
+            `YYYYMMDDhhmmssmmm`.
+          type: string
+        timestamp_resp:
+          description: >-
+            Timestamp when the computation request was picked up, in format
+            `YYYYMMDDhhmmssmmm`.
+          type: string
+        msg:
+          description: >-
+            Message containing information about the computation process.
+          type: string
+        limit:
+          description: Model's limits at the time of the computation process.
+          $ref: "#/components/schemas/ResponseModelComputationLimits"
+      required:
+        - id
+        - timestamp
+        - timestamp_str
+        - compute_request_id
+        - exports
+        - outputs
+        - params
+        - stats
+        - status
+        - timestamp_fin
+        - timestamp_req
+        - timestamp_req_iso
+        - timestamp_resp
+    ResponseModelComputationStats:
+      description: Stats of a computation request.
+      type: object
+      properties:
+        size_assets:
+          description: >-
+            Total size in bytes of the uncompressed resulting assets.
+          type: number
+        size_assets_storage:
+          description: >-
+            Total size in bytes of the (potentially compressed) assets uploaded
+            to storage.
+          type: number
+        time_completion:
+          description: >-
+            The number of milliseconds it took to answer the request.
+          type: number
+        time_model_download:
+          description: |-
+            The number of milliseconds it took to download the model from
+            storage.
+            `0` in case model was already downloaded to the instance.
+          type: number
+        time_model_open:
+          description: |-
+            The number of milliseconds it took to  load (open) the model.
+            `0` in case model was already loaded.
+
+            Note: Does not include time for script compilation and first
+            computation.
+          type: number
+        time_processing:
+          description: >-
+            The number of milliseconds it took to process the request.
+          type: number
+        time_check_stored:
+          description: >-
+            The number of milliseconds it took to carry out checks that are
+            done before loading the model.
+          type: number
+        time_check_loaded:
+          description: >-
+            The number of milliseconds it took to carry out check that are done
+            after loading the model.
+          type: number
+        time_storage:
+          description: >-
+            The number of milliseconds it took to upload assets to storage.
+          type: number
+        time_solver:
+          description: The number of milliseconds for Grasshopper solver.
+          type: number
+        time_solver_collect:
+          description: >-
+            The number of milliseconds it took to collect output and export
+            data after computation.
+          type: number
+        time_solver_ext:
+          description: >-
+            The number of milliseconds it took to download and load the model
+            and setting parameters, and to compute the solution.
+          type: number
+        time_wait:
+          description: >-
+            The number of milliseconds the request was waiting before being
+            processed.
+          type: number
+        time_cache_outputs:
+          description: >-
+            The number of milliseconds it took to store the results of the
+            request in the cache.
+          type: number
+        model:
+          description: Information about model computations.
+          $ref: "#/components/schemas/ResponseModelComputationModel"
+        cpu_time_check_stored:
+          description: >-
+            The number of milliseconds the CPU was used to carry out checks
+            which are done before loading the model.
+          type: number
+        cpu_time_check_loaded:
+          description: >-
+            The number of milliseconds the CPU was used to carry out checks
+            which are done after loading the model.
+          type: number
+        cpu_time_storage:
+          description: >-
+            The number of milliseconds the CPU was used to upload assets to
+            storage.
+          type: number
+        cpu_time_model_download:
+          description: >-
+            The number of milliseconds the CPU was used to download the model
+            from storage.
+          type: number
+        cpu_time_model_open:
+          description: |-
+            The number of milliseconds the CPU was used to  load (open)
+            the model.
+            `0` in case model was already loaded.
+          type: number
+        cpu_time_solver:
+          description: >-
+            The number of milliseconds the CPU was used for Grasshopper
+            solver.
+          type: number
+        cpu_time_solver_collect:
+          description: >-
+            The number of milliseconds the CPU was used to collect output
+            and export data after computation.
+          type: number
+        cpu_time_solver_ext:
+          description: >-
+            The number of milliseconds the CPU was used to download and
+            load the model and setting parameters, and to compute the solution.
+          type: number
+        cpu_time_cache_outputs:
+          description: >-
+            The number of milliseconds the CPU was used to store the results of
+            the request in the cache.
+          type: number
+        time_model_prepare:
+          description: >-
+            The number of milliseconds it took to prepare the model after
+            loading it. As an example, preparation includes compilation of
+            scripts.
+          type: number
+        cpu_time_model_prepare:
+          description: >-
+            The number of milliseconds the CPU was used to prepare the model
+            after loading it. As an example, preparation includes compilation
+            of scripts.
+          type: number
+      required:
+        - time_completion
+        - time_model_download
+        - time_model_open
+        - time_processing
+        - time_check_stored
+        - time_check_loaded
+        - time_solver
+        - time_solver_ext
+        - time_wait
+    ResponseModelComputationModel:
+      description: Information about model computations.
+      type: object
+      properties:
+        components:
+          description: >-
+            Information about the components taking most computation time in
+            the model computations log.
+          type: object
+          properties:
+            computed:
+              description: >-
+                Components which were computed, ordered by descending processor
+                time.
+              type: array
+              items:
+                type: object
+                properties:
+                  instance:
+                    description: Instance ID of component.
+                    type: string
+                  component:
+                    description: ID of the component.
+                    type: string
+                  name:
+                    description: Name of component.
+                    type: string
+                  nick_name:
+                    description: Nickname of component.
+                    type: string
+                  time:
+                    description: Computation time used in milliseconds.
+                    type: number
+                required:
+                  - instance
+                  - component
+                  - name
+                  - nick_name
+                  - time
+            computing:
+              description: >-
+                Components which were currently computing at the time the
+                computation was stopped.
+              type: array
+              items:
+                type: object
+                properties:
+                  instance:
+                    description: Instance ID of component.
+                    type: string
+                  component:
+                    description: ID of component.
+                    type: string
+                  name:
+                    description: Name of component.
+                    type: string
+                  nick_name:
+                    description: Nickname of component.
+                    type: string
+                required:
+                  - instance
+                  - component
+                  - name
+                  - nick_name
+            errors:
+              description: Component Errors.
+              type: array
+              items:
+                type: object
+                properties:
+                  component:
+                    description: ID of component.
+                    type: string
+                  errors:
+                    description: Component Error descriptions.
+                    type: array
+                    items:
+                      type: string
+                  instance:
+                    description: Instance ID of component.
+                    type: string
+                  name:
+                    description: Name of component.
+                    type: string
+                  nick_name:
+                    description: Nickname of component.
+                    type: string
+                  warnings:
+                    description: Component Warnings descriptions.
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - component
+                  - errors
+                  - instance
+                  - name
+                  - nick_name
+                  - warnings
+            warnings:
+              description: Component Warnings.
+              type: array
+              items:
+                type: object
+                properties:
+                  component:
+                    description: ID of component.
+                    type: string
+                  instance:
+                    description: Instance ID of component.
+                    type: string
+                  name:
+                    description: Name of component.
+                    type: string
+                  nick_name:
+                    description: Nickname of component.
+                    type: string
+                  warnings:
+                    description: Component Warnings descriptions.
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - instance
+                  - name
+                  - nick_name
+                  - warnings
+          required:
+            - computed
+            - computing
+            - errors
+            - warnings
+        count_success:
+          description: >-
+            Count of successful computations for the given loaded instance of
+            the model.
+          type: number
+        count_timeout:
+          description: >-
+            Count of timed-out computations for the given loaded instance of
+            the model.
+          type: number
+        changes:
+          description: >-
+            Lists the ids of the parameters whose values were changed before
+            the computation.
+          type: array
+          items:
+            type: string
+      required:
+        - components
+    ResponseModelComputationStatus:
+      allOf:
+        - $ref: "#/components/schemas/CommonsModelComputationStatus"
+    ResponseModelComputationLimits:
+      description: Limits of a computation process.
+      type: object
+      properties:
+        max_comp_time:
+          description: >-
+            Maximum computation time in milliseconds allowed for the model.
+          type: number
+        max_output_size:
+          description: Maximum output size in bytes allowed for the model.
+          type: number
+        max_export_size:
+          description: Maximum export size in bytes allowed for the model.
+          type: number
+      required:
+        - max_comp_time
+        - max_output_size
+        - max_export_size
+    ResponseOutputDefinitionGroup:
+      allOf:
+        - $ref: "#/components/schemas/CommonsGroup"
+        - description: Group information of an output definition.
+          type: object
+    ResponseOutputDefinition:
+      description: Output definition WITHOUT results as exposed on the API.
+      type: object
+      properties:
+        id:
+          description: >-
+            ID of the output, dependent on model ID, and therefore changing
+            each time a model gets uploaded.
+          type: string
+        uid:
+          description: >-
+            Constant ID of the output, not dependent on model ID, and therefore
+            NOT changing each time a model gets uploaded. Might be undefined
+            because this property was introduced in summer 2020 and does not
+            exist for outputs of older models.
+          type: string
+        name:
+          description: Name of the output.
+          type: string
+        material:
+          description: >-
+            Optional ID of the output holding material information for this
+            output.
+          type: string
+        chunks:
+          description: Information about which chunks exist in the asset/sdTF.
+          $ref: "#/components/schemas/ResponseOutputChunk"
+        dependency:
+          description: List of IDs of parameters influencing this output.
+          type: array
+          items:
+            type: string
+        group:
+          description: Group of an output.
+          $ref: "#/components/schemas/ResponseOutputDefinitionGroup"
+        order:
+          description: Ordering of the output in client applications.
+          type: number
+        tooltip:
+          description: Description that is shown as a tooltip in the clients.
+          type: string
+        displayname:
+          description: Parameter name to display instead of `name`.
+          type: string
+        hidden:
+          description: >-
+            Controls whether the parameter should be hidden in the UI.
+          type: boolean
+      required:
+        - id
+        - name
+        - dependency
+        - hidden
+    ResponseOutput:
+      allOf:
+        - $ref: "#/components/schemas/ResponseOutputDefinition"
+        - description: Output definition WITH results as exposed on the API.
+          type: object
+      properties:
+        version:
+          description: >-
+            A unique identifier for the particular version of the output. This
+            is a hash code which is based on the parameter values that were
+            used to compute the resulting data. The hash code only depends on
+            the values of the parameters which may theoretically influence the
+            results of the output. As an example, parameters which are in no
+            way connected to the output component in Grasshopper are not
+            considered.
+          type: string
+        delay:
+          description: |-
+            The delay in milliseconds after which a cache request shall be sent
+            to check again for this output version. This property is used ONLY
+            if the output version has not been computed yet.
+
+            Note that the existence of this property does not necessarily imply
+            the presence of an active or queued computation for the respective
+            output version.
+          type: number
+        content:
+          description: >-
+            Result parts. In case this array does not exist, this means that
+            the workers have not finished computation for this output version.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseOutputContent"
+        bbmin:
+          description: Optional bounding box, minimum corner.
+          type: array
+          items:
+            type: number
+        bbmax:
+          description: Optional bounding box, maximum corner.
+          type: array
+          items:
+            type: number
+        msg:
+          description: >-
+            In case computation of the export version (temporarily) failed.
+            Contains a message explaining what went wrong.
+          type: string
+        status_computation:
+          description: >-
+            Status of the computation which resulted in the output version.
+          $ref: "#/components/schemas/ResponseModelComputationStatus"
+        status_collect:
+          description: Status of collecting results for the output version.
+          $ref: "#/components/schemas/ResponseModelComputationStatus"
+      required:
+        - version
+    ResponseOutputContent:
+      description: An item of the `content` array for outputs.
+      type: object
+      properties:
+        href:
+          description: Optional link to asset.
+          type: string
+        size:
+          description: Size in bytes for parts of type `asset`.
+          type: number
+        name:
+          description: Optionally used for type `data`.
+          type: string
+        transformations:
+          description: >-
+            Transformations to be applied in case of type `external` or
+            `asset`.
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+        format:
+          description: |-
+            Format of part, used by all types of parts.
+            * File ending for parts of type `asset`.
+            * `material` (data contains a material definition).
+            * `data` (data contains arbitrary data).
+            * `external` (href or storage information that refer to an external
+              asset).
+          type: string
+        msg:
+          description: >-
+            This was used by legacy `transform_content_array` in case of an
+            error in getting texture URLs.
+          type: string
+        data:
+          description: Used for types `material` and `data`.
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: array
+              items:
+                oneOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+                  - type: object
+            - type: object
+        contentType:
+          description: Optional Content-Type for parts of type `asset`.
+          type: string
+      required:
+        - format
+    ResponseOutputChunk:
+      description: >-
+        Represents a collection of nodes where to start enumerating the content
+        of the sdTF file (entry points).
+      type: object
+      properties:
+        id:
+          description: ID of the chunk.
+          type: string
+        name:
+          description: Name of the chunk.
+          type: string
+        typeHint:
+          description: Indicates what type of data the data item holds.
+          type: string
+        tooltip:
+          description: Description that is shown as a tooltip in the clients.
+          type: string
+        displayname:
+          description: >-
+            Custom name to display instead of `name`. Empty string if not set.
+          type: string
+        hidden:
+          description: Controls whether the chunk should be hidden in the UI.
+          type: boolean
+      required:
+        - id
+        - name
+        - typeHint
+        - displayname
+        - hidden
+    ResponseSettings:
+      description: Definition of settings.
+      type: object
+      properties:
+        auth:
+          $ref: "#/components/schemas/ResponseSettingsAuth"
+        compute:
+          $ref: "#/components/schemas/ResponseSettingsCompute"
+        model:
+          $ref: "#/components/schemas/ResponseSettingsModel"
+    ResponseSettingsAuth:
+      type: object
+      properties:
+        ticket:
+          $ref: "#/components/schemas/ResponseSettingsAuthTicket"
+        token:
+          $ref: "#/components/schemas/ResponseSettingsAuthToken"
+    ResponseSettingsAuthTicket:
+      type: object
+      properties:
+        accessdomains:
+          description: >-
+            List of domains (origins) this model is limited to (is ignored in
+            case `model.pub` is true).
+          type: array
+          items:
+            type: string
+        backendaccess:
+          description: Should backend access to the model be allowed.
+          type: boolean
+        pub:
+          description: >-
+            If this model allows public access (ignore `model.accessdomains`)?
+          type: boolean
+      required:
+        - accessdomains
+        - backendaccess
+        - pub
+    ResponseSettingsAuthToken:
+      type: object
+      properties:
+        auth_groups:
+          description: List of allowed auth-groups.
+          type: array
+          items:
+            type: string
+        require_iframe:
+          description: Enforces iframe embedding instead of direct embedding.
+          type: boolean
+        require_token:
+          description: Enforces token-based authentication for this model.
+          type: boolean
+    ResponseSettingsCompute:
+      type: object
+      properties:
+        deny_scripts:
+          description: >-
+            Allows to control whether the model's Grasshopper file can contain
+            scripts.
+          type: boolean
+        ftype:
+          description: File type of the model.
+          type: string
+        initial_warmup:
+          description: >-
+            Allows to control whether the model should be warmed up immediately
+            after loading by running a computation. This increases the
+            likelihood of following computation requests to be faster.
+          type: boolean
+        max_comp_time:
+          description: >-
+            Maximum number of milliseconds allowed for computations of this
+            model.
+          type: number
+        max_export_size:
+          description: >-
+            Maximum number of bytes allowed to be exported from a model for a
+            specific set of parameter values.
+          type: number
+        max_idle_minutes:
+          description: |-
+            Maximum amount of minutes a loaded model may be unused before it
+            gets unloaded.
+
+            Note: Models may get unloaded earlier than that.
+          type: number
+        max_model_size:
+          description: >-
+            Maximum number of bytes allowed for the model's Grasshopper file
+            size.
+          type: number
+        max_output_size:
+          description: >-
+            Maximum number of bytes allowed for an output of a model for a
+            specific set of parameter values.
+          type: number
+        max_texture_size:
+          description: Maximum number of bytes allowed for a single texture.
+          type: number
+        max_wait_time:
+          description: >-
+            Maximum time a computation request may stay waiting before a
+            further worker goes ahead regardless of whether it already has the
+            model loaded, and regardless of `num_loaded_max`. This allows to
+            configure a soft or a hard upper boundary for the number of loaded
+            models.
+          type: number
+        num_loaded_max:
+          description: >-
+            Maximum number of workers that should have the model loaded at the
+            same time.
+          type: number
+        num_loaded_min:
+          description: >-
+            Minimum number of workers that should load the model and keep it
+            open while there is session activity.
+          type: number
+        num_preloaded_min:
+          description: >-
+            Minimum number of workers that should always have the model loaded,
+            regardless of session activity. This allows to minimise the
+            likelihood of computation requests being slower due to model
+            loading.
+          type: number
+        session_rate_limit:
+          description: >-
+            Limits the number of sessions that can be created by a specific IP
+            address in one hour.
+          type: number
+        trust:
+          description: Controls whether failed computations will be retried.
+          type: string
+          pattern: "^(none|full)?$"
+      required:
+        - deny_scripts
+        - ftype
+        - initial_warmup
+        - max_comp_time
+        - max_export_size
+        - max_idle_minutes
+        - max_output_size
+        - max_wait_time
+        - num_loaded_max
+        - num_loaded_min
+        - num_preloaded_min
+        - trust
+    ResponseSettingsModel:
+      type: object
+      properties:
+        use_cdn:
+          description: >-
+            Allows the usage of the CDN for fast content distribution.
+          type: boolean
+        cdn_supported:
+          description: Indicates if the model supports CDN-based asset URLs.
+          type: boolean
+    ResponseSystem:
+      description: ShapeDiver API response of system-request.
+      type: object
+      properties:
+        minions:
+          description: System information about the Geometry Minions.
+          type: object
+          $ref: "#/components/schemas/ResponseSystemMinions"
+        workers:
+          description: System information about the Geometry Workers.
+          type: object
+          $ref: "#/components/schemas/ResponseSystemWorkers"
+    ResponseSystemMinions:
+      description: >-
+        Holds system information of all currently running Geometry Minion
+        services.
+      type: object
+      properties:
+        instances:
+          description: |-
+            Information per instance.
+            A directory of process-IDs and process data.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ResponseSystemMinionsProcess"
+        tasks:
+          description: |-
+            Aggregated task information.
+            A directory of task types and task data.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ResponseSystemMinionTask"
+      required:
+        - instances
+        - tasks
+    ResponseSystemMinionsProcess:
+      description: System information a single Geometry Minions process.
+      type: object
+      properties:
+        tasks:
+          description: >-
+            Information about completed tasks, listed per task type.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ResponseSystemMinionTask"
+      required:
+        - tasks
+    ResponseSystemMinionTask:
+      description: Statistics of a single Minion task.
+      type: object
+      properties:
+        avgDuration:
+          description: Average duration of the task in milliseconds.
+          type: number
+        maxDuration:
+          description: Maximum duration of the task in milliseconds.
+          type: number
+        avgIntervalDiff:
+          description: >-
+            Average difference between the configured task interval and the
+            last global task execution in milliseconds.
+          type: number
+        maxIntervalDiff:
+          description: >-
+            Maximum difference between the configured task interval and the
+            last global task execution in milliseconds.
+          type: number
+        interval:
+          description: Execution interval of this task type in milliseconds.
+          type: number
+        latest:
+          description: >-
+            Timestamp of the latest task completion, in ISO-8601 format.
+          type: string
+        count:
+          description: The number of aggregated items.
+          type: number
+      required:
+        - avgDuration
+        - maxDuration
+        - avgIntervalDiff
+        - maxIntervalDiff
+        - interval
+        - latest
+        - count
+    ResponseSystemWorkers:
+      description: System information about the Geometry Workers.
+      type: object
+      properties:
+        grasshopperVersion:
+          description: Version of the Grasshopper application.
+          type: string
+        plugins:
+          description: >-
+            Holds information of all installed and allowed Grasshopper
+            plugins.
+          type: object
+          $ref: "#/components/schemas/ResponseSystemWorkerPlugins"
+        rhinoVersion:
+          description: Version of the Rhino application.
+          type: string
+        shapeDiverVersion:
+          description: Version of the ShapeDiver worker plugin.
+          type: string
+      required:
+        - grasshopperVersion
+        - plugins
+        - rhinoVersion
+        - shapeDiverVersion
+    ResponseSystemWorkerPlugins:
+      description: >-
+        Holds information of all installed and allowed Grasshopper plugins.
+      type: object
+      properties:
+        installed:
+          description: >-
+            Contains information about all installed Grasshopper plugins.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseSystemWorkerPluginInstalled"
+        allowed:
+          description: >-
+            Contains the model checking configuration for the Grasshopper
+            plugins.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseSystemWorkerPluginAllowed"
+        inconsistent:
+          description: Contains information about plugin inconsistencies.
+          type: array
+          items:
+            type: string
+      required:
+        - installed
+        - allowed
+        - inconsistent
+    ResponseSystemWorkerPluginInstalled:
+      description: >-
+        Contains information about all installed Grasshopper plugins.
+      type: object
+      properties:
+        id:
+          description: ID of the Grasshopper plugin.
+          type: string
+        name:
+          description: Name of the Grasshopper plugin.
+          type: string
+        version:
+          description: Version of the Grasshopper plugin.
+          type: string
+        authorName:
+          description: Name of the plugin author.
+          type: string
+        authorContact:
+          description: >-
+            Contact information of the plugin author (homepage URL, email
+            address, etc.).
+          type: string
+        description:
+          description: General description of the Grasshopper plugin.
+          type: string
+        assemblyVersion:
+          description: |-
+            Assembly version of the Grasshopper plugin DLL.
+            Please see the [documentation](https://learn.microsoft.com/en-us/dotnet/api/system.reflection.assemblyname.version?view=net-8.0)
+            for more information.
+          type: string
+        assemblyFullName:
+          description: |-
+            Full assembly name of the Grasshopper plugin DLL.
+            Please see the [documentation](https://learn.microsoft.com/en-us/dotnet/api/system.reflection.assembly.fullname?view=net-8.0)
+            for more information.
+          type: string
+        isCoreLibrary:
+          description: >-
+            Gets whether this library is a Grasshopper core library. Core
+            libraries are installed along with Grasshopper and thus should
+            always be available anywhere.
+          type: string
+        license:
+          description: |-
+            The license type of the plugin.
+            Please see the [documentation](https://developer.rhino3d.com/api/grasshopper/html/T_Grasshopper_Kernel_GH_LibraryLicense.htm)
+            for more information.
+          type: string
+        loadingMechanism:
+          description: |-
+            The mechanism used to load the plugin.
+            Please see the [documentation](https://developer.rhino3d.com/api/grasshopper/html/T_Grasshopper_Kernel_GH_LoadingMechanism.htm)
+            for more information.
+          type: string
+        location:
+          description: Installation path of the Grasshopper plugin.
+          type: string
+      required:
+        - id
+        - name
+        - version
+        - authorName
+        - authorContact
+        - description
+        - assemblyVersion
+        - assemblyFullName
+        - isCoreLibrary
+        - license
+        - loadingMechanism
+        - location
+    ResponseSystemWorkerPluginAllowed:
+      description: >-
+        Contains the model checking configuration for the Grasshopper plugins.
+      type: object
+      properties:
+        id:
+          description: ID of the Grasshopper plugin.
+          type: string
+        name:
+          description: Name of the Grasshopper plugin.
+          type: string
+        minVersion:
+          description: Minimum supported version of the plugin.
+          type: string
+        maxVersion:
+          description: Maximum supported version of the plugin.
+          type: string
+        authorName:
+          description: Name of the plugin author.
+          type: string
+        description:
+          description: Link to a website related to the plugin.
+          type: string
+        allowFallbackToAssemblyVersion:
+          description: |-
+            When `true` then `GH_AssemblyInfo.AssemblyVersion` may be used
+            instead of `GH_AssemblyInfo.Version` for version checking.
+            Defaults to `false`.
+          type: boolean
+        checkMajorMinorVersionOnly:
+          description: |-
+            When `true` then only the major and minor version numbers recorded
+            in Grasshopper models will be checked.
+            Defaults to `false`.
+          type: boolean
+        checkIfInstalled:
+          description: |-
+            When `false` then the installation check of the plugin will be
+            skipped.
+            Defaults to `true`.
+          type: boolean
+        previousIds:
+          description: >-
+            List of previous plugin IDs supported by this plugin version. This
+            is used for the obscure case of the plugin developer changing the
+            plugin ID.
+          type: string
+        allowedComponents:
+          description: >-
+            List of plugin components that are explicitly allowed. When this
+            property is set, only the listed components are allowed, overruling
+            the list in `disallowedComponents`.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseSystemWorkerPluginComponent"
+        disallowedComponents:
+          description: >-
+            List of plugin components which may not be used. This list might be
+            overruled by `allowedComponents`.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResponseSystemWorkerPluginComponent"
+      required:
+        - id
+        - name
+        - minVersion
+        - maxVersion
+        - allowFallbackToAssemblyVersion
+        - checkMajorMinorVersionOnly
+        - checkIfInstalled
+        - previousIds
+        - allowedComponents
+        - disallowedComponents
+    ResponseSystemWorkerPluginComponent:
+      description: A Grasshopper plugin component that may not be used.
+      type: object
+      properties:
+        id:
+          description: ID of the plugin component.
+          type: string
+        name:
+          description: Name of the plugin component.
+          type: string
+      required:
+        - id
+        - name
+
+    ###########################################################################
+    # Parameter types                                                         #
+    ###########################################################################
+    ParameterUuid:
+      type: string
+      format: uuid
+    ParameterBase64:
+      type: string
+      format: byte
+    ParameterOctetStream:
+      type: string
+      format: binary
+    ParameterNumericIso8601:
+      type: string
+      format: YYYYMMDDhhmmsszzz
+
+    ###########################################################################
+    # Security types                                                          #
+    ###########################################################################
+  securitySchemes:
+    JwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    CredentialsAuth:
+      type: http
+      scheme: basic
+
+paths:
+  "/.well-known/jwks.json":
+    get:
+      tags:
+        - auth
+      summary: Get the public keys of the JSON Web Key Set
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security: []
+  "/api/v2/analytics/session/model":
+    put:
+      tags:
+        - analytics
+      summary: Get model session analytics
+      description: |-
+        Permissions: 
+        * `analytics.model.get.*` - __required__.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestAnalyticsModel"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoAnalytics"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/analytics/credit-metrics":
+    put:
+      tags:
+        - analytics
+      summary: Get credit metrics
+      description: |-
+        Subject-Restriction: __backend__ - ONLY for _system-metrics_.
+
+        Permissions: 
+        * `analytics.model.get.*` - __required__.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestAnalyticsCreditMetrics"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoAnalytics"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/ar-scene/{sceneId}":
+    head:
+      tags:
+        - ar-scene
+      summary: Checks the existence of an AR scene
+      parameters:
+        - name: sceneId
+          in: path
+          description: AR scene ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: The AR scene with the given ID was found.
+        400:
+          description: The AR scene with the given ID does not exist.
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security: []
+  "/api/v2/ar-scene/{sceneId}/gltf":
+    get:
+      tags:
+        - ar-scene
+      summary: Downloads the glTF asset of an AR scene
+      parameters:
+        - name: sceneId
+          in: path
+          description: AR scene ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/ParameterOctetStream"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security: []
+  "/api/v2/ar-scene/{sceneId}/usdz":
+    get:
+      tags:
+        - ar-scene
+      summary: Downloads the USDZ asset of an AR scene
+      parameters:
+        - name: sceneId
+          in: path
+          description: AR scene ID
+          required: true
+          schema:
+            type: string
+      responses:
+        302:
+          description: Redirect to a temporary download link
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security: []
+  "/api/v2/session/{sessionId}/export/{assetDataEncrypted}":
+    get:
+      tags:
+        - assets
+      summary: Download a single export
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: assetDataEncrypted
+          in: path
+          description: Encrypted asset data information
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterBase64"
+      responses:
+        200:
+          description: Success
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/ParameterOctetStream"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/output/{assetDataEncrypted}":
+    get:
+      tags:
+        - assets
+      summary: Download a single output
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: assetDataEncrypted
+          in: path
+          description: Encrypted asset data information
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterBase64"
+      responses:
+        200:
+          description: Success
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/ParameterOctetStream"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/texture/{assetDataEncrypted}":
+    get:
+      tags:
+        - assets
+      summary: Download a single texture
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: assetDataEncrypted
+          in: path
+          description: Encrypted asset data information
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterBase64"
+      responses:
+        200:
+          description: Success
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/ParameterOctetStream"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/gltf/{assetDataEncrypted}":
+    get:
+      tags:
+        - assets
+      summary: Download a glTF file
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: assetDataEncrypted
+          in: path
+          description: Encrypted asset data information
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterBase64"
+      responses:
+        200:
+          description: Success
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/ParameterOctetStream"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/usdz/{assetDataEncrypted}":
+    get:
+      tags:
+        - assets
+      summary: Download a USDZ file
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: assetDataEncrypted
+          in: path
+          description: Encrypted asset data information
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterBase64"
+      responses:
+        302:
+          description: Redirect to a temporary download link
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/image":
+    get:
+      tags:
+        - assets
+      summary: Download an image
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: url
+          in: query
+          description: Specify the Base64-encoded image URL
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterBase64"
+      responses:
+        200:
+          description: Success
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/ParameterOctetStream"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/download/{assetDataEncrypted}":
+    get:
+      tags:
+        - assets
+      summary: >-
+        Download an asset without a session (can be used via an URL in an
+        email)
+      parameters:
+        - name: assetDataEncrypted
+          in: path
+          description: Encrypted asset data information
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterBase64"
+      responses:
+        200:
+          description: Success
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/ParameterOctetStream"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security: []
+  "/api/v2/auth_group":
+    post:
+      tags:
+        - auth-group
+      summary: Create new authorization group
+      description: |-
+        Subject-Restriction: __backend__.
+
+        Permissions: 
+        * `auth_group.create` - __required__.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestAuthorizationGroup"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoAuthorizationGroup"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/config":
+    get:
+      tags:
+        - model
+      summary: Get model config
+      description: |-
+        Permissions: 
+        * `setting.viewer.get.*` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoViewer"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+    post:
+      tags:
+        - model
+      summary: Create model config
+      description: |-
+        Permissions: 
+        * `setting.viewer.set.*` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+    patch:
+      tags:
+        - model
+      summary: Update model config
+      description: |-
+        Updating the model configuration requires _model authoring privilege_.
+
+        Permissions: 
+        * `setting.viewer.set.*` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/export":
+    put:
+      tags:
+        - export
+      summary: Compute a single grasshopper export for the given id
+      description: |-
+        Permissions: 
+        * `compute.export.*` - __required__.
+        * `compute.output.*` - __required__ when _outputs_ are requested.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestExport"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoActions"
+                  - $ref: "#/components/schemas/ResponseDtoTemplates"
+                  - $ref: "#/components/schemas/ResponseDtoExports"
+                  - $ref: "#/components/schemas/ResponseDtoOutputs"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/export/cache":
+    put:
+      tags:
+        - export
+      summary: Get Export from cache / check if computation is done
+      description: |-
+        Permissions: 
+        * `cache.export.get.*` - __required__.
+        * `cache.output.get.*` - __required__ when _outputs_ are requested.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/RequestCache"
+                - $ref: "#/components/schemas/RequestExport"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoActions"
+                  - $ref: "#/components/schemas/ResponseDtoTemplates"
+                  - $ref: "#/components/schemas/ResponseDtoExports"
+                  - $ref: "#/components/schemas/ResponseDtoOutputs"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/export":
+    patch:
+      tags:
+        - export
+      summary: Update definition of exports
+      description: |-
+        Permissions: 
+        * `set.export.ui` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestExportDefinition"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/export/{exportId}/list":
+    get:
+      tags:
+        - export
+      summary: List export versions
+      description: |-
+        Permissions: 
+        * `cache.export.list.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: exportId
+          in: path
+          description: Export ID
+          required: true
+          schema:
+            type: string
+        - name: statusComputation
+          in: query
+          description: Filter export versions by `status_computation`
+          required: false
+          schema:
+            $ref: "#/components/schemas/RequestQueryModelComputationStatus"
+        - name: statusCollect
+          in: query
+          description: Filter export versions by `status_collect`
+          required: false
+          schema:
+            $ref: "#/components/schemas/RequestQueryModelComputationStatus"
+        - name: offset
+          in: query
+          description: Continuation token for pagination
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoPagination"
+                  - $ref: "#/components/schemas/ResponseDtoList"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/file/{paramId}/list":
+    get:
+      tags:
+        - file
+      summary: List all file-assets of a parameter
+      description: |-
+        Permissions:  
+        * `asset.file.list.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: paramId
+          in: path
+          description: Parameter ID of the file asset
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: offset
+          in: query
+          description: Continuation token for pagination
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoPagination"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoList"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/file/{paramId}/{fileId}":
+    head:
+      tags:
+        - file
+      summary: Get information about a file-asset of a parameter
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: paramId
+          in: path
+          description: Parameter ID of the file asset
+          required: true
+          schema:
+            type: string
+        - name: fileId
+          in: path
+          description: ID of the file asset
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: The file-asset with the given ID was found.
+        400:
+          description: The file-asset with the given ID does not exist.
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+    get:
+      tags:
+        - file
+      summary: Download a file-asset
+      description: |-
+        Permissions: 
+        * `asset.file.get.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: paramId
+          in: path
+          description: Parameter ID of the file asset
+          required: true
+          schema:
+            type: string
+        - name: fileId
+          in: path
+          description: ID of the file asset
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/ParameterOctetStream"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+    delete:
+      tags:
+        - file
+      summary: Delete a file-asset
+      description: |-
+        Permissions: 
+        * `asset.file.delete.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: paramId
+          in: path
+          description: Parameter ID of the file asset
+          required: true
+          schema:
+            type: string
+        - name: fileId
+          in: path
+          description: ID of the file asset
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/file/upload":
+    post:
+      tags:
+        - file
+      summary: Request upload URL for a file-asset
+      description: |-
+        Permissions: 
+        * `asset.file.create.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestFileUpload"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoAsset"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/gltf":
+    post:
+      tags:
+        - gltf
+      summary: Upload and optionally convert a glTF object
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: conversion
+          in: query
+          description: Specify to convert the uploaded glTF
+          required: false
+          schema:
+            $ref: "#/components/schemas/RequestGltfUploadQueryConversion"
+      requestBody:
+        required: true
+        content:
+          model/gltf-binary:
+            schema:
+              $ref: "#/components/schemas/ParameterOctetStream"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoGltfUpload"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/log/message":
+    post:
+      tags:
+        - log
+      summary: Log message
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestLogMessage"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/list":
+    get:
+      tags:
+        - model
+      summary: List models
+      description: |-
+        Subject-Restriction: __backend__.
+      parameters:
+        - name: modelStatus
+          in: query
+          description: Filter models by `stat`
+          required: false
+          schema:
+            $ref: "#/components/schemas/RequestQueryModelStatus"
+        - name: offset
+          in: query
+          description: Continuation token for pagination
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoPagination"
+                  - $ref: "#/components/schemas/ResponseDtoList"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}":
+    get:
+      tags:
+        - model
+      summary: Get model
+      description: |-
+        Permissions: 
+        * `setting.auth.ticket.get.*` - optional: adds _settings.auth.ticket_.
+        * `setting.auth.token.get.*` - optional: adds _settings.auth.token_.
+        * `setting.compute.get.*` - optional: adds _settings.compute_.
+        * `file.upload` - optional: adds _file.upload_.
+        * `file.download` - optional: adds _file.download_.
+        * `get.statistic.*` - optional: adds _statistic_.
+        * `setting.viewer.get.*` - optional: adds _viewer_.
+        * `get.parameter.*` - optional: adds _parameters_.
+        * `get.output*` - optional: adds _output definitions_.
+        * `get.export*` - optional: adds _export definitions_.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoModel"
+                  - $ref: "#/components/schemas/ResponseDtoFile"
+                  - $ref: "#/components/schemas/ResponseDtoStatistic"
+                  - $ref: "#/components/schemas/ResponseDtoSetting"
+                  - $ref: "#/components/schemas/ResponseDtoParameters"
+                  - $ref: "#/components/schemas/ResponseDtoPlugins"
+                  - $ref: "#/components/schemas/ResponseDtoViewer"
+                  - $ref: "#/components/schemas/ResponseDtoOutputs"
+                  - $ref: "#/components/schemas/ResponseDtoExports"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+    put:
+      tags:
+        - model
+      summary: Update model
+      description: |-
+        Permissions: 
+        * `setting.auth.ticket.get.*` - optional: adds _settings.auth.ticket_
+          to response.
+        * `setting.auth.token.get.*` - optional: adds _settings.auth.token_ to
+          response.
+        * `setting.compute.get.*` - optional: adds _settings.compute_ to
+          response.
+        * `file.upload` - optional: adds _file.upload_ to response.
+        * `file.download` - optional: adds _file.download_ to response.
+        * `get.statistic.*` - optional: adds _statistic_ to response.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestModel"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoModel"
+                  - $ref: "#/components/schemas/ResponseDtoFile"
+                  - $ref: "#/components/schemas/ResponseDtoStatistic"
+                  - $ref: "#/components/schemas/ResponseDtoSetting"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+    delete:
+      tags:
+        - model
+      summary: Delete model
+      description: |-
+        Subject-Restriction: __backend__.
+
+        Permissions: 
+        * `delete.soft` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model":
+    post:
+      tags:
+        - model
+      summary: Create model
+      description: |-
+        Subject-Restriction: __backend__.
+
+        Permissions:
+        * `create` - __required__
+        * `setting.auth.ticket.get.*` - optional: adds _settings.auth.ticket_
+          to response.
+        * `setting.auth.token.get.*` - optional: adds _settings.auth.token_ to
+          response.
+        * `setting.compute.get.*` - optional: adds _settings.compute_ to
+          response.
+        * `file.upload` - optional: adds _file.upload_ to response if no model
+          has already been uploaded.
+        * `file.download` - optional: adds _file.download_ to response.
+        * `get.statistic.*` - optional: adds _statistic_ to response.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestModel"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoTicket"
+                  - $ref: "#/components/schemas/ResponseDtoModel"
+                  - $ref: "#/components/schemas/ResponseDtoFile"
+                  - $ref: "#/components/schemas/ResponseDtoStatistic"
+                  - $ref: "#/components/schemas/ResponseDtoSetting"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/file/download":
+    get:
+      tags:
+        - model
+      summary: Download Grasshopper file
+      description: |-
+        Permissions:  
+        * `file.download` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/ParameterOctetStream"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/computations":
+    get:
+      tags:
+        - model
+      summary: Get model computation statistics
+      description: |-
+        Permissions:  
+        * `analytics.model.get.*` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: order
+          in: query
+          description: Order in which to query computation stats items
+          required: false
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ShapeDiverRequestModelComputationQueryOrder"
+              - default: desc
+        - name: timestamp_from
+          in: query
+          description: Timestamp to query from
+          required: false
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ParameterNumericIso8601"
+              - default: "0"
+        - name: timestamp_to
+          in: query
+          description: Timestamp to query to
+          required: false
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ParameterNumericIso8601"
+              - default: infinity
+        - name: status
+          in: query
+          description: Filter computations by the result status
+          required: false
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ShapeDiverRequestModelComputationQueryStatus"
+              - default: "*"
+        - name: type
+          in: query
+          description: Filter computations by type
+          required: false
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/ShapeDiverRequestModelComputationQueryType"
+              - default: "*"
+        - name: limit
+          in: query
+          description: How many items to return at most
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
+        - name: strict_limit
+          in: query
+          description: >-
+            Whether the limit shall be attained (if there are enough items)
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: offset
+          in: query
+          description: Continuation token for pagination
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoPagination"
+                  - $ref: "#/components/schemas/ResponseDtoModelComputation"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/cleanup/export":
+    post:
+      tags:
+        - model
+      summary: Delete old export components
+      description: |-
+        Permissions: 
+        * `cache.export.delete.*` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: untilLastSeen
+          in: query
+          description: >-
+            Delete all components that have been used last at or before this
+            timestamp
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Cleanup successfully processed.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+        202:
+          description: Cleanup started but not finished yet.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/cleanup/output":
+    post:
+      tags:
+        - model
+      summary: Delete old output components
+      description: |-
+        Permissions:  
+        * `cache.output.delete.*` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: untilLastSeen
+          in: query
+          description: >-
+            Delete all components that have been used last at or before this
+            timestamp
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Cleanup successfully processed.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+        202:
+          description: Cleanup started but not finished yet.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/cleanup/texture":
+    post:
+      tags:
+        - model
+      summary: Delete old texture components
+      description: |-
+        Permissions: 
+        * `cache.texture.delete.*` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: untilLastSeen
+          in: query
+          description: >-
+            Delete all components that have been used last at or before this
+            timestamp
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Cleanup successfully processed.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+        202:
+          description: Cleanup started but not finished yet.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/cleanup/status":
+    get:
+      tags:
+        - model
+      summary: Get the status of all running model cleanup processes
+      description: ""
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoCleanup"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/output":
+    put:
+      tags:
+        - output
+      summary: Compute all outputs for given parameter values
+      description: |-
+        Permissions:  
+        * `compute.output.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestCustomization"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoActions"
+                  - $ref: "#/components/schemas/ResponseDtoTemplates"
+                  - $ref: "#/components/schemas/ResponseDtoOutputs"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/output/cache":
+    put:
+      tags:
+        - output
+      summary: Get output from cache / check if computation is done
+      description: |-
+        Permissions: 
+        * `cache.output.get.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/RequestCache"
+                - $ref: "#/components/schemas/RequestCustomization"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoActions"
+                  - $ref: "#/components/schemas/ResponseDtoTemplates"
+                  - $ref: "#/components/schemas/ResponseDtoOutputs"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/output":
+    patch:
+      tags:
+        - output
+      summary: Update definition of outputs
+      description: |-
+        Permissions: 
+        * `set.output.ui` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestOutputDefinition"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/output/{outputId}/list":
+    get:
+      tags:
+        - output
+      summary: List output versions
+      description: |-
+        Permissions: 
+        * `cache.output.list.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: outputId
+          in: path
+          description: Output ID
+          required: true
+          schema:
+            type: string
+        - name: statusComputation
+          in: query
+          description: Filter output versions by `status_computation`
+          required: false
+          schema:
+            $ref: "#/components/schemas/RequestQueryModelComputationStatus"
+        - name: statusCollect
+          in: query
+          description: Filter output versions by `status_collect`
+          required: false
+          schema:
+            $ref: "#/components/schemas/RequestQueryModelComputationStatus"
+        - name: offset
+          in: query
+          description: Continuation token for pagination
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoPagination"
+                  - $ref: "#/components/schemas/ResponseDtoList"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/parameter/defval":
+    patch:
+      tags:
+        - model
+      summary: Update default value of parameters
+      description: |-
+        Updating default parameter values requires model authoring privilege.
+
+        Permissions:  
+        * `set.parameter.defval` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestCustomization"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/parameter":
+    patch:
+      tags:
+        - model
+      summary: Update definition of parameters
+      description: |-
+        Permissions: 
+        * `set.parameter.ui` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestParameterDefinition"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/script/{scriptId}/confirm":
+    get:
+      tags:
+        - script
+      summary: Confirm script
+      description: |-
+        Permissions:  
+        * `script.confirm.*` - __required__.
+      parameters:
+        - name: scriptId
+          in: path
+          description: Script ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            text/html:
+              schema:
+                type: string
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - CredentialsAuth: []
+  "/api/v2/script/{scriptId}/deny":
+    get:
+      tags:
+        - script
+      summary: Deny script
+      description: |-
+        Permissions:  
+        * `script.deny.*` - __required__.
+      parameters:
+        - name: scriptId
+          in: path
+          description: Script ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            text/html:
+              schema:
+                type: string
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - CredentialsAuth: []
+  "/api/v2/session/{sessionId}/sdtf/{namespace}/list":
+    get:
+      tags:
+        - sdTF
+      summary: List all sdTF-assets of a namespace
+      description: |-
+        Permissions: 
+        * `asset.sdtf.list.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: namespace
+          in: path
+          description: Namespace of the sdTF asset
+          required: true
+          schema:
+            type: string
+        - name: offset
+          in: query
+          description: Continuation token for pagination
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoPagination"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoList"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/sdtf/{namespace}/{sdtfId}":
+    get:
+      tags:
+        - sdTF
+      summary: Download a sdTF-asset
+      description: |-
+        Permissions: 
+        * `asset.sdtf.get.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: namespace
+          in: path
+          description: Namespace of the sdTF asset
+          required: true
+          schema:
+            type: string
+        - name: sdtfId
+          in: path
+          description: ID of the sdTF asset
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/ParameterOctetStream"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+    delete:
+      tags:
+        - sdTF
+      summary: Delete a sdTF-assets
+      description: |-
+        Permissions: 
+        * `asset.sdtf.delete.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: namespace
+          in: path
+          description: Namespace of the sdTF asset
+          required: true
+          schema:
+            type: string
+        - name: sdtfId
+          in: path
+          description: ID of the sdTF asset
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/sdtf/upload":
+    post:
+      tags:
+        - sdTF
+      summary: Request upload URL for a sdTF-asset
+      description: |-
+        Permissions:  
+        * `asset.sdtf.create.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestSdtfUpload"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoAsset"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/session":
+    post:
+      tags:
+        - session
+      summary: Initialize new session
+      description: |-
+        Permissions: 
+        * `auth.session` - __required__.
+        * `get.parameter.*` - optional: adds _parameters_ to response.
+        * Output: 
+          * If body contains a computation request:
+            `compute.output.*` - __required__.
+          * If no computation request:
+            `compute.output.*` - optional: adds _output for default parameter_
+            to response.
+          * otherwise tries:
+            `get.output.*` - optional: adds _output definitions_ to response.
+        * Export:  
+          * Body contains an export request:
+            `compute.export.*` - __required__.
+          * No export request:
+            `get.export.*` - optional: adds _export definitions_ to response.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/RequestCustomization"
+                - $ref: "#/components/schemas/RequestExport"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoActions"
+                  - $ref: "#/components/schemas/ResponseDtoTemplates"
+                  - $ref: "#/components/schemas/ResponseDtoSessionId"
+                  - $ref: "#/components/schemas/ResponseDtoModel"
+                  - $ref: "#/components/schemas/ResponseDtoParameters"
+                  - $ref: "#/components/schemas/ResponseDtoViewer"
+                  - $ref: "#/components/schemas/ResponseDtoViewerSettingsVersion"
+                  - $ref: "#/components/schemas/ResponseDtoOutputs"
+                  - $ref: "#/components/schemas/ResponseDtoExports"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/ticket/{ticketId}":
+    post:
+      tags:
+        - session
+      summary: Initialize new session
+      description: |-
+        Permissions: 
+        * `get.parameter.*` - optional: adds _parameters_ to response.
+        * Output: 
+          * If body contains a computation request:
+            `compute.output.*` - __required__.
+          * If no computation request:
+            `compute.output.*` - optional: adds _output for default parameter_
+            to response.
+          * otherwise tries:
+            `get.output.*` - optional: adds _output definitions_ to response.
+        * Export:
+          * Body contains an export request:
+            `compute.export.*` - __required__.
+          * No export request:
+            `get.export.*` - optional: adds _export definitions_ to response.
+      parameters:
+        - name: ticketId
+          in: path
+          description: Encrypted ticket
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterBase64"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/RequestCustomization"
+                - $ref: "#/components/schemas/RequestExport"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoActions"
+                  - $ref: "#/components/schemas/ResponseDtoTemplates"
+                  - $ref: "#/components/schemas/ResponseDtoSessionId"
+                  - $ref: "#/components/schemas/ResponseDtoModel"
+                  - $ref: "#/components/schemas/ResponseDtoParameters"
+                  - $ref: "#/components/schemas/ResponseDtoViewer"
+                  - $ref: "#/components/schemas/ResponseDtoViewerSettingsVersion"
+                  - $ref: "#/components/schemas/ResponseDtoOutputs"
+                  - $ref: "#/components/schemas/ResponseDtoExports"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security: []
+  "/api/v2/session/{sessionId}/default":
+    get:
+      tags:
+        - session
+      summary: >-
+        Get session defaults (corresponds to the content of the session
+        initialization request)
+      description: |-
+        Permissions: 
+        * `get.parameter.*` - optional: adds _parameter defaults_ to response.
+        * `get.export.*` - optional: adds _export definitions_ to response.
+        * `compute.output.*` - optional: adds _outputs for default parameters_
+          to response.
+        * `get.output.*` - optional: adds _output definitions_ to response.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoMessage"
+                  - $ref: "#/components/schemas/ResponseDtoActions"
+                  - $ref: "#/components/schemas/ResponseDtoTemplates"
+                  - $ref: "#/components/schemas/ResponseDtoSessionId"
+                  - $ref: "#/components/schemas/ResponseDtoParameters"
+                  - $ref: "#/components/schemas/ResponseDtoViewer"
+                  - $ref: "#/components/schemas/ResponseDtoViewerSettingsVersion"
+                  - $ref: "#/components/schemas/ResponseDtoOutputs"
+                  - $ref: "#/components/schemas/ResponseDtoExports"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/close":
+    post:
+      tags:
+        - session
+      summary: Close session
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/system/model/{modelId}":
+    delete:
+      tags:
+        - system
+      summary: Delete model permanently
+      description: |-
+        Subject-Restriction: __backend__.
+
+        Permissions: 
+        * `delete.hard` - __required__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoVersion"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/system/minions/info":
+    get:
+      tags:
+        - system
+      summary: Get system information about the Geometry Minions
+      description: "Subject-Restriction: __backend__."
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoSystem"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+          CredentialsAuth: []
+  "/api/v2/system/workers/info":
+    get:
+      tags:
+        - system
+      summary: Get system information about the Geometry Workers
+      description: >-
+        A __backend__ subject adds `system.plugins.inconsistent`.
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseDtoSystem"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+          CredentialsAuth: []
+  "/api/v2/system/sign/cdn/{endpoint}/{encodedUri}":
+    get:
+      tags:
+        - system
+      summary: Create a signed URL for the specified endpoint and target
+      description: "Subject-Restriction: __backend__."
+      parameters:
+        - name: endpoint
+          in: path
+          description: CDN endpoint
+          required: true
+          schema:
+            type: string
+        - name: encodedUri
+          in: path
+          description: Base64 encoded target URI
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/texture/list":
+    get:
+      tags:
+        - texture
+      summary: List model textures
+      description: |-
+        Permissions: 
+        * `cache.texture.list.*` - __required__.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+        - name: offset
+          in: query
+          description: Continuation token for pagination
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoPagination"
+                  - $ref: "#/components/schemas/ResponseDtoList"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model/{modelId}/ticket":
+    post:
+      tags:
+        - session
+      summary: Create a new ticket that allows to initialize a new session
+      description: |-
+        Subject-Restriction: __backend__.
+
+        Permissions:  
+        * `setting.auth.ticket.create.*` - __required__.
+        * `setting.auth.ticket.get.*` - optional: adds _settings.auth.ticket_
+          to response.
+        * `setting.auth.token.get.*` - optional: adds _settings.auth.token_ to
+          response.
+        * `setting.compute.get.*` - optional: adds _settings.compute_ to
+          response.
+        * `file.upload` - optional: adds _file.upload_ to response.
+        * `file.download` - optional: adds _file.download_ to response.
+        * `get.statistic.*` - optional: adds _statistic_ to response.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/ParameterUuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestTicket"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDtoTicket"
+                  - $ref: "#/components/schemas/ResponseDtoModel"
+                  - $ref: "#/components/schemas/ResponseDtoFile"
+                  - $ref: "#/components/schemas/ResponseDtoStatistic"
+                  - $ref: "#/components/schemas/ResponseDtoSetting"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
+  "/api/v2/ticket/{ticketEncrypted}":
+    get:
+      tags:
+        - session
+      summary: Decrypt the given ticket and return its details
+      description: |-
+        Subject-Restriction: __backend__.
+
+        Permissions: 
+        * `setting.auth.ticket.decrypt.*` - __required__.
+      parameters:
+        - name: ticketEncrypted
+          in: path
+          description: Encrypted ShapeDiver ticket
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ResponseDtoVersion"
+                  - $ref: "#/components/schemas/ResponseDecryptTicket"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseError"
+      security:
+        - JwtAuth: []
