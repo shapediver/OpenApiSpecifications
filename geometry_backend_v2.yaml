@@ -208,6 +208,7 @@ components:
     ShapeDiverRequestModelComputationQueryOrder:
       description: |-
         Query values of a model computation statistics request.
+
         Specifies the order of the results.
       type: string
       enum:
@@ -216,6 +217,7 @@ components:
     ShapeDiverRequestModelComputationQueryStatus:
       description: |-
         Query values of a model computation statistics request.
+
         Filter by status.
       type: string
       enum:
@@ -226,6 +228,7 @@ components:
     ShapeDiverRequestModelComputationQueryType:
       description: |-
         Query values of a model computation statistics request.
+
         Filter by computation or export request.
       type: string
       enum:
@@ -505,23 +508,24 @@ components:
           description: >-
             Maximum amount of milliseconds to wait for completion of export
             request before responding.
-          type: number
+          type: integer
+          minimum: 0
       required:
         - parameters
         - exports
     RequestCache:
-      description: |-
-        Body of an export or output cache request.
-        A directory of export-/output-IDs and version-IDs.
+      description: >-
+        Body of an export or output cache request. A directory of
+        export-/output-IDs and version-IDs.
       type: object
       additionalProperties:
         type: string
       example:
         "96ce38f8-e197-416a-b78b-18d8376f5903": "62b3e13f-7b78-4a59-86f9-4a51f83feb21"
     RequestExportDefinition:
-      description: |-
-        Definition of a exports.
-        A directory of export-IDs and export-definitions.
+      description: >-
+        Definition of a exports. A directory of export-IDs and
+        export-definitions.
       type: object
       additionalProperties:
         $ref: "#/components/schemas/RequestExportDefinitionPart"
@@ -544,7 +548,7 @@ components:
           type: boolean
         order:
           description: Ordering of the export in client applications.
-          type: number
+          type: integer
         tooltip:
           description: Description that is shown as a tooltip in the clients.
           type: string
@@ -554,9 +558,9 @@ components:
         - description: Group information of an export definition.
           type: object
     RequestOutputDefinition:
-      description: |-
-        Definition of outputs.
-        A directory of output-IDs and output-definitions.
+      description: >-
+        Definition of outputs. A directory of output-IDs and
+        output-definitions.
       type: object
       additionalProperties:
         $ref: "#/components/schemas/RequestOutputDefinitionPart"
@@ -579,7 +583,7 @@ components:
           type: boolean
         order:
           description: Ordering of the output in client applications.
-          type: number
+          type: integer
         tooltip:
           description: Description that is shown as a tooltip in the clients.
           type: string
@@ -669,28 +673,34 @@ components:
           description: >-
             Maximum number of milliseconds allowed for computations of this
             model.
-          type: number
+          type: integer
+          minimum: 0
         max_export_size:
           description: >-
             Maximum number of bytes allowed to be exported from a model for a
             specific set of parameter values.
-          type: number
+          type: integer
+          minimum: 0
         max_idle_minutes:
           description: |-
             Maximum amount of minutes a loaded model may be unused before
             it gets unloaded.
+
             Note: Models may get unloaded earlier than that.
-          type: number
+          type: integer
+          minimum: 0
         max_model_size:
           description: >-
             Maximum number of bytes allowed for the model's Grasshopper file
             size.
-          type: number
+          type: integer
+          minimum: 0
         max_output_size:
           description: >-
             Maximum number of bytes allowed for an output of a model for a
             specific set of parameter values.
-          type: number
+          type: integer
+          minimum: 0
         webhook_token:
           description: >-
             Allows to control whether the model's Grasshopper file can contain
@@ -703,7 +713,8 @@ components:
             model loaded, and regardless of `num_loaded_max`. This allows to
             configure a soft or a hard upper boundary for the number of loaded
             models.
-          type: number
+          type: integer
+          minimum: 0
         name:
           description: Name of the model.
           type: string
@@ -711,19 +722,22 @@ components:
           description: >-
             Maximum number of workers that should have the model loaded at the
             same time.
-          type: number
+          type: integer
+          minimum: 0
         num_loaded_min:
           description: >-
             Minimum number of workers which should have the model loaded once a
             session to the model gets opened.
-          type: number
+          type: integer
+          minimum: 0
         num_preloaded_min:
           description: >-
             Minimum number of workers that should always have the model loaded,
             regardless of session activity. This allows to minimise the
             likelihood of computation requests being slower due to model
             loading.
-          type: number
+          type: integer
+          minimum: 0
         org_id:
           description: Optional organization ID.
           type: string
@@ -743,7 +757,8 @@ components:
           description: >-
             Limits the number of sessions that can be created by a specific
             IP address in one hour.
-          type: number
+          type: integer
+          minimum: 0
         trust:
           description: >-
             Can this model be trusted (controls whether failed computations
@@ -765,9 +780,9 @@ components:
       required:
         - pub
     RequestParameterDefinition:
-      description: |-
-        Definition of model parameters.
-        A directory of parameter-IDs and parameter-definitions.
+      description: >-
+        Definition of model parameters. A directory of parameter-IDs and
+        parameter-definitions.
       type: object
       additionalProperties:
         $ref: "#/components/schemas/RequestParameterDefinitionPart"
@@ -791,7 +806,7 @@ components:
           type: boolean
         order:
           description: Ordering of the parameter in client applications.
-          type: number
+          type: integer
         tooltip:
           description: Description that is shown as a tooltip in the clients.
           type: string
@@ -801,9 +816,9 @@ components:
         - description: Group information of a parameter definition.
           type: object
     RequestFileUpload:
-      description: |-
-        Body of a file upload request.
-        A directory of file-parameter-IDs and upload-definitions.
+      description: >-
+        Body of a file upload request. A directory of file-parameter-IDs and
+        upload-definitions.
       type: object
       additionalProperties:
         $ref: "#/components/schemas/RequestFileUploadPart"
@@ -830,7 +845,8 @@ components:
           type: string
         size:
           description: Size of the file to be uploaded, in bytes.
-          type: number
+          type: integer
+          minimum: 0
       required:
         - format
         - size
@@ -849,7 +865,8 @@ components:
           type: string
         content_length:
           description: Size of the sdTF to be uploaded, in bytes.
-          type: number
+          type: integer
+          minimum: 0
         content_type:
           description: Content-type of the sdTF to be uploaded.
           allOf:
@@ -961,9 +978,9 @@ components:
       type: object
       properties:
         parameters:
-          description: |-
-            Parameter definitions, not contained with every response.
-            A directory of parameter-IDs and parameters.
+          description: >-
+            Parameter definitions, not contained with every response. A
+            directory of parameter-IDs and parameters.
           type: object
           additionalProperties:
             $ref: "#/components/schemas/ResponseParameter"
@@ -987,9 +1004,9 @@ components:
       type: object
       properties:
         outputs:
-          description: |-
-            Outputs of the model for the given parameter values.
-            A directory of output-IDs and outputs.
+          description: >-
+            Outputs of the model for the given parameter values. A directory of
+            output-IDs and outputs.
           type: object
           additionalProperties:
             oneOf:
@@ -999,9 +1016,9 @@ components:
       type: object
       properties:
         exports:
-          description: |-
-            Exports of the model for the given parameter values.
-            A directory of export-IDs and exports.
+          description: >-
+            Exports of the model for the given parameter values. A directory of
+            export-IDs and exports.
           type: object
           additionalProperties:
             oneOf:
@@ -1071,7 +1088,9 @@ components:
       properties:
         limit:
           description: The query limit that has been used in the request.
-          type: number
+          type: integer
+          minimum: 1
+          maximum: 100
         next_offset:
           description: >-
             The offset that can be used in the next request to query the
@@ -1121,12 +1140,14 @@ components:
             get cancelled by the backend.
 
             CAUTION: Not to be confused with credits!
-          type: number
+          type: integer
+          minimum: 0
         billableCount:
           description: >-
             Billable duration-based credit count, based on maximum duration
             of 10 minutes per credit.
-          type: number
+          type: integer
+          minimum: 0
         duration:
           description: Statistics on the duration of all sessions.
           allOf:
@@ -1179,7 +1200,8 @@ components:
               model and timestamp.
             * `export`, `customize`: Number of sessions which have export
               requests.
-          type: number
+          type: integer
+          minimum: 0
         billableCount:
           description: |-
             * `duration`, `app`, `embedded`, `backend`, `desktop`: Billable
@@ -1188,7 +1210,8 @@ components:
             * `export`, `customize`: Billable duration-based credit count for
               sessions which have export requests, based on maximum duration of
               10 minutes per credit.
-          type: number
+          type: integer
+          minimum: 0
         min:
           description: |-
             * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative
@@ -1197,7 +1220,8 @@ components:
             * `export`, `customize`: Cumulative distribution function of the
               number of export requests per session, for sessions which have
               export requests.
-          type: number
+          type: integer
+          minimum: 0
         max:
           description: |-
             * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative
@@ -1206,21 +1230,24 @@ components:
             * `export`, `customize`: Cumulative distribution function of the
               number of export requests per session, for sessions which have
               export requests.
-          type: number
+          type: integer
+          minimum: 0
         avg:
           description: |-
             * `duration`, `app`, `embedded`, `backend`, `desktop`: Average
               duration of all sessions for the given model and timestamp.
             * `export`, `customize`: Average number of export requests per
               session, for sessions which have export requests.
-          type: number
+          type: integer
+          minimum: 0
         sum:
           description: |-
             * `duration`, `app`, `embedded`, `backend`, `desktop`: Total
               duration of all sessions for the given model and timestamp.
             * `export`, `customize`: Total number of export requests
               for all sessions which have export requests.
-          type: number
+          type: integer
+          minimum: 0
       required:
         - count
         - billableCount
@@ -1232,106 +1259,54 @@ components:
       allOf:
         - $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
         - type: object
-      properties:
-        count:
-          description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Number of
-              (technical) sessions from all sources (duration) or from one
-              specific source (app, embedded, backend, desktop), for the given
-              model and timestamp.
-            * `export`, `customize`: Number of sessions which have export
-              requests.
-          type: number
-        billableCount:
-          description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Billable
-              duration-based credit count for all sessions, based on maximum
-              duration of 10 minutes per credit.
-            * `export`, `customize`: Billable duration-based credit count for
-              sessions which have export requests, based on maximum duration of
-              10 minutes per credit.
-          type: number
-        min:
-          description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative
-              distribution function of the duration, for all sessions for the
-              given model and timestamp.
-            * `export`, `customize`: Cumulative distribution function of the
-              number of export requests per session, for sessions which have
-              export requests.
-          type: number
-        max:
-          description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative
-              distribution function of the duration, for all sessions for the
-              given model and timestamp.
-            * `export`, `customize`: Cumulative distribution function of the
-              number of export requests per session, for sessions which have
-              export requests.
-          type: number
-        avg:
-          description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Average
-              duration of all sessions for the given model and timestamp.
-            * `export`, `customize`: Average number of export requests per
-              session, for sessions which have export requests.
-          type: number
-        sum:
-          description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Total
-              duration of all sessions for the given model and timestamp.
-            * `export`, `customize`: Total number of export requests for all
-              sessions which have export requests.
-          type: number
-        sumApp:
-          description: |-
-            `customize`: Total number of actions, for ShapeDiver Platform
-            sessions for which the type of action happened.
+          properties:
+            sumApp:
+              description: |-
+                `customize`: Total number of actions, for ShapeDiver Platform
+                sessions for which the type of action happened.
 
-            Note: New property - will contain `0` for entries before November
-            2019.
-          type: number
-        sumBackend:
-          description: |-
-            `customize`: Total number of customization requests for backend
-            sessions which have customization requests.
+                Note: New property - will contain `0` for entries before
+                November 2019.
+              type: integer
+              minimum: 0
+            sumBackend:
+              description: |-
+                `customize`: Total number of customization requests for backend
+                sessions which have customization requests.
 
-            `export`: Total number of export requests for backend sessions
-            which have export requests.
+                `export`: Total number of export requests for backend sessions
+                which have export requests.
 
-            Note: New property - will contain `0` for entries before November
-            2019.
-          type: number
-        sumEmbedded:
-          description: |-
-            `customize`: Total number of customization requests for embedded
-            sessions which have customization requests.
+                Note: New property - will contain `0` for entries before
+                November 2019.
+              type: integer
+              minimum: 0
+            sumEmbedded:
+              description: |-
+                `customize`: Total number of customization requests for
+                embedded sessions which have customization requests.
 
-            `export`: Total number of export requests for embedded sessions
-            which have export requests.
+                `export`: Total number of export requests for embedded sessions
+                which have export requests.
 
-            Note: New property - will contain `0` for entries before November
-            2019.
-          type: number
-        sumDesktop:
-          description: |-
-            `customize`: Total number of actions, for desktop client sessions
-            for which the type of action happened.
+                Note: New property - will contain `0` for entries before
+                November 2019.
+              type: integer
+              minimum: 0
+            sumDesktop:
+              description: |-
+                `customize`: Total number of actions, for desktop client
+                sessions for which the type of action happened.
 
-            Note: New property - will contain `0` for entries before January
-            2021.
-          type: number
-      required:
-        - count
-        - billableCount
-        - min
-        - max
-        - avg
-        - sum
-        - sumApp
-        - sumBackend
-        - sumEmbedded
-        - sumDesktop
+                Note: New property - will contain `0` for entries before
+                January 2021.
+              type: integer
+              minimum: 0
+          required:
+            - sumApp
+            - sumBackend
+            - sumEmbedded
+            - sumDesktop
     ResponseAnalyticsModelCreditMetrics:
       allOf:
         - description: Aggregated credit metrics for a model.
@@ -1433,10 +1408,12 @@ components:
       properties:
         credits:
           description: Number of started 10-second chunks charged.
-          type: number
+          type: integer
+          minimum: 0
         count:
           description: Number of load requests.
-          type: number
+          type: integer
+          minimum: 0
       required:
         - credits
         - count
@@ -1450,7 +1427,8 @@ components:
           properties:
             count:
               description: Number of pure output requests.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - count
         exports:
@@ -1459,7 +1437,8 @@ components:
           properties:
             credits:
               description: Number of pure export requests charged.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - credits
         combined:
@@ -1469,7 +1448,8 @@ components:
             credits:
               description: >-
                 Number of combined output and export requests charged.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - credits
         sessions:
@@ -1478,14 +1458,17 @@ components:
           properties:
             count:
               description: Number of sessions.
-              type: number
+              type: integer
+              minimum: 0
             credits:
               description: >-
                 Number of started 10-minute periods of sessions charged.
-              type: number
+              type: integer
+              minimum: 0
             duration:
               description: The total duration of all sessions, in milliseconds.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - count
             - credits
@@ -1496,7 +1479,8 @@ components:
           properties:
             credits:
               description: The number of AR requests charged.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - credits
         computations:
@@ -1505,18 +1489,22 @@ components:
           properties:
             count:
               description: Number of computations.
-              type: number
+              type: integer
+              minimum: 0
             credits:
               description: Number of finished 10-second chunks charged.
-              type: number
+              type: integer
+              minimum: 0
             duration:
               description: Total duration of computation time, in milliseconds.
-              type: number
+              type: integer
+              minimum: 0
             countPerChunks:
               description: >-
                 Count of computations per computation time expressed in started
                 10-second chunks.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - count
             - credits
@@ -1539,7 +1527,8 @@ components:
           properties:
             credits:
               description: Number of pure output requests charged.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - credits
         exports:
@@ -1548,7 +1537,8 @@ components:
           properties:
             credits:
               description: Number of pure export requests charged.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - credits
         combined:
@@ -1558,7 +1548,8 @@ components:
             credits:
               description: >-
                 Number of combined output and export requests charged.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - credits
         sessions:
@@ -1567,10 +1558,12 @@ components:
           properties:
             count:
               description: Number of sessions.
-              type: number
+              type: integer
+              minimum: 0
             duration:
               description: The total duration of all sessions, in milliseconds.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - count
             - duration
@@ -1580,7 +1573,8 @@ components:
           properties:
             credits:
               description: Number of AR downloads charged.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - credits
         computations:
@@ -1589,18 +1583,22 @@ components:
           properties:
             count:
               description: Number of computations.
-              type: number
+              type: integer
+              minimum: 0
             credits:
               description: Number of finished 10-second chunks charged.
-              type: number
+              type: integer
+              minimum: 0
             duration:
               description: Total duration of computation time, in milliseconds.
-              type: number
+              type: integer
+              minimum: 0
             countPerChunks:
               description: >-
                 Count of computations per computation time expressed in started
                 10-second chunks.
-              type: number
+              type: integer
+              minimum: 0
           required:
             - count
             - credits
@@ -1743,7 +1741,7 @@ components:
             - $ref: "#/components/schemas/ResponseExportDefinitionGroup"
         order:
           description: Ordering of the export in client applications.
-          type: number
+          type: integer
         tooltip:
           description: Description that is shown as a tooltip in the clients.
           type: string
@@ -1778,7 +1776,8 @@ components:
             Note that the existence of this property does not necessarily imply
             the presence of an active or queued computation for the respective
             export version.
-          type: number
+            type: integer
+            minimum: 0
         content:
           description: >-
             Result parts. In case this array does not exist, this means that
@@ -1821,7 +1820,8 @@ components:
           type: string
         size:
           description: Optional size of exported asset, in bytes.
-          type: number
+          type: integer
+          minimum: 0
         contentType:
           description: Optional Content-Type for parts of type `asset`.
           type: string
@@ -1892,7 +1892,8 @@ components:
           type: string
         size:
           description: The size of the file in bytes.
-          type: number
+          type: integer
+          minimum: 0
       required:
         - id
         - parameterId
@@ -1910,7 +1911,8 @@ components:
           type: string
         size:
           description: The size of the sdTF in bytes.
-          type: number
+          type: integer
+          minimum: 0
       required:
         - id
         - namespace
@@ -2079,7 +2081,8 @@ components:
           description: >-
             Cumulative time (msec) which has been spent for processing
             computation requests by the workers (pure computation time).
-          type: number
+          type: integer
+          minimum: 0
         lastsession:
           description: >-
             Timestamp of last session created for the model, in ISO-8601
@@ -2090,25 +2093,30 @@ components:
           type: string
         memUsage:
           description: Approximate memory usage of model on workers, in bytes.
-          type: number
+          type: integer
+          minimum: 0
         numcomp:
           description: >-
             Number of computations which have been carried out for the model by
             the workers so far.
-          type: number
+          type: integer
+          minimum: 0
         numsessions:
           description: >-
             Number of sessions which have been opened for the model so far.
-          type: number
+          type: integer
+          minimum: 0
         requesttime:
           description: >-
             Cumulative time (msec) which has been spent for processing
             computation requests by the workers (computation time plus
             overheads).
-          type: number
+          type: integer
+          minimum: 0
         size:
           description: File size of the model file in bytes.
-          type: number
+          type: integer
+          minimum: 0
     ResponseParameter:
       description: Definition of a parameter of a ShapeDiver Model.
       type: object
@@ -2125,7 +2133,8 @@ components:
             type: string
         decimalplaces:
           description: Number of decimal places for numeric types.
-          type: number
+          type: integer
+          minimum: 0
         defval:
           description: Default value of parameter, stringified.
           type: string
@@ -2191,7 +2200,7 @@ components:
           type: string
         order:
           description: Ordering of the parameter in client applications.
-          type: number
+          type: integer
         tooltip:
           description: Description that is shown as a tooltip in the clients.
           type: string
@@ -2350,10 +2359,12 @@ components:
           description: >-
             The total number of items of this type that are going to be
             deleted.
-          type: number
+          type: integer
+          minimum: 0
         deleted:
           description: The number of already deleted items of this type.
-          type: number
+          type: integer
+          minimum: 0
       required:
         - type
         - timestamp_enqueued
@@ -2379,10 +2390,12 @@ components:
           type: string
         width:
           description: The width of the texture.
-          type: number
+          type: integer
+          minimum: 0
         height:
           description: The height of the texture.
-          type: number
+          type: integer
+          minimum: 0
         isAssetAvailable:
           description: >-
             Is `true` when the texture has been cached, otherwise `false`.
@@ -2404,7 +2417,7 @@ components:
             Numeric timestamp in format `YYYYMMDDHHMMSSMMM`.
 
             Deprecated: Use `timestamp_str` instead.
-          type: number
+          type: integer
           deprecated: true
         timestamp_str:
           description: Timestamp in format `YYYYMMDDHHMMSSMMM`.
@@ -2480,71 +2493,84 @@ components:
         size_assets:
           description: >-
             Total size in bytes of the uncompressed resulting assets.
-          type: number
+          type: integer
+          minimum: 0
         size_assets_storage:
           description: >-
             Total size in bytes of the (potentially compressed) assets uploaded
             to storage.
-          type: number
+          type: integer
+          minimum: 0
         time_completion:
           description: >-
             The number of milliseconds it took to answer the request.
-          type: number
+          type: integer
+          minimum: 0
         time_model_download:
-          description: |-
+          description: >-
             The number of milliseconds it took to download the model from
-            storage.
-            `0` in case model was already downloaded to the instance.
-          type: number
+            storage. `0` in case model was already downloaded to the instance.
+          type: integer
+          minimum: 0
         time_model_open:
           description: |-
-            The number of milliseconds it took to  load (open) the model.
-            `0` in case model was already loaded.
+            The number of milliseconds it took to  load (open) the model. `0`
+            in case model was already loaded.
 
             Note: Does not include time for script compilation and first
             computation.
-          type: number
+          type: integer
+          minimum: 0
         time_processing:
           description: >-
             The number of milliseconds it took to process the request.
-          type: number
+          type: integer
+          minimum: 0
         time_check_stored:
           description: >-
             The number of milliseconds it took to carry out checks that are
             done before loading the model.
-          type: number
+          type: integer
+          minimum: 0
         time_check_loaded:
           description: >-
             The number of milliseconds it took to carry out check that are done
             after loading the model.
-          type: number
+          type: integer
+          minimum: 0
         time_storage:
           description: >-
             The number of milliseconds it took to upload assets to storage.
-          type: number
+          type: integer
+          minimum: 0
         time_solver:
           description: The number of milliseconds for Grasshopper solver.
-          type: number
+          type: integer
+          minimum: 0
         time_solver_collect:
           description: >-
             The number of milliseconds it took to collect output and export
             data after computation.
-          type: number
+          type: integer
+          minimum: 0
         time_solver_ext:
           description: >-
             The number of milliseconds it took to download and load the model
             and setting parameters, and to compute the solution.
-          type: number
+          type: integer
+          minimum: 0
         time_wait:
           description: >-
             The number of milliseconds the request was waiting before being
             processed.
-          type: number
+          type: integer
+          minimum: 0
         time_cache_outputs:
           description: >-
             The number of milliseconds it took to store the results of the
             request in the cache.
-          type: number
+          type: integer
+          minimum: 0
         model:
           description: Information about model computations.
           allOf:
@@ -2553,60 +2579,70 @@ components:
           description: >-
             The number of milliseconds the CPU was used to carry out checks
             which are done before loading the model.
-          type: number
+          type: integer
+          minimum: 0
         cpu_time_check_loaded:
           description: >-
             The number of milliseconds the CPU was used to carry out checks
             which are done after loading the model.
-          type: number
+          type: integer
+          minimum: 0
         cpu_time_storage:
           description: >-
             The number of milliseconds the CPU was used to upload assets to
             storage.
-          type: number
+          type: integer
+          minimum: 0
         cpu_time_model_download:
           description: >-
             The number of milliseconds the CPU was used to download the model
             from storage.
-          type: number
+          type: integer
+          minimum: 0
         cpu_time_model_open:
-          description: |-
+          description: >-
             The number of milliseconds the CPU was used to  load (open)
-            the model.
-            `0` in case model was already loaded.
-          type: number
+            the model. `0` in case model was already loaded.
+          type: integer
+          minimum: 0
         cpu_time_solver:
           description: >-
             The number of milliseconds the CPU was used for Grasshopper
             solver.
-          type: number
+          type: integer
+          minimum: 0
         cpu_time_solver_collect:
           description: >-
             The number of milliseconds the CPU was used to collect output
             and export data after computation.
-          type: number
+          type: integer
+          minimum: 0
         cpu_time_solver_ext:
           description: >-
             The number of milliseconds the CPU was used to download and
             load the model and setting parameters, and to compute the solution.
-          type: number
+          type: integer
+          minimum: 0
         cpu_time_cache_outputs:
           description: >-
             The number of milliseconds the CPU was used to store the results of
             the request in the cache.
-          type: number
+          type: integer
+          minimum: 0
         time_model_prepare:
           description: >-
             The number of milliseconds it took to prepare the model after
             loading it. As an example, preparation includes compilation of
             scripts.
-          type: number
+          type: integer
+          minimum: 0
         cpu_time_model_prepare:
           description: >-
             The number of milliseconds the CPU was used to prepare the model
             after loading it. As an example, preparation includes compilation
             of scripts.
-          type: number
+          type: integer
+          minimum: 0
       required:
         - time_completion
         - time_model_download
@@ -2649,7 +2685,8 @@ components:
                     type: string
                   time:
                     description: Computation time used in milliseconds.
-                    type: number
+                    type: integer
+                    minimum: 0
                 required:
                   - instance
                   - component
@@ -2753,12 +2790,14 @@ components:
           description: >-
             Count of successful computations for the given loaded instance of
             the model.
-          type: number
+          type: integer
+          minimum: 0
         count_timeout:
           description: >-
             Count of timed-out computations for the given loaded instance of
             the model.
-          type: number
+          type: integer
+          minimum: 0
         changes:
           description: >-
             Lists the ids of the parameters whose values were changed before
@@ -2778,13 +2817,16 @@ components:
         max_comp_time:
           description: >-
             Maximum computation time in milliseconds allowed for the model.
-          type: number
+          type: integer
+          minimum: 0
         max_output_size:
           description: Maximum output size in bytes allowed for the model.
-          type: number
+          type: integer
+          minimum: 0
         max_export_size:
           description: Maximum export size in bytes allowed for the model.
-          type: number
+          type: integer
+          minimum: 0
       required:
         - max_comp_time
         - max_output_size
@@ -2833,7 +2875,7 @@ components:
             - $ref: "#/components/schemas/ResponseOutputDefinitionGroup"
         order:
           description: Ordering of the output in client applications.
-          type: number
+          type: integer
         tooltip:
           description: Description that is shown as a tooltip in the clients.
           type: string
@@ -2874,7 +2916,8 @@ components:
             Note that the existence of this property does not necessarily imply
             the presence of an active or queued computation for the respective
             output version.
-          type: number
+          type: integer
+          minimum: 0
         content:
           description: >-
             Result parts. In case this array does not exist, this means that
@@ -2917,7 +2960,8 @@ components:
           type: string
         size:
           description: Size in bytes for parts of type `asset`.
-          type: number
+          type: integer
+          minimum: 0
         name:
           description: Optionally used for type `data`.
           type: string
@@ -3067,32 +3111,38 @@ components:
           description: >-
             Maximum number of milliseconds allowed for computations of this
             model.
-          type: number
+          type: integer
+          minimum: 0
         max_export_size:
           description: >-
             Maximum number of bytes allowed to be exported from a model for a
             specific set of parameter values.
-          type: number
+          type: integer
+          minimum: 0
         max_idle_minutes:
           description: |-
             Maximum amount of minutes a loaded model may be unused before it
             gets unloaded.
 
             Note: Models may get unloaded earlier than that.
-          type: number
+          type: integer
+          minimum: 0
         max_model_size:
           description: >-
             Maximum number of bytes allowed for the model's Grasshopper file
             size.
-          type: number
+          type: integer
+          minimum: 0
         max_output_size:
           description: >-
             Maximum number of bytes allowed for an output of a model for a
             specific set of parameter values.
-          type: number
+          type: integer
+          minimum: 0
         max_texture_size:
           description: Maximum number of bytes allowed for a single texture.
-          type: number
+          type: integer
+          minimum: 0
         max_wait_time:
           description: >-
             Maximum time a computation request may stay waiting before a
@@ -3100,29 +3150,34 @@ components:
             model loaded, and regardless of `num_loaded_max`. This allows to
             configure a soft or a hard upper boundary for the number of loaded
             models.
-          type: number
+          type: integer
+          minimum: 0
         num_loaded_max:
           description: >-
             Maximum number of workers that should have the model loaded at the
             same time.
-          type: number
+          type: integer
+          minimum: 0
         num_loaded_min:
           description: >-
             Minimum number of workers that should load the model and keep it
             open while there is session activity.
-          type: number
+          type: integer
+          minimum: 0
         num_preloaded_min:
           description: >-
             Minimum number of workers that should always have the model loaded,
             regardless of session activity. This allows to minimise the
             likelihood of computation requests being slower due to model
             loading.
-          type: number
+          type: integer
+          minimum: 0
         session_rate_limit:
           description: >-
             Limits the number of sessions that can be created by a specific IP
             address in one hour.
-          type: number
+          type: integer
+          minimum: 0
         trust:
           description: Controls whether failed computations will be retried.
           type: string
@@ -3169,16 +3224,16 @@ components:
       type: object
       properties:
         instances:
-          description: |-
-            Information per instance.
-            A directory of process-IDs and process data.
+          description: >-
+            Information per instance. A directory of process-IDs and process
+            data.
           type: object
           additionalProperties:
             $ref: "#/components/schemas/ResponseSystemMinionsProcess"
         tasks:
-          description: |-
-            Aggregated task information.
-            A directory of task types and task data.
+          description: >-
+            Aggregated task information. A directory of task types and task
+            data.
           type: object
           additionalProperties:
             $ref: "#/components/schemas/ResponseSystemMinionTask"
@@ -3203,30 +3258,36 @@ components:
       properties:
         avgDuration:
           description: Average duration of the task in milliseconds.
-          type: number
+          type: integer
+          minimum: 0
         maxDuration:
           description: Maximum duration of the task in milliseconds.
-          type: number
+          type: integer
+          minimum: 0
         avgIntervalDiff:
           description: >-
             Average difference between the configured task interval and the
             last global task execution in milliseconds.
-          type: number
+          type: integer
+          minimum: 0
         maxIntervalDiff:
           description: >-
             Maximum difference between the configured task interval and the
             last global task execution in milliseconds.
-          type: number
+          type: integer
+          minimum: 0
         interval:
           description: Execution interval of this task type in milliseconds.
-          type: number
+          type: integer
+          minimum: 0
         latest:
           description: >-
             Timestamp of the latest task completion, in ISO-8601 format.
           type: string
         count:
           description: The number of aggregated items.
-          type: number
+          type: integer
+          minimum: 0
       required:
         - avgDuration
         - maxDuration
@@ -3314,13 +3375,15 @@ components:
         assemblyVersion:
           description: |-
             Assembly version of the Grasshopper plugin DLL.
-            Please see the [documentation](https://learn.microsoft.com/en-us/dotnet/api/system.reflection.assemblyname.version?view=net-8.0)
+
+            See the [documentation](https://learn.microsoft.com/en-us/dotnet/api/system.reflection.assemblyname.version?view=net-8.0)
             for more information.
           type: string
         assemblyFullName:
           description: |-
             Full assembly name of the Grasshopper plugin DLL.
-            Please see the [documentation](https://learn.microsoft.com/en-us/dotnet/api/system.reflection.assembly.fullname?view=net-8.0)
+
+            See the [documentation](https://learn.microsoft.com/en-us/dotnet/api/system.reflection.assembly.fullname?view=net-8.0)
             for more information.
           type: string
         isCoreLibrary:
@@ -3332,13 +3395,15 @@ components:
         license:
           description: |-
             The license type of the plugin.
-            Please see the [documentation](https://developer.rhino3d.com/api/grasshopper/html/T_Grasshopper_Kernel_GH_LibraryLicense.htm)
+
+            See the [documentation](https://developer.rhino3d.com/api/grasshopper/html/T_Grasshopper_Kernel_GH_LibraryLicense.htm)
             for more information.
           type: string
         loadingMechanism:
           description: |-
             The mechanism used to load the plugin.
-            Please see the [documentation](https://developer.rhino3d.com/api/grasshopper/html/T_Grasshopper_Kernel_GH_LoadingMechanism.htm)
+
+            See the [documentation](https://developer.rhino3d.com/api/grasshopper/html/T_Grasshopper_Kernel_GH_LoadingMechanism.htm)
             for more information.
           type: string
         location:
@@ -3384,18 +3449,21 @@ components:
           description: |-
             When `true` then `GH_AssemblyInfo.AssemblyVersion` may be used
             instead of `GH_AssemblyInfo.Version` for version checking.
+
             Defaults to `false`.
           type: boolean
         checkMajorMinorVersionOnly:
           description: |-
             When `true` then only the major and minor version numbers recorded
             in Grasshopper models will be checked.
+
             Defaults to `false`.
           type: boolean
         checkIfInstalled:
           description: |-
             When `false` then the installation check of the plugin will be
             skipped.
+
             Defaults to `true`.
           type: boolean
         previousIds:
