@@ -134,16 +134,15 @@ components:
     # Request data structures                                                 #
     ###########################################################################
     RequestTicketType:
+      description: The type of the ticket.
       allOf:
         - $ref: "#/components/schemas/CommonsTicketType"
     RequestTicket:
+      description: Body of a ticket request.
       allOf:
         - $ref: "#/components/schemas/CommonsTicket"
-        - description: Body of a ticket request.
-          type: object
       properties:
         type:
-          description: The type of the ticket.
           $ref: "#/components/schemas/RequestTicketType"
       required:
         - type
@@ -262,67 +261,29 @@ components:
             - description: A single timestamp.
               type: string
               pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
-              examples:
-                - year:
-                  summary: YYYY
-                  value: 2021
-                - year-month:
-                  summary: YYYYMM
-                  value: 202112
-                - year-month-day:
-                  summary: YYYYMMDD
-                  value: 20211225
-                - year-month-day-hour:
-                  summary: YYYYMMDDhh
-                  value: 2021122514
+              example: 2021122514
             - description: >-
                 Multiple timestamps are aggregated and result in a single
                 statistic object.
               type: array
               items:
                 type: string
-              pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
-              examples:
-                - mixed:
-                  value: ["2021", "2022010101"]
+                pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
+              example: ["2021", "202112", "20211225", "2021122514"]
         timestamp_from:
           description: >-
             Allows to define the beginning of a time range, instead of
             specifying individual timestamps.
           type: string
           pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
-          examples:
-            - year:
-              summary: YYYY
-              value: 2021
-            - year-month:
-              summary: YYYYMM
-              value: 202112
-            - year-month-day:
-              summary: YYYYMMDD
-              value: 20211225
-            - year-month-day-hour:
-              summary: YYYYMMDDhh
-              value: 2021122514
+          example: 2021122514
         timestamp_to:
           description: >-
             Allows to define the ending of a time range, instead of specifying
             individual timestamps.
           type: string
           pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
-          examples:
-            - year:
-              summary: YYYY
-              value: 2021
-            - year-month:
-              summary: YYYYMM
-              value: 202112
-            - year-month-day:
-              summary: YYYYMMDD
-              value: 20211225
-            - year-month-day-hour:
-              summary: YYYYMMDDhh
-              value: 2021122514
+          example: 2021122514
       required:
         - modelid
     RequestAnalyticsModel:
@@ -337,7 +298,7 @@ components:
           items:
             $ref: "#/components/schemas/RequestAnalyticsModelPart"
     RequestAnalyticsCreditMetricsId:
-      describe: >-
+      description: >-
         Either a single or multiple IDs. Multiple IDs are aggregated and result
         in a single credit metrics object.
       oneOf:
@@ -417,8 +378,6 @@ components:
           required:
             - modelIds
             - orgIds
-      required:
-        - id
     RequestAnalyticsCreditMetricsPart:
       description: >-
         Parameters of a credit metrics request. When IDs or timestamps are
@@ -433,19 +392,7 @@ components:
             - description: A single timestamp.
               type: string
               pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
-              examples:
-                - year:
-                  summary: YYYY
-                  value: 2021
-                - year-month:
-                  summary: YYYYMM
-                  value: 202112
-                - year-month-day:
-                  summary: YYYYMMDD
-                  value: 20211225
-                - year-month-day-hour:
-                  summary: YYYYMMDDhh
-                  value: 2021122514
+              example: 2021122514
             - description: >-
                 Multiple timestamps are aggregated and result in a single
                 credit metrics object.
@@ -453,47 +400,21 @@ components:
               items:
                 type: string
               pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
-              examples:
-                - mixed:
-                  value: ["2021", "2022010101"]
+              example: ["2021", "202112", "20211225", "2021122514"]
         timestamp_from:
           description: >-
             Allows to define the beginning of a time range, instead of
             specifying individual timestamps.
           type: string
           pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
-          examples:
-            - year:
-              summary: YYYY
-              value: 2021
-            - year-month:
-              summary: YYYYMM
-              value: 202112
-            - year-month-day:
-              summary: YYYYMMDD
-              value: 20211225
-            - year-month-day-hour:
-              summary: YYYYMMDDhh
-              value: 2021122514
+          example: 2021122514
         timestamp_to:
           description: >-
             Allows to define the ending of a time range, instead of specifying
             individual timestamps.
           type: string
           pattern: '^\d{4}(?:\d{2})?(?:\d{2})?(?:\d{2})?$'
-          examples:
-            - year:
-              summary: YYYY
-              value: 2021
-            - year-month:
-              summary: YYYYMM
-              value: 202112
-            - year-month-day:
-              summary: YYYYMMDD
-              value: 20211225
-            - year-month-day-hour:
-              summary: YYYYMMDDhh
-              value: 2021122514
+          example: 2021122514
       required:
         - id
     RequestAnalyticsCreditMetrics:
@@ -595,10 +516,8 @@ components:
       type: object
       additionalProperties:
         type: string
-      examples:
-        - ids:
-          value:
-            "96ce38f8-e197-416a-b78b-18d8376f5903": "62b3e13f-7b78-4a59-86f9-4a51f83feb21"
+      example:
+        "96ce38f8-e197-416a-b78b-18d8376f5903": "62b3e13f-7b78-4a59-86f9-4a51f83feb21"
     RequestExportDefinition:
       description: |-
         Definition of a exports.
@@ -614,12 +533,12 @@ components:
           description: Parameter name to display instead of _name_.
           type: string
         group:
-          anyOf:
+          description: >-
+            Set to `null` to remove the export from the currently assigned
+            group.
+          allOf:
             - $ref: "#/components/schemas/RequestExportDefinitionGroup"
-            - description: >-
-                Set to `null` to remove the export from the currently assigned
-                group.
-              type: "null"
+          nullable: true
         hidden:
           description: Controls whether the export should be hidden in the UI.
           type: boolean
@@ -649,12 +568,12 @@ components:
           description: Parameter name to display instead of `name`.
           type: string
         group:
-          anyOf:
+          description: >-
+            Set to `null` to remove the export from the currently assigned
+            group.
+          allOf:
             - $ref: "#/components/schemas/RequestOutputDefinitionGroup"
-            - description: >-
-                Set to `null` to remove the output from the currently assigned
-                group.
-              type: "null"
+          nullable: true
         hidden:
           description: Controls whether the output should be hidden in the UI.
           type: boolean
@@ -734,7 +653,8 @@ components:
           type: string
         ftype:
           description: File type of the model.
-          $ref: "#/components/schemas/RequestModelFiletype"
+          allOf:
+            - $ref: "#/components/schemas/RequestModelFiletype"
         initial_warmup:
           description: >-
             Allows to control whether the model should be warmed up immediately
@@ -828,7 +748,8 @@ components:
           description: >-
             Can this model be trusted (controls whether failed computations
             will be retried).
-          $ref: "#/components/schemas/RequestModelTrustlevel"
+          allOf:
+            - $ref: "#/components/schemas/RequestModelTrustlevel"
         use_cdn:
           description: >-
             Allows the usage of the CDN for fast content distribution.
@@ -858,12 +779,12 @@ components:
           description: Parameter name to display instead of `name`.
           type: string
         group:
-          anyOf:
+          description: >-
+            Set to `null` to remove the export from the currently assigned
+            group.
+          allOf:
             - $ref: "#/components/schemas/RequestParameterDefinitionGroup"
-            - description: >-
-                Set to `null` to remove the parameter from the currently
-                assigned group.
-              type: "null"
+          nullable: true
         hidden:
           description: >-
             Controls whether the parameter should be hidden in the UI.
@@ -886,12 +807,10 @@ components:
       type: object
       additionalProperties:
         $ref: "#/components/schemas/RequestFileUploadPart"
-      examples:
-        - JPEG:
-          value:
-            "e6a576af-2e16-43cc-a78f-d74ae1154205":
-              format: "image/jpeg"
-              size: 1234
+      example:
+        "e6a576af-2e16-43cc-a78f-d74ae1154205":
+            format: "image/jpeg"
+            size: 1234
     RequestFileUploadPart:
       description: >-
         Data for a single file parameter part of a file upload request.
@@ -933,7 +852,8 @@ components:
           type: number
         content_type:
           description: Content-type of the sdTF to be uploaded.
-          $ref: "#/components/schemas/RequestSdtfUploadPartType"
+          allOf:
+            - $ref: "#/components/schemas/RequestSdtfUploadPartType"
         namespace:
           description: Namespace the asset shall be created in.
           type: string
@@ -1014,25 +934,29 @@ components:
       properties:
         model:
           description: The definitions of a ShapeDiver model.
-          $ref: "#/components/schemas/ResponseModel"
+          allOf:
+            - $ref: "#/components/schemas/ResponseModel"
     ResponseDtoFile:
       type: object
       properties:
         file:
           description: Links regarding the model file.
-          $ref: "#/components/schemas/ResponseFile"
+          allOf:
+            - $ref: "#/components/schemas/ResponseFile"
     ResponseDtoStatistic:
       type: object
       properties:
         statistic:
           description: Statistics of a model.
-          $ref: "#/components/schemas/ResponseStatistic"
+          allOf:
+            - $ref: "#/components/schemas/ResponseStatistic"
     ResponseDtoSetting:
       type: object
       properties:
         setting:
           description: Various settings.
-          $ref: "#/components/schemas/ResponseSettings"
+          allOf:
+            - $ref: "#/components/schemas/ResponseSettings"
     ResponseDtoParameters:
       type: object
       properties:
@@ -1050,13 +974,15 @@ components:
           description: Information about Grasshopper plugins.
           type: object
           additionalProperties:
-            $ref: "#/components/schemas/ResponsePlugins"
+            allOf:
+            - $ref: "#/components/schemas/ResponsePlugins"
     ResponseDtoViewer:
       type: object
       properties:
         viewer:
           description: Viewer specific data.
-          $ref: "#/components/schemas/ResponseViewer"
+          allOf:
+            - $ref: "#/components/schemas/ResponseViewer"
     ResponseDtoOutputs:
       type: object
       properties:
@@ -1086,25 +1012,29 @@ components:
       properties:
         asset:
           description: File or sdTF assets.
-          $ref: "#/components/schemas/ResponseAsset"
+          allOf:
+            - $ref: "#/components/schemas/ResponseAsset"
     ResponseDtoAnalytics:
       type: object
       properties:
         analytics:
           description: Statistics of the model for the given timespan.
-          $ref: "#/components/schemas/ResponseAnalytics"
+          allOf:
+            - $ref: "#/components/schemas/ResponseAnalytics"
     ResponseDtoList:
       type: object
       properties:
         list:
           description: Response of a list API call.
-          $ref: "#/components/schemas/ResponseList"
+          allOf:
+            - $ref: "#/components/schemas/ResponseList"
     ResponseDtoGltfUpload:
       type: object
       properties:
         gltf:
           description: glTF information.
-          $ref: "#/components/schemas/ResponseGltfUpload"
+          allOf:
+            - $ref: "#/components/schemas/ResponseGltfUpload"
     ResponseDtoModelComputation:
       type: object
       properties:
@@ -1118,13 +1048,15 @@ components:
       properties:
         pagination:
           description: Pagination information.
-          $ref: "#/components/schemas/ResponsePagination"
+          allOf:
+            - $ref: "#/components/schemas/ResponsePagination"
     ResponseDtoSystem:
       type: object
       properties:
         system:
           description: System information.
-          $ref: "#/components/schemas/ResponseSystem"
+          allOf:
+            - $ref: "#/components/schemas/ResponseSystem"
     ResponseDtoCleanup:
       type: object
       properties:
@@ -1197,25 +1129,32 @@ components:
           type: number
         duration:
           description: Statistics on the duration of all sessions.
-          $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
+          allOf:
+            - $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
         app:
           description: Statistics on the duration of app sessions.
-          $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
+          allOf:
+            - $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
         backend:
           description: Statistics on the duration of backend sessions.
-          $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
+          allOf:
+            - $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
         embedded:
           description: Statistics on the duration of embedded sessions.
-          $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
+          allOf:
+            - $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
         desktop:
           description: Statistics on the duration of desktop sessions.
-          $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
+          allOf:
+            - $ref: "#/components/schemas/ResponseAnalyticsModelOnDuration"
         customize:
           description: Statistics on customization requests per session.
-          $ref: "#/components/schemas/ResponseAnalyticsModelOnAction"
+          allOf:
+            - $ref: "#/components/schemas/ResponseAnalyticsModelOnAction"
         export:
           description: Statistics on export requests per session.
-          $ref: "#/components/schemas/ResponseAnalyticsModelOnAction"
+          allOf:
+            - $ref: "#/components/schemas/ResponseAnalyticsModelOnAction"
       required:
         - modelid
         - timestamp
@@ -1710,7 +1649,8 @@ components:
       properties:
         error:
           description: The type of the error.
-          $ref: "#/components/schemas/ResponseErrorType"
+          allOf:
+            - $ref: "#/components/schemas/ResponseErrorType"
         desc:
           description: General description of the error type.
           type: string
@@ -1790,7 +1730,8 @@ components:
           type: string
         type:
           description: Type of export.
-          $ref: "#/components/schemas/ResponseExportDefinitionType"
+          allOf:
+            - $ref: "#/components/schemas/ResponseExportDefinitionType"
         dependency:
           description: List of IDs of parameters influencing this export.
           type: array
@@ -1798,7 +1739,8 @@ components:
             type: string
         group:
           description: Group of an export.
-          $ref: "#/components/schemas/ResponseExportDefinitionGroup"
+          allOf:
+            - $ref: "#/components/schemas/ResponseExportDefinitionGroup"
         order:
           description: Ordering of the export in client applications.
           type: number
@@ -1856,14 +1798,17 @@ components:
         result:
           description: >-
             Optional result object for exports of type `email` and `shapeways`.
-          $ref: "#/components/schemas/ResponseExportResult"
+          allOf:
+            - $ref: "#/components/schemas/ResponseExportResult"
         status_computation:
           description: >-
             Status of the computation which resulted in the export version.
-          $ref: "#/components/schemas/ResponseModelComputationStatus"
+          allOf:
+            - $ref: "#/components/schemas/ResponseModelComputationStatus"
         status_collect:
           description: Status of collecting results for the export version.
-          $ref: "#/components/schemas/ResponseModelComputationStatus"
+          allOf:
+            - $ref: "#/components/schemas/ResponseModelComputationStatus"
     ResponseExportContent:
       description: An item of the `content` array for exports.
       type: object
@@ -2060,7 +2005,8 @@ components:
           type: string
         stat:
           description: Status of the model.
-          $ref: "#/components/schemas/ResponseModelStatus"
+          allOf:
+            - $ref: "#/components/schemas/ResponseModelStatus"
         user_id:
           description: ShapeDiver User ID of the model owner.
           type: string
@@ -2224,18 +2170,22 @@ components:
           type: string
         type:
           description: Type of parameter.
-          $ref: "#/components/schemas/ResponseParameterType"
+          allOf:
+            - $ref: "#/components/schemas/ResponseParameterType"
         visualization:
           description: >-
             Optional preferred visualization for parameters of type `FILE` and
             `STRINGLIST`.
-          $ref: "#/components/schemas/ResponseParameterVisualization"
+          allOf:
+            - $ref: "#/components/schemas/ResponseParameterVisualization"
         structure:
           description: Structure of a parameter.
-          $ref: "#/components/schemas/ResponseParameterStructure"
+          allOf:
+            - $ref: "#/components/schemas/ResponseParameterStructure"
         group:
           description: Group of a parameter.
-          $ref: "#/components/schemas/ResponseParameterGroup"
+          allOf:
+            - $ref: "#/components/schemas/ResponseParameterGroup"
         hint:
           description: Technical hint for the UI implementation.
           type: string
@@ -2358,7 +2308,8 @@ components:
       properties:
         type:
           description: The type of the ticket.
-          $ref: "#/components/schemas/ResponseTicketType"
+          allOf:
+            - $ref: "#/components/schemas/ResponseTicketType"
         model_id:
           description: >-
             Either the model's `id` or `id2` property, depending on
@@ -2387,7 +2338,8 @@ components:
       properties:
         type:
           description: Type of the model cleanup process.
-          $ref: "#/components/schemas/ResponseModelCleanupProcessType"
+          allOf:
+            - $ref: "#/components/schemas/ResponseModelCleanupProcessType"
         timestamp_enqueued:
           description: >-
             The timestamp when the deletion job has been enqueued (format
@@ -2475,10 +2427,12 @@ components:
           type: object
         stats:
           description: The stats of the computation request.
-          $ref: "#/components/schemas/ResponseModelComputationStats"
+          allOf:
+            - $ref: "#/components/schemas/ResponseModelComputationStats"
         status:
           description: Result of processing request.
-          $ref: "#/components/schemas/ResponseModelComputationStatus"
+          allOf:
+            - $ref: "#/components/schemas/ResponseModelComputationStatus"
         timestamp_fin:
           description: >-
             Timestamp when the computation request was finished, in format
@@ -2503,7 +2457,8 @@ components:
           type: string
         limit:
           description: Model's limits at the time of the computation process.
-          $ref: "#/components/schemas/ResponseModelComputationLimits"
+          allOf:
+            - $ref: "#/components/schemas/ResponseModelComputationLimits"
       required:
         - id
         - timestamp
@@ -2592,7 +2547,8 @@ components:
           type: number
         model:
           description: Information about model computations.
-          $ref: "#/components/schemas/ResponseModelComputationModel"
+          allOf:
+            - $ref: "#/components/schemas/ResponseModelComputationModel"
         cpu_time_check_stored:
           description: >-
             The number of milliseconds the CPU was used to carry out checks
@@ -2864,7 +2820,8 @@ components:
           type: string
         chunks:
           description: Information about which chunks exist in the asset/sdTF.
-          $ref: "#/components/schemas/ResponseOutputChunk"
+          allOf:
+            - $ref: "#/components/schemas/ResponseOutputChunk"
         dependency:
           description: List of IDs of parameters influencing this output.
           type: array
@@ -2872,7 +2829,8 @@ components:
             type: string
         group:
           description: Group of an output.
-          $ref: "#/components/schemas/ResponseOutputDefinitionGroup"
+          allOf:
+            - $ref: "#/components/schemas/ResponseOutputDefinitionGroup"
         order:
           description: Ordering of the output in client applications.
           type: number
@@ -2942,10 +2900,12 @@ components:
         status_computation:
           description: >-
             Status of the computation which resulted in the output version.
-          $ref: "#/components/schemas/ResponseModelComputationStatus"
+          allOf:
+            - $ref: "#/components/schemas/ResponseModelComputationStatus"
         status_collect:
           description: Status of collecting results for the output version.
-          $ref: "#/components/schemas/ResponseModelComputationStatus"
+          allOf:
+            - $ref: "#/components/schemas/ResponseModelComputationStatus"
       required:
         - version
     ResponseOutputContent:
@@ -3196,12 +3156,12 @@ components:
       properties:
         minions:
           description: System information about the Geometry Minions.
-          type: object
-          $ref: "#/components/schemas/ResponseSystemMinions"
+          allOf:
+            - $ref: "#/components/schemas/ResponseSystemMinions"
         workers:
           description: System information about the Geometry Workers.
-          type: object
-          $ref: "#/components/schemas/ResponseSystemWorkers"
+          allOf:
+            - $ref: "#/components/schemas/ResponseSystemWorkers"
     ResponseSystemMinions:
       description: >-
         Holds system information of all currently running Geometry Minion
@@ -3286,8 +3246,8 @@ components:
           description: >-
             Holds information of all installed and allowed Grasshopper
             plugins.
-          type: object
-          $ref: "#/components/schemas/ResponseSystemWorkerPlugins"
+          allOf:
+            - $ref: "#/components/schemas/ResponseSystemWorkerPlugins"
         rhinoVersion:
           description: Version of the Rhino application.
           type: string
