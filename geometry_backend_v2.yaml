@@ -109,6 +109,16 @@ components:
       type: string
       pattern: '^\d{13}$'
       example: 1708585395633
+    NullObj:
+      description: A substitution for the JSON-value `null`.
+      type: object
+      properties:
+        nullObj:
+          description: The value of this property does not matter.
+          type: boolean
+      required:
+        - nullObj
+      nullable: true
     OctetStream:
       type: string
       format: binary
@@ -632,11 +642,11 @@ components:
           type: string
         group:
           description: >-
-            Set to `null` to remove the export from the currently assigned
-            group.
-          allOf:
+            Set to `null` or `NullObj` to remove the export from the currently
+            assigned group.
+          oneOf:
             - $ref: '#/components/schemas/ReqGroup'
-          nullable: true
+            - $ref: '#/components/schemas/NullObj'
         hidden:
           description: Controls whether the export should be hidden in the UI.
           type: boolean
@@ -662,11 +672,11 @@ components:
           type: string
         group:
           description: >-
-            Set to `null` to remove the export from the currently assigned
-            group.
-          allOf:
+            Set to `null` or `NullObj` to remove the export from the currently
+            assigned group.
+          oneOf:
             - $ref: '#/components/schemas/ReqGroup'
-          nullable: true
+            - $ref: '#/components/schemas/NullObj'
         hidden:
           description: Controls whether the output should be hidden in the UI.
           type: boolean
@@ -905,11 +915,11 @@ components:
           type: string
         group:
           description: >-
-            Set to `null` to remove the export from the currently assigned
-            group.
-          allOf:
+            Set to `null` or `NullObj` to remove the export from the currently
+            assigned group.
+          oneOf:
             - $ref: '#/components/schemas/ReqGroup'
-          nullable: true
+            - $ref: '#/components/schemas/NullObj'
         hidden:
           description: >-
             Controls whether the parameter should be hidden in the UI.
