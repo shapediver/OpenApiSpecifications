@@ -4,8 +4,7 @@ info:
   title: Geometry Backend API v2
   description: |-
     The ShapeDiver Geometry Backend system is used to:
-    * host Grasshopper models in a secure, reliable, scalable, and performant
-      way,
+    * host Grasshopper models in a secure, reliable, scalable, and performant way,
     * run computations of Grasshopper models,
     * and cache and output the results of computations and exports.
   version: 2.13.0
@@ -24,14 +23,14 @@ tags:
     externalDocs:
       url: https://help.shapediver.com/doc/exports-on-the-api
   - name: file
-  - name: glTF
+  - name: gltf
   - name: log
   - name: model
   - name: output
     externalDocs:
       url: https://help.shapediver.com/doc/outputs-on-the-api
   - name: script
-  - name: sdTF
+  - name: sdtf
     externalDocs:
       url: https://help.shapediver.com/doc/sdtf-structured-data-transfer-format
   - name: session
@@ -48,11 +47,44 @@ components:
     #-------------------------------------------------------------------------#
     #- Custom data types                                                     -#
     #-------------------------------------------------------------------------#
-    Base64:
+    AnyDateTime:
+      # Cannot combine the other types since string pattern matching within `oneOf` is not
+      # supported by all generators.
+      # TODO: Check again in OAS 3.1!
+      description: >-
+        An ISO-8601 (partial) date with an optional (partial) timestamp, in numeric format.
+
+        Formats:
+          * YYYY
+          * YYYYMM
+          * YYYYMMDD
+          * YYYYMMDDhh
+          * YYYYMMDDhhmm
+          * YYYYMMDDhhmmss
+          * YYYYMMDDhhmmsszzz
+      type: string
+      pattern: '^(\d{4}|\d{6}|\d{8}|\d{10}|\d{12}|\d{14}|\d{17})$'
+      example: 20240521
+    AnyDateExtended:
+      # Cannot combine the other types since string pattern matching within `oneOf` is not
+      # supported by all generators.
+      # TODO: Check again in OAS 3.1!
+      description: >-
+        An ISO-8601 (partial) date with an optional hour timestamp, in numeric format.
+
+        Formats:
+          * YYYY
+          * YYYYMM
+          * YYYYMMDD
+          * YYYYMMDDhh
+      type: string
+      pattern: '^(\d{4}|\d{6}|\d{8}|\d{10})$'
+      example: 20240521
+    Base64Data:
       type: string
       format: byte
-    Date:
-      description: >-
+    FullDate:
+      description: |-
         An ISO-8601 date, in numeric format.
 
         Format: YYYYMMDD
@@ -60,7 +92,7 @@ components:
       pattern: '^\d{8}$'
       example: 20240521
     DateHour:
-      description: >-
+      description: |-
         An ISO-8601 date with hours, in numeric format.
 
         Format: YYYYMMDDhh
@@ -68,7 +100,7 @@ components:
       pattern: '^\d{10}$'
       example: 2024052114
     DateHourMinute:
-      description: >-
+      description: |-
         An ISO-8601 date with hours and minutes, in numeric format.
 
         Format: YYYYMMDDhhmm
@@ -157,32 +189,6 @@ components:
         - type: array
           items: {}
         - type: object
-    AnyDateTime:
-      description: The date and optionally the time in various resolutions.
-      oneOf:
-        - $ref: '#/components/schemas/Year'
-        - $ref: '#/components/schemas/YearMonth'
-        - $ref: '#/components/schemas/Date'
-        - $ref: '#/components/schemas/DateHour'
-        - $ref: '#/components/schemas/DateHourMinute'
-        - $ref: '#/components/schemas/DateTime'
-        - $ref: '#/components/schemas/DateTimeMs'
-    AnyDateExtended:
-      description: >-
-        The date in various resolutions with an optionally partial timestamp.
-      oneOf:
-        - $ref: '#/components/schemas/Year'
-        - $ref: '#/components/schemas/YearMonth'
-        - $ref: '#/components/schemas/Date'
-        - $ref: '#/components/schemas/DateHour'
-    AtLeastOneString:
-      description: Either a single string or an array of strings.
-      oneOf:
-        - $ref: '#/components/schemas/Uuid'
-        - type: array
-          items:
-            $ref: '#/components/schemas/Uuid'
-          minItems: 1
     AtLeastOneUuid:
       description: Either a single UUID or an array of UUIDs.
       oneOf:
@@ -203,7 +209,7 @@ components:
     #-------------------------------------------------------------------------#
     #- Common data structures                                                -#
     #-------------------------------------------------------------------------#
-    CommonsComputationStatus:
+    CommonsComputationStatus: &CommonsComputationStatus
       description: Status of a model computation.
       type: string
       enum:
@@ -224,6 +230,24 @@ components:
         - nooutputdatafordefaultparametervalues
         - modelwithoutgeometryoutput
         - unknown
+      x-enum-varnames:
+        - SUCCESS
+        - TIMEOUT
+        - CHECK_CONFIRMED
+        - CHECK_DENIED
+        - CHECK_PENDING
+        - MAX_COMBINED_ASSET_SIZE_EXCEEDED
+        - MAX_DB_SIZE_PER_OUTPUT_EXCEEDED
+        - MAX_PARTS_PER_OUTPUT_EXCEEDED
+        - MAX_ASSET_PARTS_PER_OUTPUT_EXCEEDED
+        - MAX_TRANSFORMATIONS_PER_OUTPUT_EXCEEDED
+        - MAX_PARTS_EXCEEDED
+        - MAX_ASSET_PARTS_EXCEEDED
+        - RECOVERABLE_ERROR
+        - UNRECOVERABLE_ERROR
+        - NO_OUTPUT_DATA_FOR_DEFAULT_PARAMETER_VALUES
+        - MODEL_WITHOUT_GEOMETRY_OUTPUT
+        - UNKNOWN
     CommonsGroup:
       description: Group of a parameter, export or output.
       type: object
@@ -235,7 +259,7 @@ components:
       required:
         - id
         - name
-    CommonsModelStatus:
+    CommonsModelStatus: &CommonsModelStatus
       description: Status of a model.
       type: string
       enum:
@@ -246,26 +270,30 @@ components:
         - confirmed
         - denied
         - deleted
+      x-enum-varnames:
+        - UNKNOWN
+        - NOT_UPLOADED
+        - UPLOADED
+        - PENDING
+        - CONFIRMED
+        - DENIED
+        - DELETED
     CommonsTicket:
       description: Authorization ticket.
       type: object
       properties:
         accessdomains:
-          description: >-
-            List of domains (origins) this ticket should be limited to; may be
-            empty.
+          description: List of domains (origins) this ticket should be limited to; may be empty.
           type: array
           items:
             type: string
         author:
           description: >-
-            Should this ticket provide access to model authoring (allows to
-            change configuration)?
+            Should this ticket provide access to model authoring (allows to change configuration)?
           type: boolean
         pub:
           description: >-
-            Should this ticket allow public access (ignore the model's
-            `accessdomains` property)?
+            Should this ticket allow public access (ignore the model's `accessdomains` property)?
           type: boolean
         until:
           description: The timestamp until which the ticket should be valid.
@@ -273,18 +301,16 @@ components:
             - $ref: '#/components/schemas/DateTime'
         use_id2:
           description: >-
-            Does this ticket identify the model via its secondary ID (model
-            property `id2`)?
+            Does this ticket identify the model via its secondary ID (model property `id2`)?
           type: boolean
       required:
         - pub
         - until
-    CommonsTicketType:
+    CommonsTicketType: &CommonsTicketType
       description: Type of a ticket.
       type: string
-      enum:
-        - backend
-        - "''"
+      enum: [ backend, "" ]
+      x-enum-varnames: [ BACKEND, NONE ]
 
     #-------------------------------------------------------------------------#
     #- Query types                                                           -#
@@ -297,10 +323,14 @@ components:
         - timeout
         - other
         - '*'
+      x-enum-varnames:
+        - SUCCESS
+        - TIMEOUT
+        - OTHER
+        - ALL
     QueryComputationStatus:
+      <<: *CommonsComputationStatus
       description: Filter by model computation status.
-      allOf:
-        - $ref: '#/components/schemas/CommonsComputationStatus'
     QueryComputationType:
       description: Filter by computation type.
       type: string
@@ -309,28 +339,28 @@ components:
         - export
         - load
         - '*'
+      x-enum-varnames:
+        - COMPUTATION
+        - EXPORT
+        - LOAD
+        - ALL
     QueryGltfConversion:
       description: |-
         Conversion type of a glTF upoad:
         * `none`: no further processing of the file.
         * `usdz`: converts the glTF into the USDZ format.
-        * `scene`: creates a temporary AR scene that holds both, a glTF and a
-          USDZ file.
+        * `scene`: creates a temporary AR scene that holds both, a glTF and a USDZ file.
       type: string
-      enum:
-        - none
-        - scene
-        - usdz
+      enum: [ none, scene, usdz ]
+      x-enum-varnames: [ NONE, SCENE, USDZ ]
     QueryModelStatus:
+      <<: *CommonsModelStatus
       description: Filter by model status.
-      allOf:
-        - $ref: '#/components/schemas/CommonsModelStatus'
     QueryOrder:
       description: Specifies the order of the results.
       type: string
-      enum:
-        - asc
-        - desc
+      enum: [ asc, desc ]
+      x-enum-varnames: [ ASC, DESC ]
 
     #-------------------------------------------------------------------------#
     #- Request data structures                                               -#
@@ -339,19 +369,19 @@ components:
       description: Group information.
       allOf:
         - $ref: '#/components/schemas/CommonsGroup'
-    ReqTicketType:
-      description: The type of the ticket.
-      allOf:
-        - $ref: '#/components/schemas/CommonsTicketType'
     ReqTicket:
       description: Body of a ticket request.
       allOf:
         - $ref: '#/components/schemas/CommonsTicket'
-      properties:
-        type:
-          $ref: '#/components/schemas/ReqTicketType'
-      required:
-        - type
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/ReqTicketType'
+          required:
+            - type
+    ReqTicketType:
+      <<: *CommonsTicketType
+      description: The type of the ticket.
     ReqConfigure:
       description: |-
         Body of a configure request.
@@ -362,10 +392,8 @@ components:
     ReqLogLevel:
       description: Log message level for log requests.
       type: string
-      enum:
-        - 0
-        - 1
-        - 2
+      enum: [ 0, 1, 2 ]
+      x-enum-varnames: [ INFO, WARN, ERROR ]
     ReqLogMessage:
       description: Body of a log message request.
       type: object
@@ -383,228 +411,209 @@ components:
       type: object
       properties:
         models:
-          description: >-
-            The model IDs that should form the new authorization group.
+          description: The model IDs that should form the new authorization group.
           type: array
           items:
             $ref: '#/components/schemas/Uuid'
         users:
-          description: >-
-            The user IDs that should form the new authorization group.
+          description: The user IDs that should form the new authorization group.
           type: array
           items:
             $ref: '#/components/schemas/Uuid'
         organizations:
-          description: >-
-            The organization IDs that should form the new authorization
-            group.
+          description: The organization IDs that should form the new authorization group.
           type: array
           items:
             $ref: '#/components/schemas/Uuid'
-    ReqModelStatistic:
-      description: >-
-        Parameters of a single model-session analytics request. When multiple
-        model IDs or timestamps are requested, the resulting response-item
-        represents an aggregation of the requested data.
-      type: object
-      properties:
-        modelid:
-          $ref: '#/components/schemas/AtLeastOneUuid'
-        timestamp:
-          description: >-
-            Multiple timestamps are aggregated and result in a single statistic
-            object.
-          allOf:
-            - $ref: '#/components/schemas/AtLeastOneAnyDateExtended'
-        timestamp_from:
-          description: >-
-            Allows to define the beginning of a time range, instead of
-            specifying individual timestamps.
-          allOf:
-            - $ref: '#/components/schemas/AnyDateExtended'
-        timestamp_to:
-          description: >-
-            Allows to define the ending of a time range, instead of specifying
-            individual timestamps.
-          allOf:
-            - $ref: '#/components/schemas/AnyDateExtended'
-      required:
-        - modelid
     ReqModelStatistics:
       description: >-
-        Body of a model statistics request. Every request-item results in
-        exactly one response-item, whereby the order of response-items
-        corresponds to the order of the request-items.
+        Body of a model statistics request. Every request-item results in exactly one
+        response-item, whereby the order of response-items corresponds to the order of the
+        request-items.
       type: object
       properties:
         parameters:
           type: array
           items:
-            $ref: '#/components/schemas/ReqModelStatistic'
-    ReqModelCreditMetricId:
-      description: Model metrics
-      type: object
-      properties:
-        modelIds:
-          $ref: '#/components/schemas/AtLeastOneUuid'
-      required:
-        - modelIds
-    ReqUserCreditMetricId:
-      description: User metrics
-      type: object
-      properties:
-        userIds:
-          $ref: '#/components/schemas/AtLeastOneUuid'
-      required:
-        - userIds
-    ReqOrganizationCreditMetricId:
-      description: Organization metrics
-      type: object
-      properties:
-        orgIds:
-          $ref: '#/components/schemas/AtLeastOneUuid'
-      required:
-        - orgIds
-    ReqSystemCreditMetricId:
-      description: System-wide metrics
-      type: object
-      properties:
-        systems:
-          type: boolean
-      required:
-        - systems
-    ReqModelUserCreditMetricId:
-      description: Model-User metrics
-      type: object
-      properties:
-        modelIds:
-          $ref: '#/components/schemas/AtLeastOneUuid'
-        userIds:
-          $ref: '#/components/schemas/AtLeastOneUuid'
-      required:
-        - modelIds
-        - userIds
-    ReqModelOrganizationCreditMetricId:
-      description: Model-Organization metrics
-      type: object
-      properties:
-        modelIds:
-          $ref: '#/components/schemas/AtLeastOneUuid'
-        orgIds:
-          $ref: '#/components/schemas/AtLeastOneUuid'
-      required:
-        - modelIds
-        - orgIds
+            title: ReqModelStatistic
+            description: >-
+              Parameters of a single model-session analytics request. When multiple model IDs or
+              timestamps are requested, the resulting response-item represents an aggregation of
+              the requested data.
+            type: object
+            properties:
+              modelid:
+                $ref: '#/components/schemas/AtLeastOneUuid'
+              timestamp:
+                description: >-
+                  Multiple timestamps are aggregated and result in a single statistic object.
+                allOf:
+                  - $ref: '#/components/schemas/AtLeastOneAnyDateExtended'
+              timestamp_from:
+                description: >-
+                  Allows to define the beginning of a time range, instead of specifying individual
+                  timestamps.
+                allOf:
+                  - $ref: '#/components/schemas/AnyDateExtended'
+              timestamp_to:
+                description: >-
+                  Allows to define the ending of a time range, instead of specifying individual
+                  timestamps.
+                allOf:
+                  - $ref: '#/components/schemas/AnyDateExtended'
+            required:
+              - modelid
     ReqAnyCreditMetricId:
       description: >-
-        Either a single or multiple IDs. Multiple IDs are aggregated and result
-        in a single credit metrics object.
+        Either a single or multiple IDs. Multiple IDs are aggregated and result in a single credit
+        metrics object.
       oneOf:
-        - $ref: '#/components/schemas/ReqModelCreditMetricId'
-        - $ref: '#/components/schemas/ReqUserCreditMetricId'
-        - $ref: '#/components/schemas/ReqOrganizationCreditMetricId'
-        - $ref: '#/components/schemas/ReqSystemCreditMetricId'
-        - $ref: '#/components/schemas/ReqModelUserCreditMetricId'
-        - $ref: '#/components/schemas/ReqModelOrganizationCreditMetricId'
-    ReqCreditMetric:
-      description: >-
-        Parameters of a credit metrics request. When IDs or timestamps are
-        requested, the resulting response-item represents an aggregation of the
-        requested data.
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/ReqAnyCreditMetricId'
-        timestamp:
-          description: >-
-            Multiple timestamps are aggregated and result in a single
-            credit metrics object.
-          allOf:
-            - $ref: '#/components/schemas/AtLeastOneAnyDateExtended'
-        timestamp_from:
-          description: >-
-            Allows to define the beginning of a time range, instead of
-            specifying individual timestamps.
-          allOf:
-            - $ref: '#/components/schemas/AnyDateExtended'
-        timestamp_to:
-          description: >-
-            Allows to define the ending of a time range, instead of specifying
-            individual timestamps.
-          allOf:
-            - $ref: '#/components/schemas/AnyDateExtended'
-      required:
-        - id
+        - title: ReqModelCreditMetricId
+          description: Model metrics
+          type: object
+          properties:
+            modelIds:
+              $ref: '#/components/schemas/AtLeastOneUuid'
+          required:
+            - modelIds
+        - title: ReqUserCreditMetricId
+          description: User metrics
+          type: object
+          properties:
+            userIds:
+              $ref: '#/components/schemas/AtLeastOneUuid'
+          required:
+            - userIds
+        - title: ReqOrganizationCreditMetricId
+          description: Organization metrics
+          type: object
+          properties:
+            orgIds:
+              $ref: '#/components/schemas/AtLeastOneUuid'
+          required:
+            - orgIds
+        - title: ReqSystemCreditMetricId
+          description: System-wide metrics
+          type: object
+          properties:
+            systems:
+              type: boolean
+          required:
+            - systems
+        - title: ReqModelUserCreditMetricId
+          description: Model-User metrics
+          type: object
+          properties:
+            modelIds:
+              $ref: '#/components/schemas/AtLeastOneUuid'
+            userIds:
+              $ref: '#/components/schemas/AtLeastOneUuid'
+          required:
+            - modelIds
+            - userIds
+        - title: ReqModelOrganizationCreditMetricId
+          description: Model-Organization metrics
+          type: object
+          properties:
+            modelIds:
+              $ref: '#/components/schemas/AtLeastOneUuid'
+            orgIds:
+              $ref: '#/components/schemas/AtLeastOneUuid'
+          required:
+            - modelIds
+            - orgIds
     ReqCreditMetrics:
       description: >-
-        Body of a credit metrics request. Every request-item results in exactly
-        one response-item, whereby the order of response-items corresponds to
-        the order of the request-items.
+        Body of a credit metrics request. Every request-item results in exactly one response-item,
+        whereby the order of response-items corresponds to the order of the request-items.
       type: object
       properties:
         parameters:
           type: array
           items:
-            $ref: '#/components/schemas/ReqCreditMetric'
-    ReqBasicParameter:
-      description: Definition of a basic ShapeDiver parameter.
+            title: ReqCreditMetric
+            description: >-
+              Parameters of a credit metrics request. When IDs or timestamps are requested, the
+              resulting response-item represents an aggregation of the requested data.
+            type: object
+            properties:
+              id:
+                $ref: '#/components/schemas/ReqAnyCreditMetricId'
+              timestamp:
+                description: >-
+                  Multiple timestamps are aggregated and result in a single credit metrics object.
+                allOf:
+                  - $ref: '#/components/schemas/AtLeastOneAnyDateExtended'
+              timestamp_from:
+                description: >-
+                  Allows to define the beginning of a time range, instead of specifying individual
+                  timestamps.
+                allOf:
+                  - $ref: '#/components/schemas/AnyDateExtended'
+              timestamp_to:
+                description: >-
+                  Allows to define the ending of a time range, instead of specifying individual
+                  timestamps.
+                allOf:
+                  - $ref: '#/components/schemas/AnyDateExtended'
+            required:
+              - id
+    ReqParameterValue:
+      description: |-
+        The value of parameter.
+
+        Supported types:
+        * Basic parameter (`ReqBasicParameter`)
+        * S-type parameter (`ReqStypeParameter`)
       oneOf:
-        - type: string
-        - type: number
-        - type: boolean
-    ReqStypeParameter:
-      description: Definition of the value to use for s-type parameters.
-      type: object
-      properties:
-        value:
-          description: >-
-            Optional embedded value. If this is set the asset is ignored.
-          type: string
-        asset:
-          $ref: '#/components/schemas/ReqParameterAsset'
-    ReqParameterAsset:
-      description: Reference to the s-type parameter asset to be used.
-      type: object
-      properties:
-        id:
-          description: String ID of the asset.
-          type: string
-        chunk:
-          $ref: '#/components/schemas/ReqParameterChunk'
-      required:
-        - id
-    ReqParameterChunk:
-      description: >-
-        Describing which chunk of the s-type asset to use.
-        When not specified, the chunk of an asset gets chosen based on
-        parameter ID and name.
-      type: object
-      properties:
-        id:
-          description: ID of the chunk to be used.
-          type: string
-        name:
-          description: Name attribute of the chunk to be used.
-          type: string
+        - title: ReqBasicParameter
+          description: Definition of a basic ShapeDiver parameter.
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+        - title: ReqStypeParameter
+          description: Definition of the value to use for s-type parameters.
+          type: object
+          properties:
+            value:
+              description: Optional embedded value. If this is set the asset is ignored.
+              type: string
+            asset:
+              title: ReqParameterAsset
+              description: Reference to the s-type parameter asset to be used.
+              type: object
+              properties:
+                id:
+                  description: String ID of the asset.
+                  type: string
+                chunk:
+                  title: ReqParameterChunk
+                  description: >-
+                    Describing which chunk of the s-type asset to use. When not specified, the
+                    chunk of an asset gets chosen based on parameter ID and name.
+                  type: object
+                  properties:
+                    id:
+                      description: ID of the chunk to be used.
+                      type: string
+                    name:
+                      description: Name attribute of the chunk to be used.
+                      type: string
+              required:
+                - id
     ReqCustomization:
       description: |-
-        Body of a customization request, a directory of parameter key and
-        values.
+        Body of a customization request, a directory of parameter key and values.
 
-        Supported parameter keys are as follows, whereby the parameter
-        resolution is done in the same order as the keys are listed:
+        Supported parameter keys are as follows, whereby the parameter resolution is done in the
+        same order as the keys are listed:
         * `id`
         * `name`
         * `displayname`
-
-        Supported parameter values are:
-        * Basic parameter (`ReqBasicParameter`)
-        * S-type parameter (`ReqStypeParameter`)
       type: object
       additionalProperties:
-        oneOf:
-          - $ref: '#/components/schemas/ReqBasicParameter'
-          - $ref: '#/components/schemas/ReqStypeParameter'
+        $ref: '#/components/schemas/ReqParameterValue'
     ReqExport:
       description: Body of an export request.
       type: object
@@ -612,24 +621,24 @@ components:
         parameters:
           $ref: '#/components/schemas/ReqCustomization'
         exports:
-          $ref: '#/components/schemas/AtLeastOneString'
+          type: array
+          items:
+            type: string
         outputs:
           type: array
           items:
             type: string
         max_wait_time:
           description: >-
-            Maximum amount of milliseconds to wait for completion of export
-            request before responding.
+            Maximum amount of milliseconds to wait for completion of export request before
+            responding.
           type: integer
           minimum: 0
       required:
         - parameters
         - exports
     ReqExportDefinitions:
-      description: >-
-        Definition of a exports. A directory of export-IDs and
-        export-definitions.
+      description: Definition of a exports. A directory of export-IDs and export-definitions.
       type: object
       additionalProperties:
         $ref: '#/components/schemas/ReqExportDefinition'
@@ -641,9 +650,9 @@ components:
           description: Parameter name to display instead of _name_.
           type: string
         group:
+          title: ReqExportDefinitionGroup
           description: >-
-            Set to `null` or `NullObj` to remove the export from the currently
-            assigned group.
+            Set to `null` or `NullObj` to remove the export from the currently assigned group.
           oneOf:
             - $ref: '#/components/schemas/ReqGroup'
             - $ref: '#/components/schemas/NullObj'
@@ -657,9 +666,7 @@ components:
           description: Description that is shown as a tooltip in the clients.
           type: string
     ReqOutputDefinitions:
-      description: >-
-        Definition of outputs. A directory of output-IDs and
-        output-definitions.
+      description: Definition of outputs. A directory of output-IDs and output-definitions.
       type: object
       additionalProperties:
         $ref: '#/components/schemas/ReqOutputDefinition'
@@ -671,9 +678,9 @@ components:
           description: Parameter name to display instead of `name`.
           type: string
         group:
+          title: ReqOutputDefinitionGroup
           description: >-
-            Set to `null` or `NullObj` to remove the export from the currently
-            assigned group.
+            Set to `null` or `NullObj` to remove the export from the currently assigned group.
           oneOf:
             - $ref: '#/components/schemas/ReqGroup'
             - $ref: '#/components/schemas/NullObj'
@@ -688,36 +695,34 @@ components:
           type: string
         chunks:
           description: >-
-            The chunk definitions of the sdTF file that is generated by the
-            output. If specified, all existing sdTF chunks of the output must
-            be given. The order of the given chunk items determines the order
-            in that the chunks will be shown in the UI.
+            The chunk definitions of the sdTF file that is generated by the output. If specified,
+            all existing sdTF chunks of the output must be given. The order of the given chunk
+            items determines the order in that the chunks will be shown in the UI.
           type: array
           items:
-            $ref: '#/components/schemas/ReqOutputDefinitionChunk'
-    ReqOutputDefinitionChunk:
-      description: >-
-        Definition of a single "chunk" of data in an sdTF file that is
-        generated by the output component.
-      type: object
-      properties:
-        id:
-          description: ID of the chunk.
-          type: string
-        displayname:
-          description: >-
-            Chunk name to display instead of the chunk `name`. This value can
-            be unset by specifying an empty string.
-          type: string
-        hidden:
-          description: Controls whether the chunk should be hidden in the UI.
-          type: boolean
-      required:
-        - id
+            title: ReqOutputDefinitionChunk
+            description: >-
+              Definition of a single "chunk" of data in an sdTF file that is generated by the
+              output component.
+            type: object
+            properties:
+              id:
+                description: ID of the chunk.
+                type: string
+              displayname:
+                description: >-
+                  Chunk name to display instead of the chunk `name`. This value can be unset by
+                  specifying an empty string.
+                type: string
+              hidden:
+                description: Controls whether the chunk should be hidden in the UI.
+                type: boolean
+            required:
+              - id
     ReqCache:
       description: >-
-        Body of an export or output cache request. A directory of
-        export-/output-IDs and version-IDs.
+        Body of an export or output cache request. A directory of export-/output-IDs and
+        version-IDs.
       type: object
       additionalProperties:
         type: string
@@ -740,24 +745,20 @@ components:
     ReqModelFileType:
       description: Supported Grasshopper file types for models.
       type: string
-      enum:
-        - gh
-        - ghx
+      enum: [ gh, ghx ]
+      x-enum-varnames: [ GRASSHOPPER_BINARY, GRASSHOPPER_XML ]
     ReqTrustLevel:
       description: Level of trust granted for a model.
       type: string
-      enum:
-        - "''"
-        - none
-        - full
+      enum: [ "", none, full ]
+      x-enum-varnames: [ UNDEFINED, NONE, FULL ]
     ReqModel:
       description: Body of a template request.
       type: object
       properties:
         accessdomains:
           description: >-
-            List of domains (origins) this model is limited to (is ignored
-            in case `pub` is true).
+            List of domains (origins) this model is limited to (is ignored in case `pub` is true).
           type: array
           items:
             type: string
@@ -778,58 +779,50 @@ components:
             - $ref: '#/components/schemas/ReqModelFileType'
         initial_warmup:
           description: >-
-            Allows to control whether the model should be warmed up immediately
-            after loading by running a computation. This increases the
-            likelihood of following computation requests to be faster.
+            Allows to control whether the model should be warmed up immediately after loading by
+            running a computation. This increases the likelihood of following computation requests
+            to be faster.
           type: boolean
         id2:
           description: Optional second model ID.
           allOf:
             - $ref: '#/components/schemas/Uuid'
         max_comp_time:
-          description: >-
-            Maximum number of milliseconds allowed for computations of this
-            model.
+          description: Maximum number of milliseconds allowed for computations of this model.
           type: integer
           minimum: 0
         max_export_size:
           description: >-
-            Maximum number of bytes allowed to be exported from a model for a
-            specific set of parameter values.
+            Maximum number of bytes allowed to be exported from a model for a specific set of
+            parameter values.
           type: integer
           minimum: 0
         max_idle_minutes:
           description: |-
-            Maximum amount of minutes a loaded model may be unused before
-            it gets unloaded.
+            Maximum amount of minutes a loaded model may be unused before it gets unloaded.
 
             Note: Models may get unloaded earlier than that.
           type: integer
           minimum: 0
         max_model_size:
-          description: >-
-            Maximum number of bytes allowed for the model's Grasshopper file
-            size.
+          description: Maximum number of bytes allowed for the model's Grasshopper file size.
           type: integer
           minimum: 0
         max_output_size:
           description: >-
-            Maximum number of bytes allowed for an output of a model for a
-            specific set of parameter values.
+            Maximum number of bytes allowed for an output of a model for a specific set of
+            parameter values.
           type: integer
           minimum: 0
         webhook_token:
-          description: >-
-            Allows to control whether the model's Grasshopper file can contain
-            scripts.
+          description: Allows to control whether the model's Grasshopper file can contain scripts.
           type: boolean
         max_wait_time:
           description: >-
-            Maximum time a computation request may stay waiting before a
-            further worker goes ahead regardless of whether it already has the
-            model loaded, and regardless of `num_loaded_max`. This allows to
-            configure a soft or a hard upper boundary for the number of loaded
-            models.
+            Maximum time a computation request may stay waiting before a further worker goes ahead
+            regardless of whether it already has the model loaded, and regardless of
+            `num_loaded_max`. This allows to configure a soft or a hard upper boundary for the
+            number of loaded models.
           type: integer
           minimum: 0
         name:
@@ -837,22 +830,20 @@ components:
           type: string
         num_loaded_max:
           description: >-
-            Maximum number of workers that should have the model loaded at the
-            same time.
+            Maximum number of workers that should have the model loaded at the same time.
           type: integer
           minimum: 0
         num_loaded_min:
           description: >-
-            Minimum number of workers which should have the model loaded once a
-            session to the model gets opened.
+            Minimum number of workers which should have the model loaded once a session to the
+            model gets opened.
           type: integer
           minimum: 0
         num_preloaded_min:
           description: >-
-            Minimum number of workers that should always have the model loaded,
-            regardless of session activity. This allows to minimise the
-            likelihood of computation requests being slower due to model
-            loading.
+            Minimum number of workers that should always have the model loaded, regardless of
+            session activity. This allows to minimise the likelihood of computation requests being
+            slower due to model loading.
           type: integer
           minimum: 0
         org_id:
@@ -874,19 +865,16 @@ components:
           type: boolean
         session_rate_limit:
           description: >-
-            Limits the number of sessions that can be created by a specific
-            IP address in one hour.
+            Limits the number of sessions that can be created by a specific IP address in one hour.
           type: integer
           minimum: 0
         trust:
           description: >-
-            Can this model be trusted (controls whether failed computations
-            will be retried).
+            Can this model be trusted (controls whether failed computations will be retried).
           allOf:
             - $ref: '#/components/schemas/ReqTrustLevel'
         use_cdn:
-          description: >-
-            Allows the usage of the CDN for fast content distribution.
+          description: Allows the usage of the CDN for fast content distribution.
           type: boolean
         user_id:
           description: Optional user ID.
@@ -894,15 +882,13 @@ components:
             - $ref: '#/components/schemas/Uuid'
         webhook_url:
           description: >-
-            The webhook-url for updating the platform backend about model
-            status changes.
+            The webhook-url for updating the platform backend about model status changes.
           type: string
       required:
         - pub
     ReqParameterDefinitions:
       description: >-
-        Definition of model parameters. A directory of parameter-IDs and
-        parameter-definitions.
+        Definition of model parameters. A directory of parameter-IDs and parameter-definitions.
       type: object
       additionalProperties:
         $ref: '#/components/schemas/ReqParameterDefinition'
@@ -914,15 +900,14 @@ components:
           description: Parameter name to display instead of `name`.
           type: string
         group:
+          title: ReqParameterDefinitionGroup
           description: >-
-            Set to `null` or `NullObj` to remove the export from the currently
-            assigned group.
+            Set to `null` or `NullObj` to remove the export from the currently assigned group.
           oneOf:
             - $ref: '#/components/schemas/ReqGroup'
             - $ref: '#/components/schemas/NullObj'
         hidden:
-          description: >-
-            Controls whether the parameter should be hidden in the UI.
+          description: Controls whether the parameter should be hidden in the UI.
           type: boolean
         order:
           description: Ordering of the parameter in client applications.
@@ -932,8 +917,7 @@ components:
           type: string
     ReqFileUpload:
       description: >-
-        Body of a file upload request.
-        A directory of file-parameter-IDs and upload-definitions.
+        Body of a file upload request. A directory of file-parameter-IDs and upload-definitions.
       type: object
       additionalProperties:
         $ref: '#/components/schemas/ReqFileDefinition'
@@ -949,10 +933,9 @@ components:
           description: |-
             Name of the file to be uploaded.
 
-            When this property is set, then the actual file upload request must
-            contain a Content-Disposition HTTP header with the value
-            "attachment; filename=`{filename}`". Otherwise, a signature
-            mismatch will occur.
+            When this property is set, then the actual file upload request must contain a
+            Content-Disposition HTTP header with the value "attachment; filename=`{filename}`".
+            Otherwise, a signature mismatch will occur.
           type: string
         format:
           description: Content-Type (MIME type) of the file to be uploaded.
@@ -964,11 +947,12 @@ components:
       required:
         - format
         - size
-    ReqSdtfUpload:
-      description: Body of a sdTF upload request.
-      type: array
-      items:
-        $ref: '#/components/schemas/ReqSdtfDefinition'
+    # TODO: Use when Python fix is done.
+    # ReqSdtfUpload:
+    #   description: Body of a sdTF upload request.
+    #   type: array
+    #   items:
+    #     $ref: '#/components/schemas/ReqSdtfDefinition'
     ReqSdtfDefinition:
       description: Data for a single sdTF parameter.
       type: object
@@ -994,8 +978,8 @@ components:
     ReqSdtfType:
       description: Content-Type (MIME type) of the sdTF to be uploaded.
       type: string
-      enum:
-        - model/vnd.sdtf
+      enum: [ model/vnd.sdtf ]
+      x-enum-varnames: [ MODEL_SDTF ]
 
     #-------------------------------------------------------------------------#
     #- Main response data structures                                         -#
@@ -1005,16 +989,25 @@ components:
         - $ref: '#/components/schemas/ResPartAnalytics'
         - $ref: '#/components/schemas/ResPartMessage'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - analytics
+        - version
     ResGetCreditMetrics:
       allOf:
         - $ref: '#/components/schemas/ResPartAnalytics'
         - $ref: '#/components/schemas/ResPartMessage'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - analytics
+        - version
     ResCreateAuthorizationGroup:
       allOf:
         - $ref: '#/components/schemas/ResPartAuthorizationGroup'
         - $ref: '#/components/schemas/ResPartMessage'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - auth_group
+        - version
     ResComputeExports:
       allOf:
         - $ref: '#/components/schemas/ResPartActions'
@@ -1023,6 +1016,8 @@ components:
         - $ref: '#/components/schemas/ResPartOutputs'
         - $ref: '#/components/schemas/ResPartTemplates'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResGetCachedExports:
       allOf:
         - $ref: '#/components/schemas/ResPartActions'
@@ -1031,51 +1026,121 @@ components:
         - $ref: '#/components/schemas/ResPartOutputs'
         - $ref: '#/components/schemas/ResPartTemplates'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResUpdateExportDefinitions:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResListExportVersions:
       allOf:
-        - $ref: '#/components/schemas/ResPartList'
+        - title: ResPartList
+          type: object
+          properties:
+            list:
+              title: ResExportList
+              allOf:
+                - $ref: '#/components/schemas/ResList'
+                - type: object
+                  required:
+                    - export
         - $ref: '#/components/schemas/ResPartPagination'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - list
+        - pagination
+        - version
     ResListFiles:
       allOf:
-        - $ref: '#/components/schemas/ResPartList'
+        - title: ResPartList
+          type: object
+          properties:
+            list:
+              title: ResFileList
+              allOf:
+                - $ref: '#/components/schemas/ResList'
+                - type: object
+                  required:
+                    - file
         - $ref: '#/components/schemas/ResPartMessage'
         - $ref: '#/components/schemas/ResPartPagination'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - list
+        - pagination
+        - version
     ResDeleteFile:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResUploadFile:
       allOf:
-        - $ref: '#/components/schemas/ResPartAsset'
+        - title: ResPartAsset
+          type: object
+          properties:
+            asset:
+              title: ResFileAsset
+              description: File assets.
+              allOf:
+                - $ref: '#/components/schemas/ResAsset'
+                - type: object
+                  required:
+                    - file
         - $ref: '#/components/schemas/ResPartMessage'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - asset
+        - version
     ResUploadGltf:
       allOf:
         - $ref: '#/components/schemas/ResPartGltfUpload'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - gltf
+        - version
     ResLogMessage:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResGetModelConfig:
       allOf:
         - $ref: '#/components/schemas/ResPartMessage'
         - $ref: '#/components/schemas/ResPartVersion'
         - $ref: '#/components/schemas/ResPartViewer'
+      required:
+        - version
+        - viewer
     ResCreateModelConfig:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResUpdateModelConfig:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResListModels:
       allOf:
-        - $ref: '#/components/schemas/ResPartList'
+        - title: ResPartList
+          type: object
+          properties:
+            list:
+              title: ResModelList
+              allOf:
+                - $ref: '#/components/schemas/ResList'
+                - type: object
+                  required:
+                    - model
         - $ref: '#/components/schemas/ResPartPagination'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - list
+        - pagination
+        - version
     ResGetModel:
       allOf:
         - $ref: '#/components/schemas/ResPartExports'
@@ -1088,7 +1153,12 @@ components:
         - $ref: '#/components/schemas/ResPartSetting'
         - $ref: '#/components/schemas/ResPartStatistic'
         - $ref: '#/components/schemas/ResPartVersion'
-        - $ref: '#/components/schemas/ResPartViewer'
+      required:
+        - file
+        - model
+        - setting
+        - statistic
+        - version
     ResUpdateModel:
       allOf:
         - $ref: '#/components/schemas/ResPartFile'
@@ -1097,9 +1167,17 @@ components:
         - $ref: '#/components/schemas/ResPartSetting'
         - $ref: '#/components/schemas/ResPartStatistic'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - file
+        - model
+        - setting
+        - statistic
+        - version
     ResDeleteModel:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResCreateModel:
       allOf:
         - $ref: '#/components/schemas/ResPartFile'
@@ -1107,32 +1185,54 @@ components:
         - $ref: '#/components/schemas/ResPartModel'
         - $ref: '#/components/schemas/ResPartSetting'
         - $ref: '#/components/schemas/ResPartStatistic'
-        - $ref: '#/components/schemas/ResPartTicket'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - file
+        - model
+        - setting
+        - statistic
+        - version
     ResGetModelComputations:
       allOf:
         - $ref: '#/components/schemas/ResPartModelComputation'
         - $ref: '#/components/schemas/ResPartPagination'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - computations
+        - pagination
+        - version
     ResCleanupExports:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResCleanupOutputs:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResCleanupTextures:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResGetCleanupStatus:
       allOf:
         - $ref: '#/components/schemas/ResPartCleanup'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - cleanup
+        - version
     ResUpdateParameterDefaultValues:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResUpdateParameterDefinitions:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResComputeOutputs:
       allOf:
         - $ref: '#/components/schemas/ResPartActions'
@@ -1140,6 +1240,8 @@ components:
         - $ref: '#/components/schemas/ResPartOutputs'
         - $ref: '#/components/schemas/ResPartTemplates'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResGetCachedOutputs:
       allOf:
         - $ref: '#/components/schemas/ResPartActions'
@@ -1147,28 +1249,73 @@ components:
         - $ref: '#/components/schemas/ResPartOutputs'
         - $ref: '#/components/schemas/ResPartTemplates'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResUpdateOutputDefinitions:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResListOutputVersions:
       allOf:
-        - $ref: '#/components/schemas/ResPartList'
+        - title: ResPartList
+          type: object
+          properties:
+            list:
+              title: ResOutputList
+              allOf:
+                - $ref: '#/components/schemas/ResList'
+                - type: object
+                  required:
+                    - output
         - $ref: '#/components/schemas/ResPartPagination'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - list
+        - pagination
+        - version
     ResListSdtfs:
       allOf:
-        - $ref: '#/components/schemas/ResPartList'
+        - title: ResPartList
+          type: object
+          properties:
+            list:
+              title: ResSdtfList
+              allOf:
+                - $ref: '#/components/schemas/ResList'
+                - type: object
+                  required:
+                    - sdtf
         - $ref: '#/components/schemas/ResPartMessage'
         - $ref: '#/components/schemas/ResPartPagination'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - list
+        - pagination
+        - version
     ResDeleteSdtf:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResUploadSdtf:
       allOf:
-        - $ref: '#/components/schemas/ResPartAsset'
+        - title: ResPartAsset
+          type: object
+          properties:
+            asset:
+              title: ResSdtfAsset
+              description: sdTF assets.
+              allOf:
+                - $ref: '#/components/schemas/ResAsset'
+                - type: object
+                  required:
+                    - sdtf
         - $ref: '#/components/schemas/ResPartMessage'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - asset
+        - version
     ResCreateSessionByModel:
       allOf:
         - $ref: '#/components/schemas/ResPartActions'
@@ -1178,10 +1325,22 @@ components:
         - $ref: '#/components/schemas/ResPartOutputs'
         - $ref: '#/components/schemas/ResPartParameters'
         - $ref: '#/components/schemas/ResPartSessionId'
+        - $ref: '#/components/schemas/ResPartStatistic'
         - $ref: '#/components/schemas/ResPartTemplates'
         - $ref: '#/components/schemas/ResPartVersion'
         - $ref: '#/components/schemas/ResPartViewer'
         - $ref: '#/components/schemas/ResPartViewerSettingsVersion'
+      required:
+        - actions
+        - file
+        - model
+        - sessionId
+        - setting
+        - statistic
+        - templates
+        - version
+        - viewer
+        - viewerSettingsVersion
     ResCreateSessionByTicket:
       allOf:
         - $ref: '#/components/schemas/ResPartActions'
@@ -1191,10 +1350,22 @@ components:
         - $ref: '#/components/schemas/ResPartOutputs'
         - $ref: '#/components/schemas/ResPartParameters'
         - $ref: '#/components/schemas/ResPartSessionId'
+        - $ref: '#/components/schemas/ResPartStatistic'
         - $ref: '#/components/schemas/ResPartTemplates'
         - $ref: '#/components/schemas/ResPartVersion'
         - $ref: '#/components/schemas/ResPartViewer'
         - $ref: '#/components/schemas/ResPartViewerSettingsVersion'
+      required:
+        - actions
+        - file
+        - model
+        - sessionId
+        - setting
+        - statistic
+        - templates
+        - version
+        - viewer
+        - viewerSettingsVersion
     ResGetSessionDefaults:
       allOf:
         - $ref: '#/components/schemas/ResPartActions'
@@ -1204,13 +1375,27 @@ components:
         - $ref: '#/components/schemas/ResPartOutputs'
         - $ref: '#/components/schemas/ResPartParameters'
         - $ref: '#/components/schemas/ResPartSessionId'
+        - $ref: '#/components/schemas/ResPartStatistic'
         - $ref: '#/components/schemas/ResPartTemplates'
         - $ref: '#/components/schemas/ResPartVersion'
         - $ref: '#/components/schemas/ResPartViewer'
         - $ref: '#/components/schemas/ResPartViewerSettingsVersion'
+      required:
+        - actions
+        - file
+        - model
+        - sessionId
+        - setting
+        - statistic
+        - templates
+        - version
+        - viewer
+        - viewerSettingsVersion
     ResCloseSession:
       allOf:
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - version
     ResCreateTicket:
       allOf:
         - $ref: '#/components/schemas/ResPartFile'
@@ -1219,23 +1404,72 @@ components:
         - $ref: '#/components/schemas/ResPartStatistic'
         - $ref: '#/components/schemas/ResPartTicket'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - file
+        - model
+        - setting
+        - statistic
+        - ticket
+        - version
     ResDecryptTicket:
       allOf:
         - $ref: '#/components/schemas/ResPartDecryptedTicket'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - decryptedTicket
+        - version
     ResGetMinionsInfo:
       allOf:
-        - $ref: '#/components/schemas/ResPartSystem'
+        - title: ResPartSystem
+          type: object
+          properties:
+            system:
+              title: ResMinionSystem
+              description: Minion system information.
+              allOf:
+                - $ref: '#/components/schemas/ResSystem'
+                - type: object
+                  required:
+                    - minions
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - system
+        - version
     ResGetWorkersInfo:
       allOf:
-        - $ref: '#/components/schemas/ResPartSystem'
+        - title: ResPartSystem
+          type: object
+          properties:
+            system:
+              title: ResWorkerSystem
+              description: Worker system information.
+              allOf:
+                - $ref: '#/components/schemas/ResSystem'
+                - type: object
+                  required:
+                    - workers
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - system
+        - version
     ResListTextures:
       allOf:
-        - $ref: '#/components/schemas/ResList'
+        - title: ResPartList
+          type: object
+          properties:
+            list:
+              title: ResTextureList
+              allOf:
+                - $ref: '#/components/schemas/ResList'
+                - type: object
+                  required:
+                    - texture
         - $ref: '#/components/schemas/ResPartPagination'
         - $ref: '#/components/schemas/ResPartVersion'
+      required:
+        - list
+        - pagination
+        - version
 
     #-------------------------------------------------------------------------#
     #- Response data parts                                                   -#
@@ -1246,8 +1480,6 @@ components:
         version:
           description: Version of the Geometry Backend API.
           type: string
-      required:
-        - version
     ResPartMessage:
       type: object
       properties:
@@ -1336,8 +1568,8 @@ components:
       properties:
         parameters:
           description: >-
-            Parameter definitions, not contained with every response. A
-            directory of parameter-IDs and parameters.
+            Parameter definitions, not contained with every response. A directory of parameter-IDs
+            and parameters.
           type: object
           additionalProperties:
             $ref: '#/components/schemas/ResParameter'
@@ -1345,11 +1577,7 @@ components:
       type: object
       properties:
         plugins:
-          description: Information about Grasshopper plugins.
-          type: object
-          additionalProperties:
-            allOf:
-            - $ref: '#/components/schemas/ResPlugins'
+          $ref: '#/components/schemas/ResPlugins'
     ResPartViewer:
       type: object
       properties:
@@ -1362,8 +1590,8 @@ components:
       properties:
         outputs:
           description: >-
-            Outputs of the model for the given parameter values. A directory of
-            output-IDs and outputs.
+            Outputs of the model for the given parameter values. A directory of output-IDs and
+            outputs.
           type: object
           additionalProperties:
             $ref: '#/components/schemas/ResOutputOrDefinition'
@@ -1372,18 +1600,11 @@ components:
       properties:
         exports:
           description: >-
-            Exports of the model for the given parameter values. A directory of
-            export-IDs and exports.
+            Exports of the model for the given parameter values. A directory of export-IDs and
+            exports.
           type: object
           additionalProperties:
             $ref: '#/components/schemas/ResExportOrDefinition'
-    ResPartAsset:
-      type: object
-      properties:
-        asset:
-          description: File or sdTF assets.
-          allOf:
-            - $ref: '#/components/schemas/ResAsset'
     ResPartAnalytics:
       type: object
       properties:
@@ -1391,13 +1612,6 @@ components:
           description: Statistics of the model for the given timespan.
           allOf:
             - $ref: '#/components/schemas/ResAnalytics'
-    ResPartList:
-      type: object
-      properties:
-        list:
-          description: Response of a list API call.
-          allOf:
-            - $ref: '#/components/schemas/ResList'
     ResPartGltfUpload:
       type: object
       properties:
@@ -1420,13 +1634,6 @@ components:
           description: Pagination information.
           allOf:
             - $ref: '#/components/schemas/ResPagination'
-    ResPartSystem:
-      type: object
-      properties:
-        system:
-          description: System information.
-          allOf:
-            - $ref: '#/components/schemas/ResSystem'
     ResPartCleanup:
       type: object
       properties:
@@ -1450,9 +1657,8 @@ components:
           maximum: 100
         next_offset:
           description: >-
-            The offset that can be used in the next request to query the
-            remaining items. This property is missing when all items have been
-            processed.
+            The offset that can be used in the next request to query the remaining items. This
+            property is missing when all items have been processed.
           type: string
       required:
         - limit
@@ -1480,23 +1686,23 @@ components:
           allOf:
             - $ref: '#/components/schemas/Uuid'
         timestamp:
-          $ref: '#/components/schemas/AnyDateExtended'
+          description: Either an extended date-time or a 'merged'-specifier.
+          type: string
         isCompilationDone:
           description: Aggregation for this timestamp has finished.
           type: boolean
         count:
           description: |-
-            Number of (technical) sessions for the given model and timestamp.
-            A technical session may last up to two hours, after which it will
-            get cancelled by the backend.
+            Number of (technical) sessions for the given model and timestamp. A technical session
+            may last up to two hours, after which it will get cancelled by the backend.
 
             CAUTION: Not to be confused with credits!
           type: integer
           minimum: 0
         billableCount:
           description: >-
-            Billable duration-based credit count, based on maximum duration
-            of 10 minutes per credit.
+            Billable duration-based credit count, based on maximum duration of 10 minutes per
+            credit.
           type: integer
           minimum: 0
         duration:
@@ -1545,58 +1751,50 @@ components:
       properties:
         count:
           description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Number of
-              (technical) sessions from all sources (duration) or from one
-              specific source (app, embedded, backend, desktop), for the given
-              model and timestamp.
-            * `export`, `customize`: Number of sessions which have export
-              requests.
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Number of (technical) sessions
+              from all sources (duration) or from one specific source (app, embedded, backend,
+              desktop), for the given model and timestamp.
+            * `export`, `customize`: Number of sessions which have export requests.
           type: integer
           minimum: 0
         billableCount:
           description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Billable
-              duration-based credit count for all sessions, based on maximum
-              duration of 10 minutes per credit.
-            * `export`, `customize`: Billable duration-based credit count for
-              sessions which have export requests, based on maximum duration of
-              10 minutes per credit.
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Billable duration-based credit
+              count for all sessions, based on maximum duration of 10 minutes per credit.
+            * `export`, `customize`: Billable duration-based credit count for sessions which have
+              export requests, based on maximum duration of 10 minutes per credit.
           type: integer
           minimum: 0
         min:
           description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative
-              distribution function of the duration, for all sessions for the
-              given model and timestamp.
-            * `export`, `customize`: Cumulative distribution function of the
-              number of export requests per session, for sessions which have
-              export requests.
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative distribution function
+              of the duration, for all sessions for the given model and timestamp.
+            * `export`, `customize`: Cumulative distribution function of the number of export
+              requests per session, for sessions which have export requests.
           type: integer
           minimum: 0
         max:
           description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative
-              distribution function of the duration, for all sessions for the
-              given model and timestamp.
-            * `export`, `customize`: Cumulative distribution function of the
-              number of export requests per session, for sessions which have
-              export requests.
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Cumulative distribution function
+              of the duration, for all sessions for the given model and timestamp.
+            * `export`, `customize`: Cumulative distribution function of the number of export
+              requests per session, for sessions which have export requests.
           type: integer
           minimum: 0
         avg:
           description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Average
-              duration of all sessions for the given model and timestamp.
-            * `export`, `customize`: Average number of export requests per
-              session, for sessions which have export requests.
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Average duration of all sessions
+              for the given model and timestamp.
+            * `export`, `customize`: Average number of export requests per session, for sessions
+              which have export requests.
           type: integer
           minimum: 0
         sum:
           description: |-
-            * `duration`, `app`, `embedded`, `backend`, `desktop`: Total
-              duration of all sessions for the given model and timestamp.
-            * `export`, `customize`: Total number of export requests
-              for all sessions which have export requests.
+            * `duration`, `app`, `embedded`, `backend`, `desktop`: Total duration of all sessions
+              for the given model and timestamp.
+            * `export`, `customize`: Total number of export requests for all sessions which have
+              export requests.
           type: integer
           minimum: 0
       required:
@@ -1613,44 +1811,40 @@ components:
           properties:
             sumApp:
               description: |-
-                `customize`: Total number of actions, for ShapeDiver Platform
-                sessions for which the type of action happened.
+                `customize`: Total number of actions, for ShapeDiver Platform sessions for which
+                the type of action happened.
 
-                Note: New property - will contain `0` for entries before
-                November 2019.
+                Note: New property - will contain `0` for entries before November 2019.
               type: integer
               minimum: 0
             sumBackend:
               description: |-
-                `customize`: Total number of customization requests for backend
-                sessions which have customization requests.
+                `customize`: Total number of customization requests for backend sessions which have
+                customization requests.
 
-                `export`: Total number of export requests for backend sessions
-                which have export requests.
+                `export`: Total number of export requests for backend sessions which have export
+                requests.
 
-                Note: New property - will contain `0` for entries before
-                November 2019.
+                Note: New property - will contain `0` for entries before November 2019.
               type: integer
               minimum: 0
             sumEmbedded:
               description: |-
-                `customize`: Total number of customization requests for
-                embedded sessions which have customization requests.
+                `customize`: Total number of customization requests for embedded sessions which
+                have customization requests.
 
-                `export`: Total number of export requests for embedded sessions
-                which have export requests.
+                `export`: Total number of export requests for embedded sessions which have export
+                requests.
 
-                Note: New property - will contain `0` for entries before
-                November 2019.
+                Note: New property - will contain `0` for entries before November 2019.
               type: integer
               minimum: 0
             sumDesktop:
               description: |-
-                `customize`: Total number of actions, for desktop client
-                sessions for which the type of action happened.
+                `customize`: Total number of actions, for desktop client sessions for which the
+                type of action happened.
 
-                Note: New property - will contain `0` for entries before
-                January 2021.
+                Note: New property - will contain `0` for entries before January 2021.
               type: integer
               minimum: 0
           required:
@@ -1661,151 +1855,244 @@ components:
     ResAnyCreditMetric:
       description: The ID of any type of credit metric.
       oneOf:
-        - $ref: '#/components/schemas/ResModelCreditMetric'
-        - $ref: '#/components/schemas/ResUserCreditMetric'
-        - $ref: '#/components/schemas/ResOrganizationCreditMetric'
-        - $ref: '#/components/schemas/ResSystemCreditMetric'
-        - $ref: '#/components/schemas/ResModelUserCreditMetric'
-        - $ref: '#/components/schemas/ResModelOrganizationCreditMetric'
-    ResModelCreditMetric:
-      description: Aggregated credit metrics for a model.
-      allOf:
-        - $ref: '#/components/schemas/ResBaseCreditMetric'
-      properties:
-        modelId:
-          description: Requested model ID.
+        - title: ResModelCreditMetric
+          description: Aggregated credit metrics for a model.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
-      required:
-        - modelId
-    ResUserCreditMetric:
-      description: Aggregated credit metrics for a user.
-      allOf:
-        - $ref: '#/components/schemas/ResBaseCreditMetric'
-      properties:
-        userId:
-          description: Requested user ID.
+            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - type: object
+              properties:
+                modelId:
+                  description: Requested model ID.
+                  allOf:
+                    - $ref: '#/components/schemas/Uuid'
+                userId:
+                  description: This property is never set.
+                  # FIXME: Workaround until OAS 3.1 - use `null` instead!
+                  type: boolean
+                  nullable: true
+                  deprecated: true
+                orgId:
+                  description: This property is never set.
+                  # FIXME: Workaround until OAS 3.1 - use `null` instead!
+                  type: boolean
+                  nullable: true
+                  deprecated: true
+              required:
+                - modelId
+        - title: ResUserCreditMetric
+          description: Aggregated credit metrics for a user.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
-      required:
-        - userId
-    ResOrganizationCreditMetric:
-      description: Aggregated credit metrics for a organization.
-      allOf:
-        - $ref: '#/components/schemas/ResBaseCreditMetric'
-        - type: object
-          properties:
-            orgId:
-              description: Requested organization ID.
-              allOf:
-                - $ref: '#/components/schemas/Uuid'
-      required:
-        - orgId
-    ResSystemCreditMetric:
-      description: Aggregated credit metrics for a system.
-      allOf:
-        - $ref: '#/components/schemas/ResBaseCreditMetric'
-      properties:
-        system:
-          description: Requested system.
-          type: boolean
-      required:
-        - system
-    ResModelUserCreditMetric:
-      description: Aggregated credit metrics for a model-user.
-      allOf:
-        - $ref: '#/components/schemas/ResBaseCreditMetric'
-      properties:
-        modelId:
-          description: Requested model ID.
+            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - type: object
+              properties:
+                modelId:
+                  description: This property is never set.
+                  # FIXME: Workaround until OAS 3.1 - use `null` instead!
+                  type: boolean
+                  nullable: true
+                  deprecated: true
+                userId:
+                  description: Requested user ID.
+                  allOf:
+                    - $ref: '#/components/schemas/Uuid'
+              required:
+                - userId
+        - title: ResOrganizationCreditMetric
+          description: Aggregated credit metrics for a organization.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
-        userId:
-          description: Requested user ID.
+            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - type: object
+              properties:
+                modelId:
+                  description: This property is never set.
+                  # FIXME: Workaround until OAS 3.1 - use `null` instead!
+                  type: boolean
+                  nullable: true
+                  deprecated: true
+                orgId:
+                  description: Requested organization ID.
+                  allOf:
+                    - $ref: '#/components/schemas/Uuid'
+              required:
+                - orgId
+        - title: ResSystemCreditMetric
+          description: Aggregated credit metrics for a system.
           allOf:
-            -  $ref: '#/components/schemas/Uuid'
-      required:
-        - modelId
-        - userId
-    ResModelOrganizationCreditMetric:
-      description: Aggregated credit metrics for a model-organization.
-      allOf:
-        - $ref: '#/components/schemas/ResBaseCreditMetric'
-      properties:
-        modelId:
-          description: Requested model ID.
+            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - type: object
+              properties:
+                system:
+                  description: Requested system.
+                  type: boolean
+              required:
+                - system
+        - title: ResModelUserCreditMetric
+          description: Aggregated credit metrics for a model-user.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
-        orgId:
-          description: Requested organization ID.
+            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - type: object
+              properties:
+                modelId:
+                  description: Requested model ID.
+                  allOf:
+                    - $ref: '#/components/schemas/Uuid'
+                userId:
+                  description: Requested user ID.
+                  allOf:
+                    -  $ref: '#/components/schemas/Uuid'
+              required:
+                - modelId
+                - userId
+        - title: ResModelOrganizationCreditMetric
+          description: Aggregated credit metrics for a model-organization.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
-      required:
-        - modelId
-        - orgId
+            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - type: object
+              properties:
+                modelId:
+                  description: Requested model ID.
+                  allOf:
+                    - $ref: '#/components/schemas/Uuid'
+                orgId:
+                  description: Requested organization ID.
+                  allOf:
+                    - $ref: '#/components/schemas/Uuid'
+              required:
+                - modelId
+                - orgId
     ResBaseCreditMetric:
       type: object
       properties:
         timestamp:
-          $ref: '#/components/schemas/AnyDateExtended'
+          description: Either an extended date-time or a 'merged'-specifier.
+          type: string
         isCompilationDone:
           description: Aggregation for this timestamp has finished.
           type: boolean
+        ar:
+          title: ResArCreditMetric
+          description: Downloads of AR scenes.
+          type: object
+          properties:
+            credits:
+              description: Number of AR downloads charged.
+              type: integer
+              minimum: 0
+          required:
+            - credits
         loading:
-          $ref: '#/components/schemas/ResLoadingCreditMetric'
+          title: ResLoadingCreditMetric
+          description: Information about loading times on the Geometry Workers.
+          type: object
+          properties:
+            credits:
+              description: Number of started 10-second chunks charged.
+              type: integer
+              minimum: 0
+            count:
+              description: Number of load requests.
+              type: integer
+              minimum: 0
+          required:
+            - credits
+            - count
         limited:
-          $ref: '#/components/schemas/ResRateLimitedCreditMetric'
+          $ref: '#/components/schemas/ResLimitedCreditMetric'
         default:
           $ref: '#/components/schemas/ResDefaultCreditMetric'
       required:
+        - ar
         - timestamp
         - isCompilationDone
         - loading
         - limited
         - default
-    ResLoadingCreditMetric:
-      description: Information about loading times on the Geometry Workers.
-      type: object
-      properties:
-        credits:
-          description: Number of started 10-second chunks charged.
-          type: integer
-          minimum: 0
-        count:
-          description: Number of load requests.
-          type: integer
-          minimum: 0
-      required:
-        - credits
-        - count
-    ResRateLimitedCreditMetric:
+    ResLimitedCreditMetric:
       description: Aggregated metrics for 'rate-limited timeslot' sessions.
       type: object
       properties:
         outputs:
+          title: ResRateLimitedOutputMetric
           description: Pure output requests.
-          allOf:
-            - $ref: '#/components/schemas/ResRateLimitedOutputMetric'
+          type: object
+          properties:
+            count:
+              description: Number of pure output requests.
+              type: integer
+              minimum: 0
+          required:
+            - count
         exports:
+          title: ResRateLimitedExportMetric
           description: Pure export requests.
-          allOf:
-            - $ref: '#/components/schemas/ResRateLimitedExportMetric'
+          type: object
+          properties:
+            credits:
+              description: Number of pure export requests charged.
+              type: integer
+              minimum: 0
+          required:
+            - credits
         combined:
+          title: ResRateLimitedCombinedMetric
           description: Combined output and export requests.
-          allOf:
-            - $ref: '#/components/schemas/ResRateLimitedCombinedMetric'
+          type: object
+          properties:
+            credits:
+              description: Number of combined output and export requests charged.
+              type: integer
+              minimum: 0
+          required:
+            - credits
         sessions:
+          title: ResRateLimitedSessionMetric
           description: Session information.
-          allOf:
-            - $ref: '#/components/schemas/ResRateLimitedSessionMetric'
-        ar:
-          description: Downloads of AR scenes.
-          allOf:
-            - $ref: '#/components/schemas/ResRateLimitedArMetric'
+          type: object
+          properties:
+            count:
+              description: Number of sessions.
+              type: integer
+              minimum: 0
+            credits:
+              description: Number of started 10-minute periods of sessions charged.
+              type: integer
+              minimum: 0
+            duration:
+              description: The total duration of all sessions, in milliseconds.
+              type: integer
+              minimum: 0
+          required:
+            - count
+            - credits
+            - duration
         computations:
+          title: ResRateLimitedComputationMetric
           description: Computations information.
-          allOf:
-            - $ref: '#/components/schemas/ResRateLimitedComputationMetric'
+          type: object
+          properties:
+            count:
+              description: Number of computations.
+              type: integer
+              minimum: 0
+            credits:
+              description: Number of finished 10-second chunks charged.
+              type: integer
+              minimum: 0
+            duration:
+              description: Total duration of computation time, in milliseconds.
+              type: integer
+              minimum: 0
+            countPerChunks:
+              description: >-
+                Count of computations per computation time expressed in started 10-second chunks.
+              type: object
+              additionalProperties:
+                type: string
+          required:
+            - count
+            - credits
+            - duration
+            - countPerChunks
       required:
         - outputs
         - exports
@@ -1813,122 +2100,87 @@ components:
         - sessions
         - ar
         - computations
-    ResRateLimitedOutputMetric:
-      description: Pure output requests.
-      type: object
-      properties:
-        count:
-          description: Number of pure output requests.
-          type: integer
-          minimum: 0
-      required:
-        - count
-    ResRateLimitedExportMetric:
-      description: Pure export requests.
-      type: object
-      properties:
-        credits:
-          description: Number of pure export requests charged.
-          type: integer
-          minimum: 0
-      required:
-        - credits
-    ResRateLimitedCombinedMetric:
-      description: Combined output and export requests.
-      type: object
-      properties:
-        credits:
-          description: Number of combined output and export requests charged.
-          type: integer
-          minimum: 0
-      required:
-        - credits
-    ResRateLimitedSessionMetric:
-      description: Session information.
-      type: object
-      properties:
-        count:
-          description: Number of sessions.
-          type: integer
-          minimum: 0
-        credits:
-          description: >-
-            Number of started 10-minute periods of sessions charged.
-          type: integer
-          minimum: 0
-        duration:
-          description: The total duration of all sessions, in milliseconds.
-          type: integer
-          minimum: 0
-      required:
-        - count
-        - credits
-        - duration
-    ResRateLimitedArMetric:
-      description: Downloads of AR scenes.
-      type: object
-      properties:
-        credits:
-          description: The number of AR requests charged.
-          type: integer
-          minimum: 0
-      required:
-        - credits
-    ResRateLimitedComputationMetric:
-      description: Computations information.
-      type: object
-      properties:
-        count:
-          description: Number of computations.
-          type: integer
-          minimum: 0
-        credits:
-          description: Number of finished 10-second chunks charged.
-          type: integer
-          minimum: 0
-        duration:
-          description: Total duration of computation time, in milliseconds.
-          type: integer
-          minimum: 0
-        countPerChunks:
-          description: >-
-            Count of computations per computation time expressed in started
-            10-second chunks.
-          type: integer
-          minimum: 0
-      required:
-        - count
-        - credits
-        - duration
-        - countPerChunks
     ResDefaultCreditMetric:
       description: Aggregated metrics for 'default' sessions.
       type: object
       properties:
         outputs:
+          title: ResDefaultOutputMetric
           description: Pure output requests.
-          allOf:
-            - $ref: '#/components/schemas/ResDefaultOutputMetric'
+          type: object
+          properties:
+            credits:
+              description: Number of pure output requests charged.
+              type: integer
+              minimum: 0
+          required:
+            - credits
         exports:
+          title: ResDefaultExportMetric
           description: Pure export requests.
-          allOf:
-            - $ref: '#/components/schemas/ResDefaultExportMetric'
+          type: object
+          properties:
+            credits:
+              description: Number of pure export requests charged.
+              type: integer
+              minimum: 0
+          required:
+            - credits
         combined:
+          title: ResDefaultCombinedMetric
           description: Combined output and export requests.
-          allOf:
-            - $ref: '#/components/schemas/ResDefaultCombinedMetric'
+          type: object
+          properties:
+            credits:
+              description: Number of combined output and export requests charged.
+              type: integer
+              minimum: 0
+          required:
+            - credits
         sessions:
+          title: ResDefaultSessionMetric
           description: Session information.
-          allOf:
-            - $ref: '#/components/schemas/ResDefaultSessionMetric'
-        ar:
-          description: Downloads of AR scenes.
-          allOf:
-            - $ref: '#/components/schemas/ResDefaultArMetric'
+          type: object
+          properties:
+            count:
+              description: Number of sessions.
+              type: integer
+              minimum: 0
+            duration:
+              description: The total duration of all sessions, in milliseconds.
+              type: integer
+              minimum: 0
+          required:
+            - count
+            - duration
         computations:
+          title: ResDefaultComputationMetric
           description: Computations information.
-          allOf:
-           - $ref: '#/components/schemas/ResDefaultComputationMetric'
+          type: object
+          properties:
+            count:
+              description: Number of computations.
+              type: integer
+              minimum: 0
+            credits:
+              description: Number of finished 10-second chunks charged.
+              type: integer
+              minimum: 0
+            duration:
+              description: Total duration of computation time, in milliseconds.
+              type: integer
+              minimum: 0
+            countPerChunks:
+              description: >-
+                Count of computations per computation time expressed in started 10-second chunks.
+              type: object
+              additionalProperties:
+                type: string
+          required:
+            - count
+            - credits
+            - duration
+            - countPerChunks
       required:
         - outputs
         - exports
@@ -1936,89 +2188,6 @@ components:
         - sessions
         - ar
         - computations
-    ResDefaultOutputMetric:
-      description: Pure output requests.
-      type: object
-      properties:
-        credits:
-          description: Number of pure output requests charged.
-          type: integer
-          minimum: 0
-      required:
-        - credits
-    ResDefaultExportMetric:
-      description: Pure export requests.
-      type: object
-      properties:
-        credits:
-          description: Number of pure export requests charged.
-          type: integer
-          minimum: 0
-      required:
-        - credits
-    ResDefaultCombinedMetric:
-      description: Combined output and export requests.
-      type: object
-      properties:
-        credits:
-          description: >-
-            Number of combined output and export requests charged.
-          type: integer
-          minimum: 0
-      required:
-        - credits
-    ResDefaultSessionMetric:
-      description: Session information.
-      type: object
-      properties:
-        count:
-          description: Number of sessions.
-          type: integer
-          minimum: 0
-        duration:
-          description: The total duration of all sessions, in milliseconds.
-          type: integer
-          minimum: 0
-      required:
-        - count
-        - duration
-    ResDefaultArMetric:
-      description: Downloads of AR scenes.
-      type: object
-      properties:
-        credits:
-          description: Number of AR downloads charged.
-          type: integer
-          minimum: 0
-      required:
-        - credits
-    ResDefaultComputationMetric:
-      description: Computations information.
-      type: object
-      properties:
-        count:
-          description: Number of computations.
-          type: integer
-          minimum: 0
-        credits:
-          description: Number of finished 10-second chunks charged.
-          type: integer
-          minimum: 0
-        duration:
-          description: Total duration of computation time, in milliseconds.
-          type: integer
-          minimum: 0
-        countPerChunks:
-          description: >-
-            Count of computations per computation time expressed in started
-            10-second chunks.
-          type: integer
-          minimum: 0
-      required:
-        - count
-        - credits
-        - duration
-        - countPerChunks
     ResAsset:
       description: ShapeDiver API response for asset upload requests.
       type: object
@@ -2033,9 +2202,7 @@ components:
           items:
             $ref: '#/components/schemas/ResAssetDefinition'
     ResAssetDefinition:
-      description: >-
-        Result part for the response to an upload request for file/sdTF
-        parameters.
+      description: Result part for the response to an upload request for file/sdTF parameters.
       type: object
       properties:
         id:
@@ -2044,8 +2211,7 @@ components:
             - $ref: '#/components/schemas/Uuid'
         href:
           description: >-
-            href the file should be uploaded to (typically a time-limited
-            pre-signed url).
+            href the file should be uploaded to (typically a time-limited pre-signed url).
           type: string
       required:
         - id
@@ -2058,25 +2224,25 @@ components:
         - download
         - email
         - shapeways
-    ResExportDefinitionGroup:
-      description: Group information of an export definition.
-      allOf:
-        - $ref: '#/components/schemas/CommonsGroup'
+      x-enum-varnames:
+        - UNKNOWN
+        - DOWNLOAD
+        - EMAIL
+        - SHAPEWAYS
     ResExportDefinition:
       description: Export definition WITHOUT results as exposed on the API.
       type: object
       properties:
         id:
           description: >-
-            ID of the export, dependent on model ID, and therefore changing
-            each time a model gets uploaded.
+            ID of the export, dependent on model ID, and therefore changing each time a model gets
+            uploaded.
           type: string
         uid:
           description: >-
-            Constant ID of the export, not dependent on model ID, and therefore
-            NOT changing each time a model gets uploaded. Might be undefined
-            because this property was introduced in summer 2020 and does not
-            exist for exports of older models.
+            Constant ID of the export, not dependent on model ID, and therefore NOT changing each
+            time a model gets uploaded. Might be undefined because this property was introduced in
+            summer 2020 and does not exist for exports of older models.
           allOf:
             - $ref: '#/components/schemas/Uuid'
         name:
@@ -2092,9 +2258,10 @@ components:
           items:
             type: string
         group:
-          description: Group of an export.
+          title: ResExportDefinitionGroup
           allOf:
-            - $ref: '#/components/schemas/ResExportDefinitionGroup'
+            - $ref: '#/components/schemas/CommonsGroup'
+            - description: Group information of an export definition.
         order:
           description: Ordering of the export in client applications.
           type: integer
@@ -2105,9 +2272,14 @@ components:
           description: Parameter name to display instead of `name`.
           type: string
         hidden:
-          description: >-
-            Controls whether the parameter should be hidden in the UI.
+          description: Controls whether the parameter should be hidden in the UI.
           type: boolean
+        version: # Required to distinguish from ResExport
+          description: This property is never set.
+          # FIXME: Workaround until OAS 3.1 - use `null` instead!
+          type: boolean
+          nullable: true
+          deprecated: true
       required:
         - id
         - name
@@ -2118,51 +2290,64 @@ components:
       description: Export definition WITH results as exposed on the API.
       allOf:
         - $ref: '#/components/schemas/ResExportDefinition'
-      properties:
-        version:
-          description: Requested version of the export.
-          type: string
-        delay:
-          description: |-
-            The delay in milliseconds after which an export cache request
-            shall be sent to check again for this export version. This property
-            is used ONLY if the export version has not been computed yet.
+        - type: object
+          properties:
+            version:
+              description: Requested version of the export.
+              type: string
+            delay:
+              description: |-
+                The delay in milliseconds after which an export cache request shall be sent to
+                check again for this export version. This property is used ONLY if the export
+                version has not been computed yet.
 
-            Note that the existence of this property does not necessarily imply
-            the presence of an active or queued computation for the respective
-            export version.
-            type: integer
-            minimum: 0
-        content:
-          description: >-
-            Result parts. In case this array does not exist, this means that
-            the workers have not finished computation for this output version.
-          type: array
-          items:
-            $ref: '#/components/schemas/ResExportContent'
-        msg:
-          description: >-
-            In case computation of the export version (temporarily) failed.
-            Contains a message explaining what went wrong.
-          type: string
-        filename:
-          description: >-
-            Optional suggested filename for the files to be downloaded.
-          type: string
-        result:
-          description: >-
-            Optional result object for exports of type `email` and `shapeways`.
-          allOf:
-            - $ref: '#/components/schemas/ResExportResult'
-        status_computation:
-          description: >-
-            Status of the computation which resulted in the export version.
-          allOf:
-            - $ref: '#/components/schemas/ResComputationStatus'
-        status_collect:
-          description: Status of collecting results for the export version.
-          allOf:
-            - $ref: '#/components/schemas/ResComputationStatus'
+                Note that the existence of this property does not necessarily imply the presence of
+                an active or queued computation for the respective export version.
+              type: integer
+              minimum: 0
+            content:
+              description: >-
+                Result parts. In case this array does not exist, this means that the workers have
+                not finished computation for this output version.
+              type: array
+              items:
+                $ref: '#/components/schemas/ResExportContent'
+            msg:
+              description: >-
+                In case computation of the export version (temporarily) failed. Contains a message
+                explaining what went wrong.
+              type: string
+            filename:
+              description: Optional suggested filename for the files to be downloaded.
+              type: string
+            result:
+              title: ResExportResult
+              description: Optional result object for exports of type `email` and `shapeways`.
+              type: object
+              properties:
+                msg:
+                  description: Optional success message for user.
+                  type: string
+                err:
+                  description: Optional error message for user.
+                  type: string
+                href:
+                  description: Optional href to redirect user to for download.
+                  type: string
+                modelId:
+                  description: Optional shapeways model ID.
+                  allOf:
+                    - $ref: '#/components/schemas/Uuid'
+            status_computation:
+              description: Status of the computation which resulted in the export version.
+              allOf:
+                - $ref: '#/components/schemas/ResComputationStatus'
+            status_collect:
+              description: Status of collecting results for the export version.
+              allOf:
+                - $ref: '#/components/schemas/ResComputationStatus'
+          required:
+            - version
     ResExportContent:
       description: An item of the `content` array for exports.
       type: object
@@ -2183,24 +2368,6 @@ components:
       required:
         - format
         - href
-    ResExportResult:
-      description: >-
-        Optional result object for exports of type `email` and `shapeways`.
-      type: object
-      properties:
-        msg:
-          description: Optional success message for user.
-          type: string
-        err:
-          description: Optional error message for user.
-          type: string
-        href:
-          description: Optional href to redirect user to for download.
-          type: string
-        modelId:
-          description: Optional shapeways model ID.
-          allOf:
-            - $ref: '#/components/schemas/Uuid'
     ResExportOrDefinition:
       description: Either a full export or it's definition.
       oneOf:
@@ -2241,8 +2408,7 @@ components:
           items:
             $ref: '#/components/schemas/ResTexture'
     ResFileInfo:
-      description: >-
-        Result part for the response to a list request for file objects.
+      description: Result part for the response to a list request for file objects.
       type: object
       properties:
         id:
@@ -2262,8 +2428,7 @@ components:
         - parameterId
         - size
     ResSdtfInfo:
-      description: >-
-        Result part for the response to a list request for sdTF objects.
+      description: Result part for the response to a list request for sdTF objects.
       type: object
       properties:
         id:
@@ -2289,8 +2454,7 @@ components:
           description: Name of the action, e.g. customize, close, default, etc.
           type: string
         title:
-          description: >-
-            Title of the action, e.g. 'Customize model', 'Close session', etc.
+          description: Title of the action, e.g. 'Customize model', 'Close session', etc.
           type: string
         href:
           description: Hyperlink to make the request to.
@@ -2300,8 +2464,8 @@ components:
           type: string
         template:
           description: >-
-            Template for the request body, references into the 'templates'
-            array of the response (e.g. 'customize-request').
+            Template for the request body, references into the 'templates' array of the response
+            (e.g. 'customize-request').
           type: string
       required:
         - name
@@ -2316,9 +2480,7 @@ components:
           description: Name of the template, e.g. 'customize-request'.
           type: string
         title:
-          description: >-
-            Title of the template, e.g. 'Template for model customization
-            request'.
+          description: Title of the template, e.g. 'Template for model customization request'.
           type: string
         data:
           description: Template for the request body.
@@ -2337,8 +2499,7 @@ components:
           type: string
         checkurl:
           description: >-
-            Link to continue the checking process of the model on the
-            ShapeDiver Platform.
+            Link to continue the checking process of the model on the ShapeDiver Platform.
           type: string
         createdate:
           description: Timestamp of creation of the model.
@@ -2357,8 +2518,7 @@ components:
             - $ref: '#/components/schemas/Uuid'
         id2:
           description: >-
-            Optional second ID of the model. This value can be unset via an
-            empty string.
+            Optional second ID of the model. This value can be unset via an empty string.
           allOf:
             - $ref: '#/components/schemas/Uuid'
         msg:
@@ -2372,28 +2532,24 @@ components:
           allOf:
             - $ref: '#/components/schemas/Uuid'
         stat:
-          description: Status of the model.
-          allOf:
-            - $ref: '#/components/schemas/ResModelStatus'
+          $ref: '#/components/schemas/ResModelStatus'
         user_id:
           description: ShapeDiver User ID of the model owner.
           allOf:
             - $ref: '#/components/schemas/Uuid'
         webhook_url:
           description: >-
-            The webhook-url for updating the platform backend about model
-            status changes.
+            The webhook-url for updating the platform backend about model status changes.
           type: string
         webhook_token:
-          description: >-
-            The webhook-token for authentication used by the webhook-url.
+          description: The webhook-token for authentication used by the webhook-url.
           type: string
       required:
         - id
         - stat
     ResModelStatus:
-      allOf:
-        - $ref: '#/components/schemas/CommonsModelStatus'
+      <<: *CommonsModelStatus
+      description: Status of the model.
     ResFile:
       description: Definitions of a model file.
       type: object
@@ -2412,42 +2568,41 @@ components:
           description: Libraries used by the model.
           type: array
           items:
-            $ref: '#/components/schemas/ResPluginsLibrary'
-    ResPluginsLibrary:
-      description: Definition of a model library.
-      type: object
-      properties:
-        id:
-          description: Library ID.
-          type: string
-        version:
-          description: Library version.
-          type: string
-        name:
-          description: Library name.
-          type: string
-        author:
-          description: Library author.
-          type: string
-        assemblyFullName:
-          description: Assembly name (not present in Rhino 5).
-          type: string
-        assemblyVersion:
-          description: Assembly version (not present in Rhino 5).
-          type: string
-      required:
-        - id
-        - version
-        - name
-        - author
+            title: ResPluginsLibrary
+            description: Definition of a model library.
+            type: object
+            properties:
+              id:
+                description: Library ID.
+                type: string
+              version:
+                description: Library version.
+                type: string
+              name:
+                description: Library name.
+                type: string
+              author:
+                description: Library author.
+                type: string
+              assemblyFullName:
+                description: Assembly name (not present in Rhino 5).
+                type: string
+              assemblyVersion:
+                description: Assembly version (not present in Rhino 5).
+                type: string
+            required:
+              - id
+              - version
+              - name
+              - author
     ResStatistic:
       description: Model statistic object.
       type: object
       properties:
         comptime:
           description: >-
-            Cumulative time (msec) which has been spent for processing
-            computation requests by the workers (pure computation time).
+            Cumulative time (msec) which has been spent for processing computation requests by the
+            workers (pure computation time).
           type: integer
           minimum: 0
         lastsession:
@@ -2464,20 +2619,17 @@ components:
           minimum: 0
         numcomp:
           description: >-
-            Number of computations which have been carried out for the model by
-            the workers so far.
+            Number of computations which have been carried out for the model by the workers so far.
           type: integer
           minimum: 0
         numsessions:
-          description: >-
-            Number of sessions which have been opened for the model so far.
+          description: Number of sessions which have been opened for the model so far.
           type: integer
           minimum: 0
         requesttime:
           description: >-
-            Cumulative time (msec) which has been spent for processing
-            computation requests by the workers (computation time plus
-            overheads).
+            Cumulative time (msec) which has been spent for processing computation requests by the
+            workers (computation time plus overheads).
           type: integer
           minimum: 0
         size:
@@ -2489,9 +2641,7 @@ components:
       type: object
       properties:
         id:
-          description: >-
-            Unique ID of parameter, stays constant each time a model gets
-            uploaded.
+          description: Unique ID of parameter, stays constant each time a model gets uploaded.
           allOf:
             - $ref: '#/components/schemas/Uuid'
         choices:
@@ -2507,13 +2657,10 @@ components:
           description: Default value of parameter, stringified.
           type: string
         expression:
-          description: >-
-            Optional expression to be applied to value for visualisation.
+          description: Optional expression to be applied to value for visualisation.
           type: string
         format:
-          description: >-
-            List of file formats (content types) supported, used for type
-            `FILE`.
+          description: List of file formats (content types) supported, used for type `FILE`.
           type: array
           items:
             type: string
@@ -2551,8 +2698,7 @@ components:
             - $ref: '#/components/schemas/ResParameterType'
         visualization:
           description: >-
-            Optional preferred visualization for parameters of type `FILE` and
-            `STRINGLIST`.
+            Optional preferred visualization for parameters of type `FILE` and `STRINGLIST`.
           allOf:
             - $ref: '#/components/schemas/ResVisualizationType'
         structure:
@@ -2560,9 +2706,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/ResStructureType'
         group:
-          description: Group of a parameter.
+          title: ResParameterGroup
           allOf:
-            - $ref: '#/components/schemas/ResParameterGroup'
+            - $ref: '#/components/schemas/CommonsGroup'
+            - description: Group information of a parameter.
         hint:
           description: Technical hint for the UI implementation.
           type: string
@@ -2576,8 +2723,7 @@ components:
           description: Parameter name to display instead of `name`.
           type: string
         hidden:
-          description: >-
-            Controls whether the parameter should be hidden in the UI.
+          description: Controls whether the parameter should be hidden in the UI.
           type: boolean
       required:
         - id
@@ -2589,8 +2735,8 @@ components:
       description: |-
         Type of parameter.
 
-        All types starting with 's' are s-type parameters while the others are
-        basic parameter types.
+        All types starting with 's' are s-type parameters while the others are basic parameter
+        types.
       type: string
       enum:
         - sBitmap
@@ -2625,10 +2771,41 @@ components:
         - StringList
         - Time
         - unknown
+      x-enum-varnames:
+        - S_BITMAP
+        - S_BOOL
+        - S_BOX
+        - S_BREP
+        - S_CIRCLE
+        - S_COLOR
+        - S_CURVE
+        - S_DOMAIN
+        - S_DOMAIN_2D
+        - S_INTEGER
+        - S_LINE
+        - S_MESH
+        - S_NUMBER
+        - S_PLANE
+        - S_POINT
+        - S_RECTANGLE
+        - S_STRING
+        - S_SUBDIV
+        - S_SURFACE
+        - S_TIME
+        - S_VECTOR
+        - BOOL
+        - COLOR
+        - EVEN
+        - FILE
+        - FLOAT
+        - INT
+        - ODD
+        - STRING
+        - STRINGLIST
+        - TIME
+        - UNKNOWN
     ResVisualizationType:
-      description: >-
-        Optional preferred visualization for parameters of type
-        `FILE` and `STRINGLIST`.
+      description: Optional preferred visualization for parameters of type `FILE` and `STRINGLIST`.
       type: string
       enum:
         - unknown
@@ -2646,17 +2823,27 @@ components:
         - swatch
         - text
         - toggle
+      x-enum-varnames:
+        - UNKNOWN
+        - BUTTON
+        - CALENDAR
+        - CHECKLIST
+        - CLOCK
+        - CYCLE
+        - DIAL
+        - DROPDOWN
+        - GEOMETRY
+        - IMAGE
+        - SEQUENCE
+        - SLIDER
+        - SWATCH
+        - TEXT
+        - TOGGLE
     ResStructureType:
       description: Structural information of a parameter.
       type: string
-      enum:
-        - item
-        - list
-        - tree
-    ResParameterGroup:
-      description: Group information of a parameter.
-      allOf:
-        - $ref: '#/components/schemas/CommonsGroup'
+      enum: [ item, list, tree ]
+      x-enum-varnames: [ ITEM, LIST, TREE ]
     ResViewer:
       description: Viewer config object.
       type: object
@@ -2666,9 +2853,6 @@ components:
           additionalProperties: true
       required:
         - config
-    ResTicketType:
-      allOf:
-        - $ref: '#/components/schemas/CommonsTicketType'
     ResTicket:
       allOf:
         - $ref: '#/components/schemas/CommonsTicket'
@@ -2678,20 +2862,22 @@ components:
             - accessdomains
             - author
             - use_id2
-      properties:
-        type:
-          description: The type of the ticket.
-          allOf:
-            - $ref: '#/components/schemas/ResTicketType'
-        model_id:
-          description: >-
-            Either the model's `id` or `id2` property, depending on the ticket
-            property `use_id2`.
-          allOf:
-            - $ref: '#/components/schemas/Uuid'
-      required:
-        - type
-        - model_id
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/ResTicketType'
+            model_id:
+              description: >-
+                Either the model's `id` or `id2` property, depending on the ticket property
+                `use_id2`.
+              allOf:
+                - $ref: '#/components/schemas/Uuid'
+          required:
+            - type
+            - model_id
+    ResTicketType:
+      <<: *CommonsTicketType
+      description: The type of the ticket.
     ResGltfUpload:
       description: Information about uploaded glTF object.
       type: object
@@ -2701,8 +2887,8 @@ components:
           type: string
         sceneId:
           description: >-
-            Contains the unique ID of the uploaded scene. Only present for
-            uploads with the conversion type `scene`.
+            Contains the unique ID of the uploaded scene. Only present for uploads with the
+            conversion type `scene`.
           type: string
       required:
         - href
@@ -2715,14 +2901,11 @@ components:
           allOf:
             - $ref: '#/components/schemas/ResModelCleanupProcessType'
         timestamp_enqueued:
-          description: >-
-            The timestamp when the deletion job has been enqueued.
+          description: The timestamp when the deletion job has been enqueued.
           allOf:
             - $ref: '#/components/schemas/DateTimeMs'
         total:
-          description: >-
-            The total number of items of this type that are going to be
-            deleted.
+          description: The total number of items of this type that are going to be deleted.
           type: integer
           minimum: 0
         deleted:
@@ -2739,6 +2922,10 @@ components:
         - delete_export_version
         - delete_model_texture
         - delete_output_version
+      x-enum-varnames:
+        - DELETE_EXPORT_VERSION
+        - DELETE_MODEL_TEXTURE
+        - DELETE_OUTPUT_VERSION
     ResTexture:
       description: Information about a model texture.
       type: object
@@ -2762,8 +2949,7 @@ components:
           type: integer
           minimum: 0
         isAssetAvailable:
-          description: >-
-            Is `true` when the texture has been cached, otherwise `false`.
+          description: Is `true` when the texture has been cached, otherwise `false`.
           type: boolean
       required:
         - modelId
@@ -2829,8 +3015,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/DateTimeMs'
         msg:
-          description: >-
-            Message containing information about the computation process.
+          description: Message containing information about the computation process.
           type: string
         limit:
           description: Model's limits at the time of the computation process.
@@ -2855,56 +3040,50 @@ components:
       type: object
       properties:
         size_assets:
-          description: >-
-            Total size in bytes of the uncompressed resulting assets.
+          description: Total size in bytes of the uncompressed resulting assets.
           type: integer
           minimum: 0
         size_assets_storage:
           description: >-
-            Total size in bytes of the (potentially compressed) assets uploaded
-            to storage.
+            Total size in bytes of the (potentially compressed) assets uploaded to storage.
           type: integer
           minimum: 0
         time_completion:
-          description: >-
-            The number of milliseconds it took to answer the request.
+          description: The number of milliseconds it took to answer the request.
           type: integer
           minimum: 0
         time_model_download:
           description: >-
-            The number of milliseconds it took to download the model from
-            storage. `0` in case model was already downloaded to the instance.
+            The number of milliseconds it took to download the model from storage. `0` in case
+            model was already downloaded to the instance.
           type: integer
           minimum: 0
         time_model_open:
           description: |-
-            The number of milliseconds it took to  load (open) the model. `0`
-            in case model was already loaded.
+            The number of milliseconds it took to  load (open) the model. `0` in case model was
+            already loaded.
 
-            Note: Does not include time for script compilation and first
-            computation.
+            Note: Does not include time for script compilation and first computation.
           type: integer
           minimum: 0
         time_processing:
-          description: >-
-            The number of milliseconds it took to process the request.
+          description: The number of milliseconds it took to process the request.
           type: integer
           minimum: 0
         time_check_stored:
           description: >-
-            The number of milliseconds it took to carry out checks that are
-            done before loading the model.
+            The number of milliseconds it took to carry out checks that are done before loading the
+            model.
           type: integer
           minimum: 0
         time_check_loaded:
           description: >-
-            The number of milliseconds it took to carry out check that are done
-            after loading the model.
+            The number of milliseconds it took to carry out check that are done after loading the
+            model.
           type: integer
           minimum: 0
         time_storage:
-          description: >-
-            The number of milliseconds it took to upload assets to storage.
+          description: The number of milliseconds it took to upload assets to storage.
           type: integer
           minimum: 0
         time_solver:
@@ -2913,26 +3092,22 @@ components:
           minimum: 0
         time_solver_collect:
           description: >-
-            The number of milliseconds it took to collect output and export
-            data after computation.
+            The number of milliseconds it took to collect output and export data after computation.
           type: integer
           minimum: 0
         time_solver_ext:
           description: >-
-            The number of milliseconds it took to download and load the model
-            and setting parameters, and to compute the solution.
+            The number of milliseconds it took to download and load the model and setting
+            parameters, and to compute the solution.
           type: integer
           minimum: 0
         time_wait:
-          description: >-
-            The number of milliseconds the request was waiting before being
-            processed.
+          description: The number of milliseconds the request was waiting before being processed.
           type: integer
           minimum: 0
         time_cache_outputs:
           description: >-
-            The number of milliseconds it took to store the results of the
-            request in the cache.
+            The number of milliseconds it took to store the results of the request in the cache.
           type: integer
           minimum: 0
         model:
@@ -2941,70 +3116,63 @@ components:
             - $ref: '#/components/schemas/ResComputationComponents'
         cpu_time_check_stored:
           description: >-
-            The number of milliseconds the CPU was used to carry out checks
-            which are done before loading the model.
+            The number of milliseconds the CPU was used to carry out checks which are done before
+            loading the model.
           type: integer
           minimum: 0
         cpu_time_check_loaded:
           description: >-
-            The number of milliseconds the CPU was used to carry out checks
-            which are done after loading the model.
+            The number of milliseconds the CPU was used to carry out checks which are done after
+            loading the model.
           type: integer
           minimum: 0
         cpu_time_storage:
-          description: >-
-            The number of milliseconds the CPU was used to upload assets to
-            storage.
+          description: The number of milliseconds the CPU was used to upload assets to storage.
           type: integer
           minimum: 0
         cpu_time_model_download:
           description: >-
-            The number of milliseconds the CPU was used to download the model
-            from storage.
+            The number of milliseconds the CPU was used to download the model from storage.
           type: integer
           minimum: 0
         cpu_time_model_open:
           description: >-
-            The number of milliseconds the CPU was used to  load (open)
-            the model. `0` in case model was already loaded.
+            The number of milliseconds the CPU was used to  load (open) the model. `0` in case
+            model was already loaded.
           type: integer
           minimum: 0
         cpu_time_solver:
-          description: >-
-            The number of milliseconds the CPU was used for Grasshopper
-            solver.
+          description: The number of milliseconds the CPU was used for Grasshopper solver.
           type: integer
           minimum: 0
         cpu_time_solver_collect:
           description: >-
-            The number of milliseconds the CPU was used to collect output
-            and export data after computation.
+            The number of milliseconds the CPU was used to collect output and export data after
+            computation.
           type: integer
           minimum: 0
         cpu_time_solver_ext:
           description: >-
-            The number of milliseconds the CPU was used to download and
-            load the model and setting parameters, and to compute the solution.
+            The number of milliseconds the CPU was used to download and load the model and setting
+            parameters, and to compute the solution.
           type: integer
           minimum: 0
         cpu_time_cache_outputs:
           description: >-
-            The number of milliseconds the CPU was used to store the results of
-            the request in the cache.
+            The number of milliseconds the CPU was used to store the results of the request in the
+            cache.
           type: integer
           minimum: 0
         time_model_prepare:
           description: >-
-            The number of milliseconds it took to prepare the model after
-            loading it. As an example, preparation includes compilation of
-            scripts.
+            The number of milliseconds it took to prepare the model after loading it. As an
+            example, preparation includes compilation of scripts.
           type: integer
           minimum: 0
         cpu_time_model_prepare:
           description: >-
-            The number of milliseconds the CPU was used to prepare the model
-            after loading it. As an example, preparation includes compilation
-            of scripts.
+            The number of milliseconds the CPU was used to prepare the model after loading it. As
+            an example, preparation includes compilation of scripts.
           type: integer
           minimum: 0
       required:
@@ -3033,8 +3201,8 @@ components:
           description: Nickname of component.
           type: string
         time:
-          description: Computation time used in milliseconds.
-          type: integer
+          description: Computation time used.
+          type: number
           minimum: 0
       required:
         - instance
@@ -3121,21 +3289,18 @@ components:
         - warnings
     ResComputationComponent:
       description: >-
-        Information about the components taking most computation time in the
-        model computations log.
+        Information about the components taking most computation time in the model computations
+        log.
       type: object
       properties:
         computed:
-          description: >-
-            Components which were computed, ordered by descending processor
-            time.
+          description: Components which were computed, ordered by descending processor time.
           type: array
           items:
             $ref: '#/components/schemas/ResComputedComponent'
         computing:
           description: >-
-            Components which were currently computing at the time the
-            computation was stopped.
+            Components which were currently computing at the time the computation was stopped.
           type: array
           items:
             $ref: '#/components/schemas/ResComputingComponent'
@@ -3161,37 +3326,29 @@ components:
         components:
           $ref: '#/components/schemas/ResComputationComponent'
         count_success:
-          description: >-
-            Count of successful computations for the given loaded instance of
-            the model.
+          description: Count of successful computations for the given loaded instance of the model.
           type: integer
           minimum: 0
         count_timeout:
-          description: >-
-            Count of timed-out computations for the given loaded instance of
-            the model.
+          description: Count of timed-out computations for the given loaded instance of the model.
           type: integer
           minimum: 0
         changes:
           description: >-
-            Lists the ids of the parameters whose values were changed before
-            the computation.
+            Lists the ids of the parameters whose values were changed before the computation.
           type: array
           items:
             allOf:
               - $ref: '#/components/schemas/Uuid'
       required:
         - components
-    ResComputationStatus:
-      allOf:
-        - $ref: '#/components/schemas/CommonsComputationStatus'
+    ResComputationStatus: *CommonsComputationStatus
     ResComputationLimits:
       description: Limits of a model computation process.
       type: object
       properties:
         max_comp_time:
-          description: >-
-            Maximum computation time in milliseconds allowed for the model.
+          description: Maximum computation time in milliseconds allowed for the model.
           type: integer
           minimum: 0
         max_output_size:
@@ -3206,48 +3363,43 @@ components:
         - max_comp_time
         - max_output_size
         - max_export_size
-    ResOutputDefinitionGroup:
-      description: Group information of an output definition.
-      allOf:
-        - $ref: '#/components/schemas/CommonsGroup'
     ResOutputDefinition:
       description: Output definition WITHOUT results as exposed on the API.
       type: object
       properties:
         id:
           description: >-
-            ID of the output, dependent on model ID, and therefore changing
-            each time a model gets uploaded.
+            ID of the output, dependent on model ID, and therefore changing each time a model gets
+            uploaded.
           type: string
         uid:
           description: >-
-            Constant ID of the output, not dependent on model ID, and therefore
-            NOT changing each time a model gets uploaded. Might be undefined
-            because this property was introduced in summer 2020 and does not
-            exist for outputs of older models.
+            Constant ID of the output, not dependent on model ID, and therefore NOT changing each
+            time a model gets uploaded. Might be undefined because this property was introduced in
+            summer 2020 and does not exist for outputs of older models.
           allOf:
             - $ref: '#/components/schemas/Uuid'
         name:
           description: Name of the output.
           type: string
         material:
-          description: >-
-            Optional ID of the output holding material information for this
-            output.
+          description: Optional ID of the output holding material information for this output.
           type: string
         chunks:
           description: Information about which chunks exist in the asset/sdTF.
-          allOf:
-            - $ref: '#/components/schemas/ResOutputChunk'
+          type: array
+          items:
+            $ref: '#/components/schemas/ResOutputChunk'
         dependency:
           description: List of IDs of parameters influencing this output.
           type: array
           items:
             type: string
         group:
-          description: Group of an output.
+          title: ResOutputDefinitionGroup
           allOf:
-            - $ref: '#/components/schemas/ResOutputDefinitionGroup'
+            - $ref: '#/components/schemas/CommonsGroup'
+            - description: Group information of an output definition.
         order:
           description: Ordering of the output in client applications.
           type: integer
@@ -3258,9 +3410,14 @@ components:
           description: Parameter name to display instead of `name`.
           type: string
         hidden:
-          description: >-
-            Controls whether the parameter should be hidden in the UI.
+          description: Controls whether the parameter should be hidden in the UI.
           type: boolean
+        version: # Required to distinguish from ResOutput
+          description: This property is never set.
+          # FIXME: Workaround until OAS 3.1 - use `null` instead!
+          type: boolean
+          nullable: true
+          deprecated: true
       required:
         - id
         - name
@@ -3270,61 +3427,58 @@ components:
       description: Output definition WITH results as exposed on the API.
       allOf:
         - $ref: '#/components/schemas/ResOutputDefinition'
-      properties:
-        version:
-          description: >-
-            A unique identifier for the particular version of the output. This
-            is a hash code which is based on the parameter values that were
-            used to compute the resulting data. The hash code only depends on
-            the values of the parameters which may theoretically influence the
-            results of the output. As an example, parameters which are in no
-            way connected to the output component in Grasshopper are not
-            considered.
-          type: string
-        delay:
-          description: |-
-            The delay in milliseconds after which a cache request shall be sent
-            to check again for this output version. This property is used ONLY
-            if the output version has not been computed yet.
+        - type: object
+          properties:
+            version:
+              description: >-
+                A unique identifier for the particular version of the output. This is a hash code
+                which is based on the parameter values that were used to compute the resulting
+                data. The hash code only depends on the values of the parameters which may
+                theoretically influence the results of the output. As an example, parameters which
+                are in no way connected to the output component in Grasshopper are not considered.
+              type: string
+            delay:
+              description: |-
+                The delay in milliseconds after which a cache request shall be sent to check again
+                for this output version. This property is used ONLY if the output version has not
+                been computed yet.
 
-            Note that the existence of this property does not necessarily imply
-            the presence of an active or queued computation for the respective
-            output version.
-          type: integer
-          minimum: 0
-        content:
-          description: >-
-            Result parts. In case this array does not exist, this means that
-            the workers have not finished computation for this output version.
-          type: array
-          items:
-            $ref: '#/components/schemas/ResOutputContent'
-        bbmin:
-          description: Optional bounding box, minimum corner.
-          type: array
-          items:
-            type: number
-        bbmax:
-          description: Optional bounding box, maximum corner.
-          type: array
-          items:
-            type: number
-        msg:
-          description: >-
-            In case computation of the export version (temporarily) failed.
-            Contains a message explaining what went wrong.
-          type: string
-        status_computation:
-          description: >-
-            Status of the computation which resulted in the output version.
-          allOf:
-            - $ref: '#/components/schemas/ResComputationStatus'
-        status_collect:
-          description: Status of collecting results for the output version.
-          allOf:
-            - $ref: '#/components/schemas/ResComputationStatus'
-      required:
-        - version
+                Note that the existence of this property does not necessarily imply the presence of
+                an active or queued computation for the respective output version.
+              type: integer
+              minimum: 0
+            content:
+              description: >-
+                Result parts. In case this array does not exist, this means that the workers have
+                not finished computation for this output version.
+              type: array
+              items:
+                $ref: '#/components/schemas/ResOutputContent'
+            bbmin:
+              description: Optional bounding box, minimum corner.
+              type: array
+              items:
+                type: number
+            bbmax:
+              description: Optional bounding box, maximum corner.
+              type: array
+              items:
+                type: number
+            msg:
+              description: >-
+                In case computation of the export version (temporarily) failed. Contains a message
+                explaining what went wrong.
+              type: string
+            status_computation:
+              description: Status of the computation which resulted in the output version.
+              allOf:
+                - $ref: '#/components/schemas/ResComputationStatus'
+            status_collect:
+              description: Status of collecting results for the output version.
+              allOf:
+                - $ref: '#/components/schemas/ResComputationStatus'
+          required:
+            - version
     ResOutputContent:
       description: An item of the `content` array for outputs.
       type: object
@@ -3340,9 +3494,7 @@ components:
           description: Optionally used for type `data`.
           type: string
         transformations:
-          description: >-
-            Transformations to be applied in case of type `external` or
-            `asset`.
+          description: Transformations to be applied in case of type `external` or `asset`.
           type: array
           items:
             type: array
@@ -3354,13 +3506,12 @@ components:
             * File ending for parts of type `asset`.
             * `material` (data contains a material definition).
             * `data` (data contains arbitrary data).
-            * `external` (href or storage information that refer to an external
-              asset).
+            * `external` (href or storage information that refer to an external asset).
           type: string
         msg:
           description: >-
-            This was used by legacy `transform_content_array` in case of an
-            error in getting texture URLs.
+            This was used by legacy `transform_content_array` in case of an error in getting
+            texture URLs.
           type: string
         data:
           description: Used for types `material` and `data`.
@@ -3373,8 +3524,8 @@ components:
         - format
     ResOutputChunk:
       description: >-
-        Represents a collection of nodes where to start enumerating the content
-        of the sdTF file (entry points).
+        Represents a collection of nodes where to start enumerating the content of the sdTF file
+        (entry points).
       type: object
       properties:
         id:
@@ -3390,8 +3541,7 @@ components:
           description: Description that is shown as a tooltip in the clients.
           type: string
         displayname:
-          description: >-
-            Custom name to display instead of `name`. Empty string if not set.
+          description: Custom name to display instead of `name`. Empty string if not set.
           type: string
         hidden:
           description: Controls whether the chunk should be hidden in the UI.
@@ -3429,8 +3579,8 @@ components:
       properties:
         accessdomains:
           description: >-
-            List of domains (origins) this model is limited to (is ignored in
-            case `model.pub` is true).
+            List of domains (origins) this model is limited to (is ignored in case `model.pub` is
+            true).
           type: array
           items:
             type: string
@@ -3438,8 +3588,7 @@ components:
           description: Should backend access to the model be allowed.
           type: boolean
         pub:
-          description: >-
-            If this model allows public access (ignore `model.accessdomains`)?
+          description: If this model allows public access (ignore `model.accessdomains`)?
           type: boolean
       required:
         - accessdomains
@@ -3463,49 +3612,42 @@ components:
       type: object
       properties:
         deny_scripts:
-          description: >-
-            Allows to control whether the model's Grasshopper file can contain
-            scripts.
+          description: Allows to control whether the model's Grasshopper file can contain scripts.
           type: boolean
         ftype:
           description: File type of the model.
           type: string
         initial_warmup:
           description: >-
-            Allows to control whether the model should be warmed up immediately
-            after loading by running a computation. This increases the
-            likelihood of following computation requests to be faster.
+            Allows to control whether the model should be warmed up immediately after loading by
+            running a computation. This increases the likelihood of following computation requests
+            to be faster.
           type: boolean
         max_comp_time:
-          description: >-
-            Maximum number of milliseconds allowed for computations of this
-            model.
+          description: Maximum number of milliseconds allowed for computations of this model.
           type: integer
           minimum: 0
         max_export_size:
           description: >-
-            Maximum number of bytes allowed to be exported from a model for a
-            specific set of parameter values.
+            Maximum number of bytes allowed to be exported from a model for a specific set of
+            parameter values.
           type: integer
           minimum: 0
         max_idle_minutes:
           description: |-
-            Maximum amount of minutes a loaded model may be unused before it
-            gets unloaded.
+            Maximum amount of minutes a loaded model may be unused before it gets unloaded.
 
             Note: Models may get unloaded earlier than that.
           type: integer
           minimum: 0
         max_model_size:
-          description: >-
-            Maximum number of bytes allowed for the model's Grasshopper file
-            size.
+          description: Maximum number of bytes allowed for the model's Grasshopper file size.
           type: integer
           minimum: 0
         max_output_size:
           description: >-
-            Maximum number of bytes allowed for an output of a model for a
-            specific set of parameter values.
+            Maximum number of bytes allowed for an output of a model for a specific set of
+            parameter values.
           type: integer
           minimum: 0
         max_texture_size:
@@ -3514,37 +3656,33 @@ components:
           minimum: 0
         max_wait_time:
           description: >-
-            Maximum time a computation request may stay waiting before a
-            further worker goes ahead regardless of whether it already has the
-            model loaded, and regardless of `num_loaded_max`. This allows to
-            configure a soft or a hard upper boundary for the number of loaded
-            models.
+            Maximum time a computation request may stay waiting before a further worker goes ahead
+            regardless of whether it already has the model loaded, and regardless of
+            `num_loaded_max`. This allows to configure a soft or a hard upper boundary for the
+            number of loaded models.
           type: integer
           minimum: 0
         num_loaded_max:
           description: >-
-            Maximum number of workers that should have the model loaded at the
-            same time.
+            Maximum number of workers that should have the model loaded at the same time.
           type: integer
           minimum: 0
         num_loaded_min:
           description: >-
-            Minimum number of workers that should load the model and keep it
-            open while there is session activity.
+            Minimum number of workers that should load the model and keep it open while there is
+            session activity.
           type: integer
           minimum: 0
         num_preloaded_min:
           description: >-
-            Minimum number of workers that should always have the model loaded,
-            regardless of session activity. This allows to minimise the
-            likelihood of computation requests being slower due to model
-            loading.
+            Minimum number of workers that should always have the model loaded, regardless of
+            session activity. This allows to minimise the likelihood of computation requests being
+            slower due to model loading.
           type: integer
           minimum: 0
         session_rate_limit:
           description: >-
-            Limits the number of sessions that can be created by a specific IP
-            address in one hour.
+            Limits the number of sessions that can be created by a specific IP address in one hour.
           type: integer
           minimum: 0
         trust:
@@ -3568,8 +3706,7 @@ components:
       type: object
       properties:
         use_cdn:
-          description: >-
-            Allows the usage of the CDN for fast content distribution.
+          description: Allows the usage of the CDN for fast content distribution.
           type: boolean
         cdn_supported:
           description: Indicates if the model supports CDN-based asset URLs.
@@ -3581,28 +3718,22 @@ components:
         minions:
           description: System information about the Geometry Minions.
           allOf:
-            - $ref: '#/components/schemas/ResMinionSystem'
+            - $ref: '#/components/schemas/ResMinionInfo'
         workers:
           description: System information about the Geometry Workers.
           allOf:
-            - $ref: '#/components/schemas/ResWorkerSystem'
-    ResMinionSystem:
-      description: >-
-        Holds system information of all currently running Geometry Minion
-        services.
+            - $ref: '#/components/schemas/ResWorkerInfo'
+    ResMinionInfo:
+      description: Holds system information of all currently running Geometry Minion services.
       type: object
       properties:
         instances:
-          description: >-
-            Information per instance. A directory of process-IDs and process
-            data.
+          description: Information per instance. A directory of process-IDs and process data.
           type: object
           additionalProperties:
             $ref: '#/components/schemas/ResMinionProcess'
         tasks:
-          description: >-
-            Aggregated task information. A directory of task types and task
-            data.
+          description: Aggregated task information. A directory of task types and task data.
           type: object
           additionalProperties:
             $ref: '#/components/schemas/ResMinionTask'
@@ -3614,8 +3745,7 @@ components:
       type: object
       properties:
         tasks:
-          description: >-
-            Information about completed tasks, listed per task type.
+          description: Information about completed tasks, listed per task type.
           type: object
           additionalProperties:
             $ref: '#/components/schemas/ResMinionTask'
@@ -3635,14 +3765,14 @@ components:
           minimum: 0
         avgIntervalDiff:
           description: >-
-            Average difference between the configured task interval and the
-            last global task execution in milliseconds.
+            Average difference between the configured task interval and the last global task
+            execution in milliseconds.
           type: integer
           minimum: 0
         maxIntervalDiff:
           description: >-
-            Maximum difference between the configured task interval and the
-            last global task execution in milliseconds.
+            Maximum difference between the configured task interval and the last global task
+            execution in milliseconds.
           type: integer
           minimum: 0
         interval:
@@ -3665,7 +3795,7 @@ components:
         - interval
         - latest
         - count
-    ResWorkerSystem:
+    ResWorkerInfo:
       description: System information about the Geometry Workers.
       type: object
       properties:
@@ -3673,9 +3803,7 @@ components:
           description: Version of the Grasshopper application.
           type: string
         plugins:
-          description: >-
-            Holds information of all installed and allowed Grasshopper
-            plugins.
+          description: Holds information of all installed and allowed Grasshopper plugins.
           allOf:
             - $ref: '#/components/schemas/ResWorkerPlugins'
         rhinoVersion:
@@ -3690,20 +3818,16 @@ components:
         - rhinoVersion
         - shapeDiverVersion
     ResWorkerPlugins:
-      description: >-
-        Holds information of all installed and allowed Grasshopper plugins.
+      description: Holds information of all installed and allowed Grasshopper plugins.
       type: object
       properties:
         installed:
-          description: >-
-            Contains information about all installed Grasshopper plugins.
+          description: Contains information about all installed Grasshopper plugins.
           type: array
           items:
             $ref: '#/components/schemas/ResInstalledWorkerPlugin'
         allowed:
-          description: >-
-            Contains the model checking configuration for the Grasshopper
-            plugins.
+          description: Contains the model checking configuration for the Grasshopper plugins.
           type: array
           items:
             $ref: '#/components/schemas/ResAllowedWorkerPlugin'
@@ -3717,8 +3841,7 @@ components:
         - allowed
         - inconsistent
     ResInstalledWorkerPlugin:
-      description: >-
-        Contains information about all installed Grasshopper plugins.
+      description: Contains information about all installed Grasshopper plugins.
       type: object
       properties:
         id:
@@ -3735,8 +3858,7 @@ components:
           type: string
         authorContact:
           description: >-
-            Contact information of the plugin author (homepage URL, email
-            address, etc.).
+            Contact information of the plugin author (homepage URL, email address, etc.).
           type: string
         description:
           description: General description of the Grasshopper plugin.
@@ -3757,9 +3879,8 @@ components:
           type: string
         isCoreLibrary:
           description: >-
-            Gets whether this library is a Grasshopper core library. Core
-            libraries are installed along with Grasshopper and thus should
-            always be available anywhere.
+            Gets whether this library is a Grasshopper core library. Core libraries are installed
+            along with Grasshopper and thus should always be available anywhere.
           type: string
         license:
           description: |-
@@ -3792,8 +3913,7 @@ components:
         - loadingMechanism
         - location
     ResAllowedWorkerPlugin:
-      description: >-
-        Contains the model checking configuration for the Grasshopper plugins.
+      description: Contains the model checking configuration for the Grasshopper plugins.
       type: object
       properties:
         id:
@@ -3816,43 +3936,40 @@ components:
           type: string
         allowFallbackToAssemblyVersion:
           description: |-
-            When `true` then `GH_AssemblyInfo.AssemblyVersion` may be used
-            instead of `GH_AssemblyInfo.Version` for version checking.
+            When `true` then `GH_AssemblyInfo.AssemblyVersion` may be used instead of
+            `GH_AssemblyInfo.Version` for version checking.
 
             Defaults to `false`.
           type: boolean
         checkMajorMinorVersionOnly:
           description: |-
-            When `true` then only the major and minor version numbers recorded
-            in Grasshopper models will be checked.
+            When `true` then only the major and minor version numbers recorded in Grasshopper
+            models will be checked.
 
             Defaults to `false`.
           type: boolean
         checkIfInstalled:
           description: |-
-            When `false` then the installation check of the plugin will be
-            skipped.
+            When `false` then the installation check of the plugin will be skipped.
 
             Defaults to `true`.
           type: boolean
         previousIds:
           description: >-
-            List of previous plugin IDs supported by this plugin version. This
-            is used for the obscure case of the plugin developer changing the
-            plugin ID.
+            List of previous plugin IDs supported by this plugin version. This is used for the
+            obscure case of the plugin developer changing the plugin ID.
           type: string
         allowedComponents:
           description: >-
-            List of plugin components that are explicitly allowed. When this
-            property is set, only the listed components are allowed, overruling
-            the list in `disallowedComponents`.
+            List of plugin components that are explicitly allowed. When this property is set, only
+            the listed components are allowed, overruling the list in `disallowedComponents`.
           type: array
           items:
             $ref: '#/components/schemas/ResWorkerPluginComponent'
         disallowedComponents:
           description: >-
-            List of plugin components which may not be used. This list might be
-            overruled by `allowedComponents`.
+            List of plugin components which may not be used. This list might be overruled by
+            `allowedComponents`.
           type: array
           items:
             $ref: '#/components/schemas/ResWorkerPluginComponent'
@@ -3901,14 +4018,10 @@ components:
       description: Possible error types.
       type: string
       enum:
-        - "''"
         - SdAssertionError
         - SdCacheErrorGeneric
         - SdConnectorError
-        - SdDatabaseErrorFilterInvalid
         - SdDatabaseErrorGeneric
-        - SdDatabaseErrorSelectorInvalid
-        - SdDatabaseErrorSelectorNotUnique
         - SdEmailingError
         - SdErrorEntityNotFound
         - SdErrorForbidden
@@ -3933,6 +4046,37 @@ components:
         - SdTokenMissingError
         - SdTransformContentArrayError
         - SdUnconfirmedModelError
+        - ""
+      x-enum-varnames:
+        - ASSERTION_ERROR
+        - CACHE_ERROR_GENERIC
+        - CONNECTOR_ERROR
+        - DATABASE_ERROR_GENERIC
+        - EMAILING_ERROR
+        - ERROR_ENTITY_NOT_FOUND
+        - ERROR_FORBIDDEN
+        - ERROR_GENERIC_CLIENT
+        - ERROR_GENERIC_INTERNAL
+        - ERROR_UNAUTHORIZED
+        - ILLEGAL_ARGUMENT_ERROR
+        - JWT_VALIDATION_ERROR
+        - MODEL_VALIDATION_ERROR
+        - NOT_ACCEPTABLE
+        - NOT_FOUND_ERROR
+        - PARAMETER_VALIDATION_ERROR
+        - RATE_LIMIT_ERROR_GENERIC
+        - REQUEST_TIMEOUT
+        - REQUEST_VALIDATION_ERROR
+        - RESOURCE_GONE_ERROR
+        - SESSION_GONE_ERROR
+        - SESSION_VALIDATION_ERROR
+        - STORAGE_ERROR_GENERIC
+        - TEXTURE_URL_ERROR
+        - TICKET_VALIDATION_ERROR
+        - TOKEN_MISSING_ERROR
+        - TRANSFORM_CONTENT_ARRAY_ERROR
+        - UNCONFIRMED_MODEL_ERROR
+        - UNKNOWN
 
   #---------------------------------------------------------------------------#
   #- Security types                                                          -#
@@ -3955,6 +4099,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/analytics/session/model':
     put:
+      operationId: GetModelStatistics
       tags:
         - analytics
       summary: Get model session analytics.
@@ -3984,6 +4129,7 @@ paths:
         - JwtAuth: []
   '/api/v2/analytics/credit-metrics':
     put:
+      operationId: GetCreditMetrics
       tags:
         - analytics
       summary: Get credit metrics.
@@ -4019,6 +4165,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/ar-scene/{sceneId}':
     head:
+      operationId: GetArSceneMetadata
       tags:
         - ar-scene
       summary: Checks the existence of an AR scene.
@@ -4032,7 +4179,7 @@ paths:
       responses:
         200:
           description: The AR scene with the given ID was found.
-        400:
+        404:
           description: The AR scene with the given ID does not exist.
         default:
           description: Unexpected error. See `message` for more details.
@@ -4043,6 +4190,7 @@ paths:
       security: []
   '/api/v2/ar-scene/{sceneId}/gltf':
     get:
+      operationId: DownloadArSceneGltf
       tags:
         - ar-scene
       summary: Downloads the glTF asset of an AR scene.
@@ -4069,6 +4217,7 @@ paths:
       security: []
   '/api/v2/ar-scene/{sceneId}/usdz':
     get:
+      operationId: DownloadArSceneUsdz
       tags:
         - ar-scene
       summary: Downloads the USDZ asset of an AR scene.
@@ -4080,6 +4229,12 @@ paths:
           schema:
             type: string
       responses:
+        200:
+          description: Success.
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/OctetStream'
         302:
           description: Redirect to a temporary download link.
         default:
@@ -4095,6 +4250,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/session/{sessionId}/export/{assetDataEncrypted}':
     get:
+      operationId: DownloadExport
       tags:
         - assets
       summary: Download a single export.
@@ -4110,7 +4266,7 @@ paths:
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64'
+            $ref: '#/components/schemas/Base64Data'
       responses:
         200:
           description: Success.
@@ -4128,6 +4284,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/output/{assetDataEncrypted}':
     get:
+      operationId: DownloadOutput
       tags:
         - assets
       summary: Download a single output.
@@ -4143,9 +4300,9 @@ paths:
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64'
+            $ref: '#/components/schemas/Base64Data'
       responses:
-        200:
+        206:
           description: Success.
           content:
             application/octet-stream:
@@ -4161,6 +4318,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/texture/{assetDataEncrypted}':
     get:
+      operationId: DownloadTexture
       tags:
         - assets
       summary: Download a single texture.
@@ -4176,7 +4334,7 @@ paths:
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64'
+            $ref: '#/components/schemas/Base64Data'
       responses:
         200:
           description: Success.
@@ -4194,6 +4352,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/gltf/{assetDataEncrypted}':
     get:
+      operationId: DownloadGltf
       tags:
         - assets
       summary: Download a glTF file.
@@ -4209,7 +4368,7 @@ paths:
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64'
+            $ref: '#/components/schemas/Base64Data'
       responses:
         200:
           description: Success.
@@ -4227,6 +4386,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/usdz/{assetDataEncrypted}':
     get:
+      operationId: DownloadUsdz
       tags:
         - assets
       summary: Download a USDZ file.
@@ -4242,7 +4402,7 @@ paths:
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64'
+            $ref: '#/components/schemas/Base64Data'
       responses:
         302:
           description: Redirect to a temporary download link.
@@ -4256,6 +4416,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/image':
     get:
+      operationId: DownloadImage
       tags:
         - assets
       summary: Download an image.
@@ -4271,7 +4432,7 @@ paths:
           description: Specify the Base64-encoded image URL.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64'
+            $ref: '#/components/schemas/Base64Data'
       responses:
         200:
           description: Success.
@@ -4289,6 +4450,7 @@ paths:
         - JwtAuth: []
   '/api/v2/download/{assetDataEncrypted}':
     get:
+      operationId: DownloadAsset
       tags:
         - assets
       summary: >-
@@ -4300,7 +4462,7 @@ paths:
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64'
+            $ref: '#/components/schemas/Base64Data'
       responses:
         200:
           description: Success.
@@ -4321,6 +4483,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/.well-known/jwks.json':
     get:
+      operationId: GetJsonWebKeySets
       tags:
         - auth
       summary: Get the public keys of the JSON Web Key Set.
@@ -4344,6 +4507,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/auth_group':
     post:
+      operationId: CreateAuthorizationGroup
       tags:
         - auth-group
       summary: Create new authorization group.
@@ -4379,6 +4543,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/session/{sessionId}/export':
     put:
+      operationId: ComputeExports
       tags:
         - export
       summary: Compute a Grasshopper exports for given parameter values.
@@ -4416,6 +4581,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/export/cache':
     put:
+      operationId: GetCachedExports
       tags:
         - export
       summary: Get Export from cache / check if computation is done.
@@ -4453,6 +4619,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}/export':
     patch:
+      operationId: UpdateExportDefinitions
       tags:
         - export
       summary: Update definition of exports.
@@ -4489,6 +4656,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/export/{exportId}/list':
     get:
+      operationId: ListExportVersions
       tags:
         - export
       summary: List export versions.
@@ -4547,6 +4715,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/session/{sessionId}/file/{paramId}/list':
     get:
+      operationId: ListFiles
       tags:
         - file
       summary: List all file-assets of a parameter.
@@ -4589,6 +4758,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/file/{paramId}/{fileId}':
     head:
+      operationId: GetFileMetadata
       tags:
         - file
       summary: Get information about a file-asset of a parameter.
@@ -4625,6 +4795,7 @@ paths:
       security:
         - JwtAuth: []
     get:
+      operationId: DownloadFile
       tags:
         - file
       summary: Download a file-asset.
@@ -4666,6 +4837,7 @@ paths:
       security:
         - JwtAuth: []
     delete:
+      operationId: DeleteFile
       tags:
         - file
       summary: Delete a file-asset.
@@ -4708,6 +4880,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/file/upload':
     post:
+      operationId: UploadFile
       tags:
         - file
       summary: Request upload URL for a file-asset.
@@ -4744,12 +4917,13 @@ paths:
         - JwtAuth: []
 
   #---------------------------------------------------------------------------#
-  #- glTF                                                                    -#
+  #- gltf                                                                    -#
   #---------------------------------------------------------------------------#
   '/api/v2/session/{sessionId}/gltf':
     post:
+      operationId: UploadGltf
       tags:
-        - glTF
+        - gltf
       summary: Upload and optionally convert a glTF object.
       parameters:
         - name: sessionId
@@ -4791,6 +4965,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/session/{sessionId}/log/message':
     post:
+      operationId: LogMessage
       tags:
         - log
       summary: Log message.
@@ -4829,6 +5004,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/model/{modelId}/config':
     get:
+      operationId: GetModelConfig
       tags:
         - model
       summary: Get model config.
@@ -4858,6 +5034,7 @@ paths:
       security:
         - JwtAuth: []
     post:
+      operationId: CreateModelConfig
       tags:
         - model
       summary: Create model config.
@@ -4893,6 +5070,7 @@ paths:
       security:
         - JwtAuth: []
     patch:
+      operationId: UpdateModelConfig
       tags:
         - model
       summary: Update model config.
@@ -4931,6 +5109,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/list':
     get:
+      operationId: ListModels
       tags:
         - model
       summary: List models.
@@ -4966,6 +5145,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}':
     get:
+      operationId: GetModel
       tags:
         - model
       summary: Get model.
@@ -5004,17 +5184,15 @@ paths:
       security:
         - JwtAuth: []
     put:
+      operationId: UpdateModel
       tags:
         - model
       summary: Update model.
       description: |-
         Permissions: 
-        * `setting.auth.ticket.get.*` - optional: adds _settings.auth.ticket_
-          to response.
-        * `setting.auth.token.get.*` - optional: adds _settings.auth.token_ to
-          response.
-        * `setting.compute.get.*` - optional: adds _settings.compute_ to
-          response.
+        * `setting.auth.ticket.get.*` - optional: adds _settings.auth.ticket_ to response.
+        * `setting.auth.token.get.*` - optional: adds _settings.auth.token_ to response.
+        * `setting.compute.get.*` - optional: adds _settings.compute_ to response.
         * `file.upload` - optional: adds _file.upload_ to response.
         * `file.download` - optional: adds _file.download_ to response.
         * `get.statistic.*` - optional: adds _statistic_ to response.
@@ -5047,6 +5225,7 @@ paths:
       security:
         - JwtAuth: []
     delete:
+      operationId: DeleteModel
       tags:
         - model
       summary: Delete model.
@@ -5079,6 +5258,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model':
     post:
+      operationId: CreateModel
       tags:
         - model
       summary: Create model.
@@ -5087,14 +5267,11 @@ paths:
 
         Permissions:
         * `create` - __required__
-        * `setting.auth.ticket.get.*` - optional: adds _settings.auth.ticket_
-          to response.
-        * `setting.auth.token.get.*` - optional: adds _settings.auth.token_ to
-          response.
-        * `setting.compute.get.*` - optional: adds _settings.compute_ to
-          response.
-        * `file.upload` - optional: adds _file.upload_ to response if no model
-          has already been uploaded.
+        * `setting.auth.ticket.get.*` - optional: adds _settings.auth.ticket_ to response.
+        * `setting.auth.token.get.*` - optional: adds _settings.auth.token_ to response.
+        * `setting.compute.get.*` - optional: adds _settings.compute_ to response.
+        * `file.upload` - optional: adds _file.upload_ to response if no model has already been
+          uploaded.
         * `file.download` - optional: adds _file.download_ to response.
         * `get.statistic.*` - optional: adds _statistic_ to response.
       requestBody:
@@ -5120,6 +5297,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}/file/download':
     get:
+      operationId: DownloadModelFile
       tags:
         - model
       summary: Download Grasshopper file.
@@ -5150,6 +5328,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}/computations':
     get:
+      operationId: GetModelComputations
       tags:
         - model
       summary: Get model computation statistics.
@@ -5165,61 +5344,69 @@ paths:
             $ref: '#/components/schemas/Uuid'
         - name: order
           in: query
-          description: Order in which to query computation stats items.
+          description: |-
+            Order in which to query computation stats items.
+
+            _Default:_ `desc`
           required: false
           schema:
-            allOf:
-              - $ref: '#/components/schemas/QueryOrder'
-              - default: desc
+            $ref: '#/components/schemas/QueryOrder'
         - name: timestamp_from
           in: query
-          description: Timestamp to query from.
+          description: |-
+            Timestamp to query from.
+
+            _Default:_ `0`
           required: false
           schema:
-            allOf:
-              - $ref: '#/components/schemas/DateTimeMs'
-              - default: '0'
+            $ref: '#/components/schemas/DateTimeMs'
         - name: timestamp_to
           in: query
-          description: Timestamp to query to.
+          description: |-
+            Timestamp to query to.
+
+            _Default:_ `infinity`
           required: false
           schema:
-            allOf:
-              - $ref: '#/components/schemas/DateTimeMs'
-              - default: infinity
+            $ref: '#/components/schemas/DateTimeMs'
         - name: status
           in: query
-          description: Filter computations by the result status.
+          description: |-
+            Filter computations by the result status.
+
+            _Default:_ `*`
           required: false
           schema:
-            allOf:
-              - $ref: '#/components/schemas/QueryComputationStatisticsStatus'
-              - default: '*'
+            $ref: '#/components/schemas/QueryComputationStatisticsStatus'
         - name: type
           in: query
-          description: Filter computations by type.
+          description: |-
+            Filter computations by type.
+
+            _Default:_ `*`
           required: false
           schema:
-            allOf:
-              - $ref: '#/components/schemas/QueryComputationType'
-              - default: '*'
+            $ref: '#/components/schemas/QueryComputationType'
         - name: limit
           in: query
-          description: How many items to return at most.
+          description: |-
+            How many items to return at most.
+
+            _Default:_ `100`
           required: false
           schema:
             type: integer
             minimum: 1
             maximum: 100
-            default: 100
         - name: strict_limit
           in: query
-          description: >-
+          description: |-
             Whether the limit shall be attained (if there are enough items).
+
+            _Default:_ `false`
           required: false
           schema:
             type: boolean
-            default: false
         - name: offset
           in: query
           description: Continuation token for pagination.
@@ -5243,6 +5430,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}/cleanup/export':
     post:
+      operationId: CleanupExports
       tags:
         - model
       summary: Delete old export components.
@@ -5258,9 +5446,7 @@ paths:
             $ref: '#/components/schemas/Uuid'
         - name: untilLastSeen
           in: query
-          description: >-
-            Delete all components that have been used last at or before this
-            timestamp.
+          description: Delete all components that have been used last at or before this timestamp.
           required: true
           schema:
             $ref: '#/components/schemas/AnyDateTime'
@@ -5287,6 +5473,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}/cleanup/output':
     post:
+      operationId: CleanupOutputs
       tags:
         - model
       summary: Delete old output components.
@@ -5302,9 +5489,7 @@ paths:
             $ref: '#/components/schemas/Uuid'
         - name: untilLastSeen
           in: query
-          description: >-
-            Delete all components that have been used last at or before this
-            timestamp.
+          description: Delete all components that have been used last at or before this timestamp.
           required: true
           schema:
             $ref: '#/components/schemas/AnyDateTime'
@@ -5331,6 +5516,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}/cleanup/texture':
     post:
+      operationId: CleanupTextures
       tags:
         - model
       summary: Delete old texture components.
@@ -5346,9 +5532,7 @@ paths:
             $ref: '#/components/schemas/Uuid'
         - name: untilLastSeen
           in: query
-          description: >-
-            Delete all components that have been used last at or before this
-            timestamp.
+          description: Delete all components that have been used last at or before this timestamp.
           required: true
           schema:
             $ref: '#/components/schemas/AnyDateTime'
@@ -5375,6 +5559,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}/cleanup/status':
     get:
+      operationId: GetCleanupStatus
       tags:
         - model
       summary: Get the status of all running model cleanup processes.
@@ -5403,6 +5588,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}/parameter/defval':
     patch:
+      operationId: UpdateParameterDefaultValues
       tags:
         - model
       summary: Update default value of parameters.
@@ -5441,6 +5627,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}/parameter':
     patch:
+      operationId: UpdateParameterDefinitions
       tags:
         - model
       summary: Update definition of parameters.
@@ -5481,6 +5668,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/session/{sessionId}/output':
     put:
+      operationId: ComputeOutputs
       tags:
         - output
       summary: Compute all outputs for given parameter values.
@@ -5517,6 +5705,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/output/cache':
     put:
+      operationId: GetCachedOutputs
       tags:
         - output
       summary: Get output from cache / check if computation is done.
@@ -5553,6 +5742,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}/output':
     patch:
+      operationId: UpdateOutputDefinitions
       tags:
         - output
       summary: Update definition of outputs.
@@ -5589,6 +5779,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/output/{outputId}/list':
     get:
+      operationId: ListOutputVersions
       tags:
         - output
       summary: List output versions.
@@ -5647,6 +5838,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/script/{scriptId}/confirm':
     get:
+      operationId: ConfirmScript
       tags:
         - script
       summary: Confirm script.
@@ -5677,6 +5869,7 @@ paths:
         - CredentialsAuth: []
   '/api/v2/script/{scriptId}/deny':
     get:
+      operationId: DenyScript
       tags:
         - script
       summary: Deny script.
@@ -5707,12 +5900,13 @@ paths:
         - CredentialsAuth: []
 
   #---------------------------------------------------------------------------#
-  #- sdTF                                                                    -#
+  #- sdtf                                                                    -#
   #---------------------------------------------------------------------------#
   '/api/v2/session/{sessionId}/sdtf/{namespace}/list':
     get:
+      operationId: ListSdtfs
       tags:
-        - sdTF
+        - sdtf
       summary: List all sdTF-assets of a namespace.
       description: |-
         Permissions: 
@@ -5753,8 +5947,9 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/sdtf/{namespace}/{sdtfId}':
     get:
+      operationId: DownloadSdtf
       tags:
-        - sdTF
+        - sdtf
       summary: Download a sdTF-asset.
       description: |-
         Permissions: 
@@ -5794,8 +5989,9 @@ paths:
       security:
         - JwtAuth: []
     delete:
+      operationId: DeleteSdtf
       tags:
-        - sdTF
+        - sdtf
       summary: Delete a sdTF-assets.
       description: |-
         Permissions: 
@@ -5836,8 +6032,9 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/sdtf/upload':
     post:
+      operationId: UploadSdtf
       tags:
-        - sdTF
+        - sdtf
       summary: Request upload URL for a sdTF-asset.
       description: |-
         Permissions:  
@@ -5854,7 +6051,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqSdtfUpload'
+              # $ref: '#/components/schemas/ReqSdtfUpload'
+              description: Body of a sdTF upload request.
+              type: array
+              items:
+                $ref: '#/components/schemas/ReqSdtfDefinition'
       responses:
         200:
           description: Success.
@@ -5876,26 +6077,22 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/model/{modelId}/session':
     post:
+      operationId: CreateSessionByModel
       tags:
         - session
-      summary: Initialize new session.
+      summary: Initialize new session by model ID.
       description: |-
         Permissions: 
         * `auth.session` - __required__.
         * `get.parameter.*` - optional: adds _parameters_ to response.
         * Output: 
-          * If body contains a computation request:
-            `compute.output.*` - __required__.
-          * If no computation request:
-            `compute.output.*` - optional: adds _output for default parameter_
-            to response.
-          * otherwise tries:
-            `get.output.*` - optional: adds _output definitions_ to response.
+          * If body contains a computation request: `compute.output.*` - __required__.
+          * If no computation request: `compute.output.*` - optional: adds _output for default
+            parameter_ to response.
+          * otherwise tries: `get.output.*` - optional: adds _output definitions_ to response.
         * Export:  
-          * Body contains an export request:
-            `compute.export.*` - __required__.
-          * No export request:
-            `get.export.*` - optional: adds _export definitions_ to response.
+          * Body contains an export request: `compute.export.*` - __required__.
+          * No export request: `get.export.*` - optional: adds _export definitions_ to response.
       parameters:
         - name: modelId
           in: path
@@ -5910,7 +6107,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ReqCustomizationOrExport'
       responses:
-        200:
+        201:
           description: Success.
           content:
             application/json:
@@ -5926,32 +6123,28 @@ paths:
         - JwtAuth: []
   '/api/v2/ticket/{ticketId}':
     post:
+      operationId: CreateSessionByTicket
       tags:
         - session
-      summary: Initialize new session.
+      summary: Initialize new session by ticket.
       description: |-
         Permissions: 
         * `get.parameter.*` - optional: adds _parameters_ to response.
         * Output: 
-          * If body contains a computation request:
-            `compute.output.*` - __required__.
-          * If no computation request:
-            `compute.output.*` - optional: adds _output for default parameter_
-            to response.
-          * otherwise tries:
-            `get.output.*` - optional: adds _output definitions_ to response.
+          * If body contains a computation request: `compute.output.*` - __required__.
+          * If no computation request: `compute.output.*` - optional: adds _output for default
+            parameter_ to response.
+          * otherwise tries: `get.output.*` - optional: adds _output definitions_ to response.
         * Export:
-          * Body contains an export request:
-            `compute.export.*` - __required__.
-          * No export request:
-            `get.export.*` - optional: adds _export definitions_ to response.
+          * Body contains an export request: `compute.export.*` - __required__.
+          * No export request: `get.export.*` - optional: adds _export definitions_ to response.
       parameters:
         - name: ticketId
           in: path
           description: Encrypted ticket.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64'
+            $ref: '#/components/schemas/Base64Data'
       requestBody:
         required: false
         content:
@@ -5959,7 +6152,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ReqCustomizationOrExport'
       responses:
-        200:
+        201:
           description: Success.
           content:
             application/json:
@@ -5974,17 +6167,16 @@ paths:
       security: []
   '/api/v2/session/{sessionId}/default':
     get:
+      operationId: GetSessionDefaults
       tags:
         - session
       summary: >-
-        Get session defaults (corresponds to the content of the session
-        initialization request).
+        Get session defaults (corresponds to the content of the session initialization request).
       description: |-
         Permissions: 
         * `get.parameter.*` - optional: adds _parameter defaults_ to response.
         * `get.export.*` - optional: adds _export definitions_ to response.
-        * `compute.output.*` - optional: adds _outputs for default parameters_
-          to response.
+        * `compute.output.*` - optional: adds _outputs for default parameters_ to response.
         * `get.output.*` - optional: adds _output definitions_ to response.
       parameters:
         - name: sessionId
@@ -6010,6 +6202,7 @@ paths:
         - JwtAuth: []
   '/api/v2/session/{sessionId}/close':
     post:
+      operationId: CloseSession
       tags:
         - session
       summary: Close session.
@@ -6037,6 +6230,7 @@ paths:
         - JwtAuth: []
   '/api/v2/model/{modelId}/ticket':
     post:
+      operationId: CreateTicket
       tags:
         - session
       summary: Create a new ticket that allows to initialize a new session.
@@ -6045,12 +6239,9 @@ paths:
 
         Permissions:  
         * `setting.auth.ticket.create.*` - __required__.
-        * `setting.auth.ticket.get.*` - optional: adds _settings.auth.ticket_
-          to response.
-        * `setting.auth.token.get.*` - optional: adds _settings.auth.token_ to
-          response.
-        * `setting.compute.get.*` - optional: adds _settings.compute_ to
-          response.
+        * `setting.auth.ticket.get.*` - optional: adds _settings.auth.ticket_ to response.
+        * `setting.auth.token.get.*` - optional: adds _settings.auth.token_ to response.
+        * `setting.compute.get.*` - optional: adds _settings.compute_ to response.
         * `file.upload` - optional: adds _file.upload_ to response.
         * `file.download` - optional: adds _file.download_ to response.
         * `get.statistic.*` - optional: adds _statistic_ to response.
@@ -6084,6 +6275,7 @@ paths:
         - JwtAuth: []
   '/api/v2/ticket/{ticketEncrypted}':
     get:
+      operationId: DecryptTicket
       tags:
         - session
       summary: Decrypt the given ticket and return its details.
@@ -6121,6 +6313,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/system/model/{modelId}':
     delete:
+      operationId: EraseModel
       tags:
         - system
       summary: Delete model permanently.
@@ -6153,6 +6346,7 @@ paths:
         - JwtAuth: []
   '/api/v2/system/minions/info':
     get:
+      operationId: GetMinionsInfo
       tags:
         - system
       summary: Get system information about the Geometry Minions.
@@ -6175,11 +6369,11 @@ paths:
           CredentialsAuth: []
   '/api/v2/system/workers/info':
     get:
+      operationId: GetWorkersInfo
       tags:
         - system
       summary: Get system information about the Geometry Workers.
-      description: >-
-        A __backend__ subject adds `system.plugins.inconsistent`.
+      description: A __backend__ subject adds `system.plugins.inconsistent`.
       responses:
         200:
           description: Success.
@@ -6198,6 +6392,7 @@ paths:
           CredentialsAuth: []
   '/api/v2/system/sign/cdn/{endpoint}/{encodedUri}':
     get:
+      operationId: CreateSignedUrl
       tags:
         - system
       summary: Create a signed URL for the specified endpoint and target.
@@ -6214,7 +6409,7 @@ paths:
           description: Base64 encoded target URI.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64'
+            $ref: '#/components/schemas/Base64Data'
       responses:
         200:
           description: Success.
@@ -6236,6 +6431,7 @@ paths:
   #---------------------------------------------------------------------------#
   '/api/v2/session/{sessionId}/texture/list':
     get:
+      operationId: ListTextures
       tags:
         - texture
       summary: List model textures.
