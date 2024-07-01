@@ -915,6 +915,9 @@ components:
         tooltip:
           description: Description that is shown as a tooltip in the clients.
           type: string
+        settings:
+          description: Holds parameter-type specific information.
+          type: object
     ReqFileUpload:
       description: >-
         Body of a file upload request. A directory of file-parameter-IDs and upload-definitions.
@@ -2725,6 +2728,9 @@ components:
         hidden:
           description: Controls whether the parameter should be hidden in the UI.
           type: boolean
+        settings:
+          description: Holds parameter-type specific information.
+          type: object
       required:
         - id
         - defvali
@@ -2762,10 +2768,12 @@ components:
         - sVector
         - Bool
         - Color
+        - Drawing
         - Even
         - File
         - Float
         - Int
+        - Interaction
         - Odd
         - String
         - StringList
