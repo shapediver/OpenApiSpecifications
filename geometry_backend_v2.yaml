@@ -158,7 +158,7 @@ components:
       description: A UUID v4.
       type: string
       format: uuid
-      example: 'bd725508-176a-11ef-9196-bf06f0e99bb4'
+      example: "bd725508-176a-11ef-9196-bf06f0e99bb4"
     Year:
       description: |-
         An ISO-8601 year.
@@ -192,18 +192,18 @@ components:
     AtLeastOneUuid:
       description: Either a single UUID or an array of UUIDs.
       oneOf:
-        - $ref: '#/components/schemas/Uuid'
+        - $ref: "#/components/schemas/Uuid"
         - type: array
           items:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
           minItems: 1
     AtLeastOneAnyDateExtended:
       description: Either a single extended date or an array of extended dates.
       oneOf:
-        - $ref: '#/components/schemas/AnyDateExtended'
+        - $ref: "#/components/schemas/AnyDateExtended"
         - type: array
           items:
-            $ref: '#/components/schemas/AnyDateExtended'
+            $ref: "#/components/schemas/AnyDateExtended"
           minItems: 1
 
     #-------------------------------------------------------------------------#
@@ -298,7 +298,7 @@ components:
         until:
           description: The timestamp until which the ticket should be valid.
           allOf:
-            - $ref: '#/components/schemas/DateTime'
+            - $ref: "#/components/schemas/DateTime"
         use_id2:
           description: >-
             Does this ticket identify the model via its secondary ID (model property `id2`)?
@@ -309,8 +309,8 @@ components:
     CommonsTicketType: &CommonsTicketType
       description: Type of a ticket.
       type: string
-      enum: [ backend, "" ]
-      x-enum-varnames: [ BACKEND, NONE ]
+      enum: [backend, ""]
+      x-enum-varnames: [BACKEND, NONE]
 
     #-------------------------------------------------------------------------#
     #- Query types                                                           -#
@@ -322,7 +322,7 @@ components:
         - success
         - timeout
         - other
-        - '*'
+        - "*"
       x-enum-varnames:
         - SUCCESS
         - TIMEOUT
@@ -338,7 +338,7 @@ components:
         - computation
         - export
         - load
-        - '*'
+        - "*"
       x-enum-varnames:
         - COMPUTATION
         - EXPORT
@@ -351,16 +351,16 @@ components:
         * `usdz`: converts the glTF into the USDZ format.
         * `scene`: creates a temporary AR scene that holds both, a glTF and a USDZ file.
       type: string
-      enum: [ none, scene, usdz ]
-      x-enum-varnames: [ NONE, SCENE, USDZ ]
+      enum: [none, scene, usdz]
+      x-enum-varnames: [NONE, SCENE, USDZ]
     QueryModelStatus:
       <<: *CommonsModelStatus
       description: Filter by model status.
     QueryOrder:
       description: Specifies the order of the results.
       type: string
-      enum: [ asc, desc ]
-      x-enum-varnames: [ ASC, DESC ]
+      enum: [asc, desc]
+      x-enum-varnames: [ASC, DESC]
 
     #-------------------------------------------------------------------------#
     #- Request data structures                                               -#
@@ -368,15 +368,15 @@ components:
     ReqGroup:
       description: Group information.
       allOf:
-        - $ref: '#/components/schemas/CommonsGroup'
+        - $ref: "#/components/schemas/CommonsGroup"
     ReqTicket:
       description: Body of a ticket request.
       allOf:
-        - $ref: '#/components/schemas/CommonsTicket'
+        - $ref: "#/components/schemas/CommonsTicket"
         - type: object
           properties:
             type:
-              $ref: '#/components/schemas/ReqTicketType'
+              $ref: "#/components/schemas/ReqTicketType"
           required:
             - type
     ReqTicketType:
@@ -385,21 +385,21 @@ components:
     ReqConfigure:
       description: |-
         Body of a configure request.
-        
+
         A dictionary of string keys and values of any type.
       type: object
       additionalProperties: true
     ReqLogLevel:
       description: Log message level for log requests.
       type: string
-      enum: [ 0, 1, 2 ]
-      x-enum-varnames: [ INFO, WARN, ERROR ]
+      enum: [0, 1, 2]
+      x-enum-varnames: [INFO, WARN, ERROR]
     ReqLogMessage:
       description: Body of a log message request.
       type: object
       properties:
         level:
-          $ref: '#/components/schemas/ReqLogLevel'
+          $ref: "#/components/schemas/ReqLogLevel"
         message:
           description: The message that should be logged.
           type: string
@@ -414,17 +414,17 @@ components:
           description: The model IDs that should form the new authorization group.
           type: array
           items:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         users:
           description: The user IDs that should form the new authorization group.
           type: array
           items:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         organizations:
           description: The organization IDs that should form the new authorization group.
           type: array
           items:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
     ReqModelStatistics:
       description: >-
         Body of a model statistics request. Every request-item results in exactly one
@@ -443,24 +443,24 @@ components:
             type: object
             properties:
               modelid:
-                $ref: '#/components/schemas/AtLeastOneUuid'
+                $ref: "#/components/schemas/AtLeastOneUuid"
               timestamp:
                 description: >-
                   Multiple timestamps are aggregated and result in a single statistic object.
                 allOf:
-                  - $ref: '#/components/schemas/AtLeastOneAnyDateExtended'
+                  - $ref: "#/components/schemas/AtLeastOneAnyDateExtended"
               timestamp_from:
                 description: >-
                   Allows to define the beginning of a time range, instead of specifying individual
                   timestamps.
                 allOf:
-                  - $ref: '#/components/schemas/AnyDateExtended'
+                  - $ref: "#/components/schemas/AnyDateExtended"
               timestamp_to:
                 description: >-
                   Allows to define the ending of a time range, instead of specifying individual
                   timestamps.
                 allOf:
-                  - $ref: '#/components/schemas/AnyDateExtended'
+                  - $ref: "#/components/schemas/AnyDateExtended"
             required:
               - modelid
     ReqAnyCreditMetricId:
@@ -473,7 +473,7 @@ components:
           type: object
           properties:
             modelIds:
-              $ref: '#/components/schemas/AtLeastOneUuid'
+              $ref: "#/components/schemas/AtLeastOneUuid"
           required:
             - modelIds
         - title: ReqUserCreditMetricId
@@ -481,7 +481,7 @@ components:
           type: object
           properties:
             userIds:
-              $ref: '#/components/schemas/AtLeastOneUuid'
+              $ref: "#/components/schemas/AtLeastOneUuid"
           required:
             - userIds
         - title: ReqOrganizationCreditMetricId
@@ -489,7 +489,7 @@ components:
           type: object
           properties:
             orgIds:
-              $ref: '#/components/schemas/AtLeastOneUuid'
+              $ref: "#/components/schemas/AtLeastOneUuid"
           required:
             - orgIds
         - title: ReqSystemCreditMetricId
@@ -505,9 +505,9 @@ components:
           type: object
           properties:
             modelIds:
-              $ref: '#/components/schemas/AtLeastOneUuid'
+              $ref: "#/components/schemas/AtLeastOneUuid"
             userIds:
-              $ref: '#/components/schemas/AtLeastOneUuid'
+              $ref: "#/components/schemas/AtLeastOneUuid"
           required:
             - modelIds
             - userIds
@@ -516,9 +516,9 @@ components:
           type: object
           properties:
             modelIds:
-              $ref: '#/components/schemas/AtLeastOneUuid'
+              $ref: "#/components/schemas/AtLeastOneUuid"
             orgIds:
-              $ref: '#/components/schemas/AtLeastOneUuid'
+              $ref: "#/components/schemas/AtLeastOneUuid"
           required:
             - modelIds
             - orgIds
@@ -538,24 +538,24 @@ components:
             type: object
             properties:
               id:
-                $ref: '#/components/schemas/ReqAnyCreditMetricId'
+                $ref: "#/components/schemas/ReqAnyCreditMetricId"
               timestamp:
                 description: >-
                   Multiple timestamps are aggregated and result in a single credit metrics object.
                 allOf:
-                  - $ref: '#/components/schemas/AtLeastOneAnyDateExtended'
+                  - $ref: "#/components/schemas/AtLeastOneAnyDateExtended"
               timestamp_from:
                 description: >-
                   Allows to define the beginning of a time range, instead of specifying individual
                   timestamps.
                 allOf:
-                  - $ref: '#/components/schemas/AnyDateExtended'
+                  - $ref: "#/components/schemas/AnyDateExtended"
               timestamp_to:
                 description: >-
                   Allows to define the ending of a time range, instead of specifying individual
                   timestamps.
                 allOf:
-                  - $ref: '#/components/schemas/AnyDateExtended'
+                  - $ref: "#/components/schemas/AnyDateExtended"
             required:
               - id
     ReqParameterValue:
@@ -613,13 +613,13 @@ components:
         * `displayname`
       type: object
       additionalProperties:
-        $ref: '#/components/schemas/ReqParameterValue'
+        $ref: "#/components/schemas/ReqParameterValue"
     ReqExport:
       description: Body of an export request.
       type: object
       properties:
         parameters:
-          $ref: '#/components/schemas/ReqCustomization'
+          $ref: "#/components/schemas/ReqCustomization"
         exports:
           type: array
           items:
@@ -641,7 +641,7 @@ components:
       description: Definition of a exports. A directory of export-IDs and export-definitions.
       type: object
       additionalProperties:
-        $ref: '#/components/schemas/ReqExportDefinition'
+        $ref: "#/components/schemas/ReqExportDefinition"
     ReqExportDefinition:
       description: Data for a single export definition.
       type: object
@@ -654,8 +654,8 @@ components:
           description: >-
             Set to `null` or `NullObj` to remove the export from the currently assigned group.
           oneOf:
-            - $ref: '#/components/schemas/ReqGroup'
-            - $ref: '#/components/schemas/NullObj'
+            - $ref: "#/components/schemas/ReqGroup"
+            - $ref: "#/components/schemas/NullObj"
         hidden:
           description: Controls whether the export should be hidden in the UI.
           type: boolean
@@ -669,7 +669,7 @@ components:
       description: Definition of outputs. A directory of output-IDs and output-definitions.
       type: object
       additionalProperties:
-        $ref: '#/components/schemas/ReqOutputDefinition'
+        $ref: "#/components/schemas/ReqOutputDefinition"
     ReqOutputDefinition:
       description: Data for a single output definition.
       type: object
@@ -682,8 +682,8 @@ components:
           description: >-
             Set to `null` or `NullObj` to remove the export from the currently assigned group.
           oneOf:
-            - $ref: '#/components/schemas/ReqGroup'
-            - $ref: '#/components/schemas/NullObj'
+            - $ref: "#/components/schemas/ReqGroup"
+            - $ref: "#/components/schemas/NullObj"
         hidden:
           description: Controls whether the output should be hidden in the UI.
           type: boolean
@@ -727,31 +727,31 @@ components:
       additionalProperties:
         type: string
       example:
-        '96ce38f8-e197-416a-b78b-18d8376f5903': '62b3e13f-7b78-4a59-86f9-4a51f83feb21'
+        "96ce38f8-e197-416a-b78b-18d8376f5903": "62b3e13f-7b78-4a59-86f9-4a51f83feb21"
     ReqExportOrCache:
-      description: Either a cache or an export request. 
+      description: Either a cache or an export request.
       oneOf:
-        - $ref: '#/components/schemas/ReqCache'
-        - $ref: '#/components/schemas/ReqExport'
+        - $ref: "#/components/schemas/ReqCache"
+        - $ref: "#/components/schemas/ReqExport"
     ReqCustomizationOrCache:
-      description: Either a cache or a customization request. 
+      description: Either a cache or a customization request.
       oneOf:
-        - $ref: '#/components/schemas/ReqCache'
-        - $ref: '#/components/schemas/ReqCustomization'
+        - $ref: "#/components/schemas/ReqCache"
+        - $ref: "#/components/schemas/ReqCustomization"
     ReqCustomizationOrExport:
       oneOf:
-        - $ref: '#/components/schemas/ReqCustomization'
-        - $ref: '#/components/schemas/ReqExport'
+        - $ref: "#/components/schemas/ReqCustomization"
+        - $ref: "#/components/schemas/ReqExport"
     ReqModelFileType:
       description: Supported Grasshopper file types for models.
       type: string
-      enum: [ gh, ghx ]
-      x-enum-varnames: [ GRASSHOPPER_BINARY, GRASSHOPPER_XML ]
+      enum: [gh, ghx]
+      x-enum-varnames: [GRASSHOPPER_BINARY, GRASSHOPPER_XML]
     ReqTrustLevel:
       description: Level of trust granted for a model.
       type: string
-      enum: [ "", none, full ]
-      x-enum-varnames: [ UNDEFINED, NONE, FULL ]
+      enum: ["", none, full]
+      x-enum-varnames: [UNDEFINED, NONE, FULL]
     ReqModel:
       description: Body of a template request.
       type: object
@@ -766,7 +766,7 @@ components:
           description: List of allowed auth-groups.
           type: array
           items:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         backendaccess:
           description: Should backend access to the model be allowed.
           type: boolean
@@ -776,7 +776,7 @@ components:
         ftype:
           description: File type of the model.
           allOf:
-            - $ref: '#/components/schemas/ReqModelFileType'
+            - $ref: "#/components/schemas/ReqModelFileType"
         initial_warmup:
           description: >-
             Allows to control whether the model should be warmed up immediately after loading by
@@ -786,7 +786,7 @@ components:
         id2:
           description: Optional second model ID.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         max_comp_time:
           description: Maximum number of milliseconds allowed for computations of this model.
           type: integer
@@ -849,11 +849,11 @@ components:
         org_id:
           description: Optional organization ID.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         prev_id:
           description: Model ID of this model's previous version.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         pub:
           description: Allows public access (ignore `accessdomains`).
           type: boolean
@@ -872,14 +872,14 @@ components:
           description: >-
             Can this model be trusted (controls whether failed computations will be retried).
           allOf:
-            - $ref: '#/components/schemas/ReqTrustLevel'
+            - $ref: "#/components/schemas/ReqTrustLevel"
         use_cdn:
           description: Allows the usage of the CDN for fast content distribution.
           type: boolean
         user_id:
           description: Optional user ID.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         webhook_url:
           description: >-
             The webhook-url for updating the platform backend about model status changes.
@@ -891,7 +891,7 @@ components:
         Definition of model parameters. A directory of parameter-IDs and parameter-definitions.
       type: object
       additionalProperties:
-        $ref: '#/components/schemas/ReqParameterDefinition'
+        $ref: "#/components/schemas/ReqParameterDefinition"
     ReqParameterDefinition:
       description: Data for a single parameter definition.
       type: object
@@ -904,8 +904,8 @@ components:
           description: >-
             Set to `null` or `NullObj` to remove the export from the currently assigned group.
           oneOf:
-            - $ref: '#/components/schemas/ReqGroup'
-            - $ref: '#/components/schemas/NullObj'
+            - $ref: "#/components/schemas/ReqGroup"
+            - $ref: "#/components/schemas/NullObj"
         hidden:
           description: Controls whether the parameter should be hidden in the UI.
           type: boolean
@@ -923,11 +923,11 @@ components:
         Body of a file upload request. A directory of file-parameter-IDs and upload-definitions.
       type: object
       additionalProperties:
-        $ref: '#/components/schemas/ReqFileDefinition'
+        $ref: "#/components/schemas/ReqFileDefinition"
       example:
-        'e6a576af-2e16-43cc-a78f-d74ae1154205':
-            format: 'image/jpeg'
-            size: 1234
+        "e6a576af-2e16-43cc-a78f-d74ae1154205":
+          format: "image/jpeg"
+          size: 1234
     ReqFileDefinition:
       description: Data for a single file parameter.
       type: object
@@ -970,7 +970,7 @@ components:
         content_type:
           description: Content-type of the sdTF to be uploaded.
           allOf:
-            - $ref: '#/components/schemas/ReqSdtfType'
+            - $ref: "#/components/schemas/ReqSdtfType"
         namespace:
           description: Namespace the asset shall be created in.
           type: string
@@ -981,59 +981,59 @@ components:
     ReqSdtfType:
       description: Content-Type (MIME type) of the sdTF to be uploaded.
       type: string
-      enum: [ model/vnd.sdtf ]
-      x-enum-varnames: [ MODEL_SDTF ]
+      enum: [model/vnd.sdtf]
+      x-enum-varnames: [MODEL_SDTF]
 
     #-------------------------------------------------------------------------#
     #- Main response data structures                                         -#
     #-------------------------------------------------------------------------#
     ResGetModelStatistics:
       allOf:
-        - $ref: '#/components/schemas/ResPartAnalytics'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartAnalytics"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - analytics
         - version
     ResGetCreditMetrics:
       allOf:
-        - $ref: '#/components/schemas/ResPartAnalytics'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartAnalytics"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - analytics
         - version
     ResCreateAuthorizationGroup:
       allOf:
-        - $ref: '#/components/schemas/ResPartAuthorizationGroup'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartAuthorizationGroup"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - auth_group
         - version
     ResComputeExports:
       allOf:
-        - $ref: '#/components/schemas/ResPartActions'
-        - $ref: '#/components/schemas/ResPartExports'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartOutputs'
-        - $ref: '#/components/schemas/ResPartTemplates'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartActions"
+        - $ref: "#/components/schemas/ResPartExports"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartOutputs"
+        - $ref: "#/components/schemas/ResPartTemplates"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResGetCachedExports:
       allOf:
-        - $ref: '#/components/schemas/ResPartActions'
-        - $ref: '#/components/schemas/ResPartExports'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartOutputs'
-        - $ref: '#/components/schemas/ResPartTemplates'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartActions"
+        - $ref: "#/components/schemas/ResPartExports"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartOutputs"
+        - $ref: "#/components/schemas/ResPartTemplates"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResUpdateExportDefinitions:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResListExportVersions:
@@ -1044,12 +1044,12 @@ components:
             list:
               title: ResExportList
               allOf:
-                - $ref: '#/components/schemas/ResList'
+                - $ref: "#/components/schemas/ResList"
                 - type: object
                   required:
                     - export
-        - $ref: '#/components/schemas/ResPartPagination'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartPagination"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - list
         - pagination
@@ -1062,20 +1062,20 @@ components:
             list:
               title: ResFileList
               allOf:
-                - $ref: '#/components/schemas/ResList'
+                - $ref: "#/components/schemas/ResList"
                 - type: object
                   required:
                     - file
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartPagination'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartPagination"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - list
         - pagination
         - version
     ResDeleteFile:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResUploadFile:
@@ -1087,43 +1087,43 @@ components:
               title: ResFileAsset
               description: File assets.
               allOf:
-                - $ref: '#/components/schemas/ResAsset'
+                - $ref: "#/components/schemas/ResAsset"
                 - type: object
                   required:
                     - file
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - asset
         - version
     ResUploadGltf:
       allOf:
-        - $ref: '#/components/schemas/ResPartGltfUpload'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartGltfUpload"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - gltf
         - version
     ResLogMessage:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResGetModelConfig:
       allOf:
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartVersion'
-        - $ref: '#/components/schemas/ResPartViewer'
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartVersion"
+        - $ref: "#/components/schemas/ResPartViewer"
       required:
         - version
         - viewer
     ResCreateModelConfig:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResUpdateModelConfig:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResListModels:
@@ -1134,28 +1134,28 @@ components:
             list:
               title: ResModelList
               allOf:
-                - $ref: '#/components/schemas/ResList'
+                - $ref: "#/components/schemas/ResList"
                 - type: object
                   required:
                     - model
-        - $ref: '#/components/schemas/ResPartPagination'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartPagination"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - list
         - pagination
         - version
     ResGetModel:
       allOf:
-        - $ref: '#/components/schemas/ResPartExports'
-        - $ref: '#/components/schemas/ResPartFile'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartModel'
-        - $ref: '#/components/schemas/ResPartOutputs'
-        - $ref: '#/components/schemas/ResPartParameters'
-        - $ref: '#/components/schemas/ResPartPlugins'
-        - $ref: '#/components/schemas/ResPartSetting'
-        - $ref: '#/components/schemas/ResPartStatistic'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartExports"
+        - $ref: "#/components/schemas/ResPartFile"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartModel"
+        - $ref: "#/components/schemas/ResPartOutputs"
+        - $ref: "#/components/schemas/ResPartParameters"
+        - $ref: "#/components/schemas/ResPartPlugins"
+        - $ref: "#/components/schemas/ResPartSetting"
+        - $ref: "#/components/schemas/ResPartStatistic"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - file
         - model
@@ -1164,12 +1164,12 @@ components:
         - version
     ResUpdateModel:
       allOf:
-        - $ref: '#/components/schemas/ResPartFile'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartModel'
-        - $ref: '#/components/schemas/ResPartSetting'
-        - $ref: '#/components/schemas/ResPartStatistic'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartFile"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartModel"
+        - $ref: "#/components/schemas/ResPartSetting"
+        - $ref: "#/components/schemas/ResPartStatistic"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - file
         - model
@@ -1178,17 +1178,17 @@ components:
         - version
     ResDeleteModel:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResCreateModel:
       allOf:
-        - $ref: '#/components/schemas/ResPartFile'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartModel'
-        - $ref: '#/components/schemas/ResPartSetting'
-        - $ref: '#/components/schemas/ResPartStatistic'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartFile"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartModel"
+        - $ref: "#/components/schemas/ResPartSetting"
+        - $ref: "#/components/schemas/ResPartStatistic"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - file
         - model
@@ -1197,66 +1197,66 @@ components:
         - version
     ResGetModelComputations:
       allOf:
-        - $ref: '#/components/schemas/ResPartModelComputation'
-        - $ref: '#/components/schemas/ResPartPagination'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartModelComputation"
+        - $ref: "#/components/schemas/ResPartPagination"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - computations
         - pagination
         - version
     ResCleanupExports:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResCleanupOutputs:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResCleanupTextures:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResGetCleanupStatus:
       allOf:
-        - $ref: '#/components/schemas/ResPartCleanup'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartCleanup"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - cleanup
         - version
     ResUpdateParameterDefaultValues:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResUpdateParameterDefinitions:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResComputeOutputs:
       allOf:
-        - $ref: '#/components/schemas/ResPartActions'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartOutputs'
-        - $ref: '#/components/schemas/ResPartTemplates'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartActions"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartOutputs"
+        - $ref: "#/components/schemas/ResPartTemplates"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResGetCachedOutputs:
       allOf:
-        - $ref: '#/components/schemas/ResPartActions'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartOutputs'
-        - $ref: '#/components/schemas/ResPartTemplates'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartActions"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartOutputs"
+        - $ref: "#/components/schemas/ResPartTemplates"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResUpdateOutputDefinitions:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResListOutputVersions:
@@ -1267,12 +1267,12 @@ components:
             list:
               title: ResOutputList
               allOf:
-                - $ref: '#/components/schemas/ResList'
+                - $ref: "#/components/schemas/ResList"
                 - type: object
                   required:
                     - output
-        - $ref: '#/components/schemas/ResPartPagination'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartPagination"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - list
         - pagination
@@ -1285,20 +1285,20 @@ components:
             list:
               title: ResSdtfList
               allOf:
-                - $ref: '#/components/schemas/ResList'
+                - $ref: "#/components/schemas/ResList"
                 - type: object
                   required:
                     - sdtf
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartPagination'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartPagination"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - list
         - pagination
         - version
     ResDeleteSdtf:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResUploadSdtf:
@@ -1310,29 +1310,29 @@ components:
               title: ResSdtfAsset
               description: sdTF assets.
               allOf:
-                - $ref: '#/components/schemas/ResAsset'
+                - $ref: "#/components/schemas/ResAsset"
                 - type: object
                   required:
                     - sdtf
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - asset
         - version
     ResCreateSessionByModel:
       allOf:
-        - $ref: '#/components/schemas/ResPartActions'
-        - $ref: '#/components/schemas/ResPartExports'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartModel'
-        - $ref: '#/components/schemas/ResPartOutputs'
-        - $ref: '#/components/schemas/ResPartParameters'
-        - $ref: '#/components/schemas/ResPartSessionId'
-        - $ref: '#/components/schemas/ResPartStatistic'
-        - $ref: '#/components/schemas/ResPartTemplates'
-        - $ref: '#/components/schemas/ResPartVersion'
-        - $ref: '#/components/schemas/ResPartViewer'
-        - $ref: '#/components/schemas/ResPartViewerSettingsVersion'
+        - $ref: "#/components/schemas/ResPartActions"
+        - $ref: "#/components/schemas/ResPartExports"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartModel"
+        - $ref: "#/components/schemas/ResPartOutputs"
+        - $ref: "#/components/schemas/ResPartParameters"
+        - $ref: "#/components/schemas/ResPartSessionId"
+        - $ref: "#/components/schemas/ResPartStatistic"
+        - $ref: "#/components/schemas/ResPartTemplates"
+        - $ref: "#/components/schemas/ResPartVersion"
+        - $ref: "#/components/schemas/ResPartViewer"
+        - $ref: "#/components/schemas/ResPartViewerSettingsVersion"
       required:
         - actions
         - file
@@ -1346,18 +1346,18 @@ components:
         - viewerSettingsVersion
     ResCreateSessionByTicket:
       allOf:
-        - $ref: '#/components/schemas/ResPartActions'
-        - $ref: '#/components/schemas/ResPartExports'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartModel'
-        - $ref: '#/components/schemas/ResPartOutputs'
-        - $ref: '#/components/schemas/ResPartParameters'
-        - $ref: '#/components/schemas/ResPartSessionId'
-        - $ref: '#/components/schemas/ResPartStatistic'
-        - $ref: '#/components/schemas/ResPartTemplates'
-        - $ref: '#/components/schemas/ResPartVersion'
-        - $ref: '#/components/schemas/ResPartViewer'
-        - $ref: '#/components/schemas/ResPartViewerSettingsVersion'
+        - $ref: "#/components/schemas/ResPartActions"
+        - $ref: "#/components/schemas/ResPartExports"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartModel"
+        - $ref: "#/components/schemas/ResPartOutputs"
+        - $ref: "#/components/schemas/ResPartParameters"
+        - $ref: "#/components/schemas/ResPartSessionId"
+        - $ref: "#/components/schemas/ResPartStatistic"
+        - $ref: "#/components/schemas/ResPartTemplates"
+        - $ref: "#/components/schemas/ResPartVersion"
+        - $ref: "#/components/schemas/ResPartViewer"
+        - $ref: "#/components/schemas/ResPartViewerSettingsVersion"
       required:
         - actions
         - file
@@ -1371,18 +1371,18 @@ components:
         - viewerSettingsVersion
     ResGetSessionDefaults:
       allOf:
-        - $ref: '#/components/schemas/ResPartActions'
-        - $ref: '#/components/schemas/ResPartExports'
-        - $ref: '#/components/schemas/ResPartMessage'
-        - $ref: '#/components/schemas/ResPartModel'
-        - $ref: '#/components/schemas/ResPartOutputs'
-        - $ref: '#/components/schemas/ResPartParameters'
-        - $ref: '#/components/schemas/ResPartSessionId'
-        - $ref: '#/components/schemas/ResPartStatistic'
-        - $ref: '#/components/schemas/ResPartTemplates'
-        - $ref: '#/components/schemas/ResPartVersion'
-        - $ref: '#/components/schemas/ResPartViewer'
-        - $ref: '#/components/schemas/ResPartViewerSettingsVersion'
+        - $ref: "#/components/schemas/ResPartActions"
+        - $ref: "#/components/schemas/ResPartExports"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartModel"
+        - $ref: "#/components/schemas/ResPartOutputs"
+        - $ref: "#/components/schemas/ResPartParameters"
+        - $ref: "#/components/schemas/ResPartSessionId"
+        - $ref: "#/components/schemas/ResPartStatistic"
+        - $ref: "#/components/schemas/ResPartTemplates"
+        - $ref: "#/components/schemas/ResPartVersion"
+        - $ref: "#/components/schemas/ResPartViewer"
+        - $ref: "#/components/schemas/ResPartViewerSettingsVersion"
       required:
         - actions
         - file
@@ -1396,17 +1396,17 @@ components:
         - viewerSettingsVersion
     ResCloseSession:
       allOf:
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - version
     ResCreateTicket:
       allOf:
-        - $ref: '#/components/schemas/ResPartFile'
-        - $ref: '#/components/schemas/ResPartModel'
-        - $ref: '#/components/schemas/ResPartSetting'
-        - $ref: '#/components/schemas/ResPartStatistic'
-        - $ref: '#/components/schemas/ResPartTicket'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartFile"
+        - $ref: "#/components/schemas/ResPartModel"
+        - $ref: "#/components/schemas/ResPartSetting"
+        - $ref: "#/components/schemas/ResPartStatistic"
+        - $ref: "#/components/schemas/ResPartTicket"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - file
         - model
@@ -1416,8 +1416,8 @@ components:
         - version
     ResDecryptTicket:
       allOf:
-        - $ref: '#/components/schemas/ResPartDecryptedTicket'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartDecryptedTicket"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - decryptedTicket
         - version
@@ -1430,11 +1430,11 @@ components:
               title: ResMinionSystem
               description: Minion system information.
               allOf:
-                - $ref: '#/components/schemas/ResSystem'
+                - $ref: "#/components/schemas/ResSystem"
                 - type: object
                   required:
                     - minions
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - system
         - version
@@ -1447,11 +1447,11 @@ components:
               title: ResWorkerSystem
               description: Worker system information.
               allOf:
-                - $ref: '#/components/schemas/ResSystem'
+                - $ref: "#/components/schemas/ResSystem"
                 - type: object
                   required:
                     - workers
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - system
         - version
@@ -1463,12 +1463,12 @@ components:
             list:
               title: ResTextureList
               allOf:
-                - $ref: '#/components/schemas/ResList'
+                - $ref: "#/components/schemas/ResList"
                 - type: object
                   required:
                     - texture
-        - $ref: '#/components/schemas/ResPartPagination'
-        - $ref: '#/components/schemas/ResPartVersion'
+        - $ref: "#/components/schemas/ResPartPagination"
+        - $ref: "#/components/schemas/ResPartVersion"
       required:
         - list
         - pagination
@@ -1501,7 +1501,7 @@ components:
         sessionId:
           description: The ID of the created session.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
     ResPartViewerSettingsVersion:
       type: object
       properties:
@@ -1514,14 +1514,14 @@ components:
         decryptedTicket:
           description: Decrypted ticket details.
           allOf:
-            - $ref: '#/components/schemas/ResTicket'
+            - $ref: "#/components/schemas/ResTicket"
     ResPartAuthorizationGroup:
       type: object
       properties:
         auth_group:
           description: The auth-group to use for ticked-based authentication.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
     ResPartActions:
       type: object
       properties:
@@ -1529,7 +1529,7 @@ components:
           description: Actions the client may take.
           type: array
           items:
-            $ref: '#/components/schemas/ResAction'
+            $ref: "#/components/schemas/ResAction"
     ResPartTemplates:
       type: object
       properties:
@@ -1537,35 +1537,35 @@ components:
           description: Request templates for actions.
           type: array
           items:
-            $ref: '#/components/schemas/ResTemplate'
+            $ref: "#/components/schemas/ResTemplate"
     ResPartModel:
       type: object
       properties:
         model:
           description: The definitions of a ShapeDiver model.
           allOf:
-            - $ref: '#/components/schemas/ResModel'
+            - $ref: "#/components/schemas/ResModel"
     ResPartFile:
       type: object
       properties:
         file:
           description: Links regarding the model file.
           allOf:
-            - $ref: '#/components/schemas/ResFile'
+            - $ref: "#/components/schemas/ResFile"
     ResPartStatistic:
       type: object
       properties:
         statistic:
           description: Statistics of a model.
           allOf:
-            - $ref: '#/components/schemas/ResStatistic'
+            - $ref: "#/components/schemas/ResStatistic"
     ResPartSetting:
       type: object
       properties:
         setting:
           description: Various settings.
           allOf:
-            - $ref: '#/components/schemas/ResSettings'
+            - $ref: "#/components/schemas/ResSettings"
     ResPartParameters:
       type: object
       properties:
@@ -1575,19 +1575,19 @@ components:
             and parameters.
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/ResParameter'
+            $ref: "#/components/schemas/ResParameter"
     ResPartPlugins:
       type: object
       properties:
         plugins:
-          $ref: '#/components/schemas/ResPlugins'
+          $ref: "#/components/schemas/ResPlugins"
     ResPartViewer:
       type: object
       properties:
         viewer:
           description: Viewer specific data.
           allOf:
-            - $ref: '#/components/schemas/ResViewer'
+            - $ref: "#/components/schemas/ResViewer"
     ResPartOutputs:
       type: object
       properties:
@@ -1597,7 +1597,7 @@ components:
             outputs.
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/ResOutputOrDefinition'
+            $ref: "#/components/schemas/ResOutputOrDefinition"
     ResPartExports:
       type: object
       properties:
@@ -1607,21 +1607,21 @@ components:
             exports.
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/ResExportOrDefinition'
+            $ref: "#/components/schemas/ResExportOrDefinition"
     ResPartAnalytics:
       type: object
       properties:
         analytics:
           description: Statistics of the model for the given timespan.
           allOf:
-            - $ref: '#/components/schemas/ResAnalytics'
+            - $ref: "#/components/schemas/ResAnalytics"
     ResPartGltfUpload:
       type: object
       properties:
         gltf:
           description: glTF information.
           allOf:
-            - $ref: '#/components/schemas/ResGltfUpload'
+            - $ref: "#/components/schemas/ResGltfUpload"
     ResPartModelComputation:
       type: object
       properties:
@@ -1629,14 +1629,14 @@ components:
           description: Statistics about model computations.
           type: array
           items:
-            $ref: '#/components/schemas/ResModelComputation'
+            $ref: "#/components/schemas/ResModelComputation"
     ResPartPagination:
       type: object
       properties:
         pagination:
           description: Pagination information.
           allOf:
-            - $ref: '#/components/schemas/ResPagination'
+            - $ref: "#/components/schemas/ResPagination"
     ResPartCleanup:
       type: object
       properties:
@@ -1644,7 +1644,7 @@ components:
           description: Model cleanup information.
           type: array
           items:
-            $ref: '#/components/schemas/ResModelCleanupProcess'
+            $ref: "#/components/schemas/ResModelCleanupProcess"
 
     #-------------------------------------------------------------------------#
     #- Response data sub-structures                                          -#
@@ -1672,11 +1672,11 @@ components:
         models:
           type: array
           items:
-            $ref: '#/components/schemas/ResModelStatistic'
+            $ref: "#/components/schemas/ResModelStatistic"
         creditMetrics:
           type: array
           items:
-            $ref: '#/components/schemas/ResAnyCreditMetric'
+            $ref: "#/components/schemas/ResAnyCreditMetric"
       required:
         - models
         - creditMetrics
@@ -1687,7 +1687,7 @@ components:
         modelid:
           description: Requested model ID.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         timestamp:
           description: Either an extended date-time or a 'merged'-specifier.
           type: string
@@ -1711,31 +1711,31 @@ components:
         duration:
           description: Statistics on the duration of all sessions.
           allOf:
-            - $ref: '#/components/schemas/ResOnDurationStatistic'
+            - $ref: "#/components/schemas/ResOnDurationStatistic"
         app:
           description: Statistics on the duration of app sessions.
           allOf:
-            - $ref: '#/components/schemas/ResOnDurationStatistic'
+            - $ref: "#/components/schemas/ResOnDurationStatistic"
         backend:
           description: Statistics on the duration of backend sessions.
           allOf:
-            - $ref: '#/components/schemas/ResOnDurationStatistic'
+            - $ref: "#/components/schemas/ResOnDurationStatistic"
         embedded:
           description: Statistics on the duration of embedded sessions.
           allOf:
-            - $ref: '#/components/schemas/ResOnDurationStatistic'
+            - $ref: "#/components/schemas/ResOnDurationStatistic"
         desktop:
           description: Statistics on the duration of desktop sessions.
           allOf:
-            - $ref: '#/components/schemas/ResOnDurationStatistic'
+            - $ref: "#/components/schemas/ResOnDurationStatistic"
         customize:
           description: Statistics on customization requests per session.
           allOf:
-            - $ref: '#/components/schemas/ResOnActionStatistic'
+            - $ref: "#/components/schemas/ResOnActionStatistic"
         export:
           description: Statistics on export requests per session.
           allOf:
-            - $ref: '#/components/schemas/ResOnActionStatistic'
+            - $ref: "#/components/schemas/ResOnActionStatistic"
       required:
         - modelid
         - timestamp
@@ -1809,7 +1809,7 @@ components:
         - sum
     ResOnActionStatistic:
       allOf:
-        - $ref: '#/components/schemas/ResOnDurationStatistic'
+        - $ref: "#/components/schemas/ResOnDurationStatistic"
         - type: object
           properties:
             sumApp:
@@ -1861,13 +1861,13 @@ components:
         - title: ResModelCreditMetric
           description: Aggregated credit metrics for a model.
           allOf:
-            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - $ref: "#/components/schemas/ResBaseCreditMetric"
             - type: object
               properties:
                 modelId:
                   description: Requested model ID.
                   allOf:
-                    - $ref: '#/components/schemas/Uuid'
+                    - $ref: "#/components/schemas/Uuid"
                 userId:
                   description: This property is never set.
                   # FIXME: Workaround until OAS 3.1 - use `null` instead!
@@ -1885,7 +1885,7 @@ components:
         - title: ResUserCreditMetric
           description: Aggregated credit metrics for a user.
           allOf:
-            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - $ref: "#/components/schemas/ResBaseCreditMetric"
             - type: object
               properties:
                 modelId:
@@ -1897,13 +1897,13 @@ components:
                 userId:
                   description: Requested user ID.
                   allOf:
-                    - $ref: '#/components/schemas/Uuid'
+                    - $ref: "#/components/schemas/Uuid"
               required:
                 - userId
         - title: ResOrganizationCreditMetric
           description: Aggregated credit metrics for a organization.
           allOf:
-            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - $ref: "#/components/schemas/ResBaseCreditMetric"
             - type: object
               properties:
                 modelId:
@@ -1915,13 +1915,13 @@ components:
                 orgId:
                   description: Requested organization ID.
                   allOf:
-                    - $ref: '#/components/schemas/Uuid'
+                    - $ref: "#/components/schemas/Uuid"
               required:
                 - orgId
         - title: ResSystemCreditMetric
           description: Aggregated credit metrics for a system.
           allOf:
-            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - $ref: "#/components/schemas/ResBaseCreditMetric"
             - type: object
               properties:
                 system:
@@ -1932,34 +1932,34 @@ components:
         - title: ResModelUserCreditMetric
           description: Aggregated credit metrics for a model-user.
           allOf:
-            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - $ref: "#/components/schemas/ResBaseCreditMetric"
             - type: object
               properties:
                 modelId:
                   description: Requested model ID.
                   allOf:
-                    - $ref: '#/components/schemas/Uuid'
+                    - $ref: "#/components/schemas/Uuid"
                 userId:
                   description: Requested user ID.
                   allOf:
-                    -  $ref: '#/components/schemas/Uuid'
+                    - $ref: "#/components/schemas/Uuid"
               required:
                 - modelId
                 - userId
         - title: ResModelOrganizationCreditMetric
           description: Aggregated credit metrics for a model-organization.
           allOf:
-            - $ref: '#/components/schemas/ResBaseCreditMetric'
+            - $ref: "#/components/schemas/ResBaseCreditMetric"
             - type: object
               properties:
                 modelId:
                   description: Requested model ID.
                   allOf:
-                    - $ref: '#/components/schemas/Uuid'
+                    - $ref: "#/components/schemas/Uuid"
                 orgId:
                   description: Requested organization ID.
                   allOf:
-                    - $ref: '#/components/schemas/Uuid'
+                    - $ref: "#/components/schemas/Uuid"
               required:
                 - modelId
                 - orgId
@@ -2000,9 +2000,9 @@ components:
             - credits
             - count
         limited:
-          $ref: '#/components/schemas/ResLimitedCreditMetric'
+          $ref: "#/components/schemas/ResLimitedCreditMetric"
         default:
-          $ref: '#/components/schemas/ResDefaultCreditMetric'
+          $ref: "#/components/schemas/ResDefaultCreditMetric"
       required:
         - ar
         - timestamp
@@ -2199,11 +2199,11 @@ components:
           description: A directory of parameter-IDs and asset-definitions.
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/ResAssetDefinition'
+            $ref: "#/components/schemas/ResAssetDefinition"
         sdtf:
           type: array
           items:
-            $ref: '#/components/schemas/ResAssetDefinition'
+            $ref: "#/components/schemas/ResAssetDefinition"
     ResAssetDefinition:
       description: Result part for the response to an upload request for file/sdTF parameters.
       type: object
@@ -2211,14 +2211,28 @@ components:
         id:
           description: ID of the file to be uploaded.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         href:
           description: >-
             href the file should be uploaded to (typically a time-limited pre-signed url).
           type: string
+        headers:
+          title: ResAssetUploadHeaders
+          description: HTTP headers to use when uploading an asset to ShapeDiver.
+          type: object
+          properties:
+            contentDisposition:
+              type: string
+              description: The value of the Content-Disposition HTTP header.
+            contentType:
+              type: string
+              description: The value of the Content-Type HTTP header.
+          required:
+            - contentType
       required:
         - id
         - href
+        - headers
     ResExportDefinitionType:
       description: Types of exports.
       type: string
@@ -2247,14 +2261,14 @@ components:
             time a model gets uploaded. Might be undefined because this property was introduced in
             summer 2020 and does not exist for exports of older models.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         name:
           description: Name of the export.
           type: string
         type:
           description: Type of export.
           allOf:
-            - $ref: '#/components/schemas/ResExportDefinitionType'
+            - $ref: "#/components/schemas/ResExportDefinitionType"
         dependency:
           description: List of IDs of parameters influencing this export.
           type: array
@@ -2263,7 +2277,7 @@ components:
         group:
           title: ResExportDefinitionGroup
           allOf:
-            - $ref: '#/components/schemas/CommonsGroup'
+            - $ref: "#/components/schemas/CommonsGroup"
             - description: Group information of an export definition.
         order:
           description: Ordering of the export in client applications.
@@ -2292,7 +2306,7 @@ components:
     ResExport:
       description: Export definition WITH results as exposed on the API.
       allOf:
-        - $ref: '#/components/schemas/ResExportDefinition'
+        - $ref: "#/components/schemas/ResExportDefinition"
         - type: object
           properties:
             version:
@@ -2314,7 +2328,7 @@ components:
                 not finished computation for this output version.
               type: array
               items:
-                $ref: '#/components/schemas/ResExportContent'
+                $ref: "#/components/schemas/ResExportContent"
             msg:
               description: >-
                 In case computation of the export version (temporarily) failed. Contains a message
@@ -2340,15 +2354,15 @@ components:
                 modelId:
                   description: Optional shapeways model ID.
                   allOf:
-                    - $ref: '#/components/schemas/Uuid'
+                    - $ref: "#/components/schemas/Uuid"
             status_computation:
               description: Status of the computation which resulted in the export version.
               allOf:
-                - $ref: '#/components/schemas/ResComputationStatus'
+                - $ref: "#/components/schemas/ResComputationStatus"
             status_collect:
               description: Status of collecting results for the export version.
               allOf:
-                - $ref: '#/components/schemas/ResComputationStatus'
+                - $ref: "#/components/schemas/ResComputationStatus"
           required:
             - version
     ResExportContent:
@@ -2374,8 +2388,8 @@ components:
     ResExportOrDefinition:
       description: Either a full export or it's definition.
       oneOf:
-        - $ref: '#/components/schemas/ResExport'
-        - $ref: '#/components/schemas/ResExportDefinition'
+        - $ref: "#/components/schemas/ResExport"
+        - $ref: "#/components/schemas/ResExportDefinition"
     ResList:
       description: ShapeDiver API response of a list-request.
       type: object
@@ -2384,32 +2398,32 @@ components:
           description: A directory of file objects.
           type: array
           items:
-            $ref: '#/components/schemas/ResFileInfo'
+            $ref: "#/components/schemas/ResFileInfo"
         sdtf:
           description: A directory of sdTF objects.
           type: array
           items:
-            $ref: '#/components/schemas/ResSdtfInfo'
+            $ref: "#/components/schemas/ResSdtfInfo"
         model:
           description: A directory of ShapeDiver models.
           type: array
           items:
-            $ref: '#/components/schemas/ResModel'
+            $ref: "#/components/schemas/ResModel"
         output:
           description: A directory of output versions.
           type: array
           items:
-            $ref: '#/components/schemas/ResOutput'
+            $ref: "#/components/schemas/ResOutput"
         export:
           description: A directory of export versions.
           type: array
           items:
-            $ref: '#/components/schemas/ResExport'
+            $ref: "#/components/schemas/ResExport"
         texture:
           description: A directory of model textures.
           type: array
           items:
-            $ref: '#/components/schemas/ResTexture'
+            $ref: "#/components/schemas/ResTexture"
     ResFileInfo:
       description: Result part for the response to a list request for file objects.
       type: object
@@ -2417,15 +2431,18 @@ components:
         id:
           description: ID of the file.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         parameterId:
           description: ID of the parameter that the file is assigned to.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         size:
           description: The size of the file in bytes.
           type: integer
           minimum: 0
+        filename:
+          description: The name of the file, when specified during the upload.
+          type: string
       required:
         - id
         - parameterId
@@ -2437,7 +2454,7 @@ components:
         id:
           description: ID of the sdTF.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         namespace:
           description: The namespace of the sdTF.
           type: string
@@ -2507,23 +2524,23 @@ components:
         createdate:
           description: Timestamp of creation of the model.
           allOf:
-            - $ref: '#/components/schemas/DateTimeIso'
+            - $ref: "#/components/schemas/DateTimeIso"
         documentid:
           description: ID of the Grasshopper document.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         filename:
           description: Original name of the model's grasshopper file.
           type: string
         id:
           description: ID of the model.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         id2:
           description: >-
             Optional second ID of the model. This value can be unset via an empty string.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         msg:
           description: Optional message, used in case the model was denied.
           type: string
@@ -2533,13 +2550,13 @@ components:
         org_id:
           description: Organization ID of the user that owns the model.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         stat:
-          $ref: '#/components/schemas/ResModelStatus'
+          $ref: "#/components/schemas/ResModelStatus"
         user_id:
           description: ShapeDiver User ID of the model owner.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         webhook_url:
           description: >-
             The webhook-url for updating the platform backend about model status changes.
@@ -2611,11 +2628,11 @@ components:
         lastsession:
           description: Timestamp of last session created for the model.
           allOf:
-            - $ref: '#/components/schemas/DateTimeIso'
+            - $ref: "#/components/schemas/DateTimeIso"
         lastview:
           description: Timestamp of last view of the model.
           allOf:
-            - $ref: '#/components/schemas/DateTimeIso'
+            - $ref: "#/components/schemas/DateTimeIso"
         memUsage:
           description: Approximate memory usage of model on workers, in bytes.
           type: integer
@@ -2646,7 +2663,7 @@ components:
         id:
           description: Unique ID of parameter, stays constant each time a model gets uploaded.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         choices:
           description: Choice of parameter values for types `STRINGLIST`.
           type: array
@@ -2698,20 +2715,20 @@ components:
         type:
           description: Type of parameter.
           allOf:
-            - $ref: '#/components/schemas/ResParameterType'
+            - $ref: "#/components/schemas/ResParameterType"
         visualization:
           description: >-
             Optional preferred visualization for parameters of type `FILE` and `STRINGLIST`.
           allOf:
-            - $ref: '#/components/schemas/ResVisualizationType'
+            - $ref: "#/components/schemas/ResVisualizationType"
         structure:
           description: Structure of a parameter.
           allOf:
-            - $ref: '#/components/schemas/ResStructureType'
+            - $ref: "#/components/schemas/ResStructureType"
         group:
           title: ResParameterGroup
           allOf:
-            - $ref: '#/components/schemas/CommonsGroup'
+            - $ref: "#/components/schemas/CommonsGroup"
             - description: Group information of a parameter.
         hint:
           description: Technical hint for the UI implementation.
@@ -2850,8 +2867,8 @@ components:
     ResStructureType:
       description: Structural information of a parameter.
       type: string
-      enum: [ item, list, tree ]
-      x-enum-varnames: [ ITEM, LIST, TREE ]
+      enum: [item, list, tree]
+      x-enum-varnames: [ITEM, LIST, TREE]
     ResViewer:
       description: Viewer config object.
       type: object
@@ -2863,7 +2880,7 @@ components:
         - config
     ResTicket:
       allOf:
-        - $ref: '#/components/schemas/CommonsTicket'
+        - $ref: "#/components/schemas/CommonsTicket"
         - description: Decrypted ticket details.
           type: object
           required:
@@ -2873,13 +2890,13 @@ components:
         - type: object
           properties:
             type:
-              $ref: '#/components/schemas/ResTicketType'
+              $ref: "#/components/schemas/ResTicketType"
             model_id:
               description: >-
                 Either the model's `id` or `id2` property, depending on the ticket property
                 `use_id2`.
               allOf:
-                - $ref: '#/components/schemas/Uuid'
+                - $ref: "#/components/schemas/Uuid"
           required:
             - type
             - model_id
@@ -2907,11 +2924,11 @@ components:
         type:
           description: Type of the model cleanup process.
           allOf:
-            - $ref: '#/components/schemas/ResModelCleanupProcessType'
+            - $ref: "#/components/schemas/ResModelCleanupProcessType"
         timestamp_enqueued:
           description: The timestamp when the deletion job has been enqueued.
           allOf:
-            - $ref: '#/components/schemas/DateTimeMs'
+            - $ref: "#/components/schemas/DateTimeMs"
         total:
           description: The total number of items of this type that are going to be deleted.
           type: integer
@@ -2941,7 +2958,7 @@ components:
         modelId:
           description: The ID of the ShapeDiver model.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         textureId:
           description: The texture ID.
           type: string
@@ -2970,7 +2987,7 @@ components:
         id:
           description: ID of the model.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         timestamp:
           description: |-
             Numeric timestamp in format `YYYYMMDDHHMMSSMMM`.
@@ -2981,7 +2998,7 @@ components:
         timestamp_str:
           description: Timestamp.
           allOf:
-            - $ref: '#/components/schemas/DateTimeMs'
+            - $ref: "#/components/schemas/DateTimeMs"
         compute_request_id:
           description: The ID of the compute request that was processed.
           type: string
@@ -3001,34 +3018,34 @@ components:
         stats:
           description: The stats of the computation request.
           allOf:
-            - $ref: '#/components/schemas/ResModelComputationStats'
+            - $ref: "#/components/schemas/ResModelComputationStats"
         status:
           description: Result of processing request.
           allOf:
-            - $ref: '#/components/schemas/ResComputationStatus'
+            - $ref: "#/components/schemas/ResComputationStatus"
         timestamp_fin:
           description: Timestamp when the computation request was finished.
           allOf:
-            - $ref: '#/components/schemas/DateTimeMs'
+            - $ref: "#/components/schemas/DateTimeMs"
         timestamp_req:
           description: Timestamp when the work request was filed.
           allOf:
-            - $ref: '#/components/schemas/EpochMs'
+            - $ref: "#/components/schemas/EpochMs"
         timestamp_req_iso:
           description: Timestamp when the computation request was filed.
           allOf:
-            - $ref: '#/components/schemas/DateTimeMs'
+            - $ref: "#/components/schemas/DateTimeMs"
         timestamp_resp:
           description: Timestamp when the computation request was picked up.
           allOf:
-            - $ref: '#/components/schemas/DateTimeMs'
+            - $ref: "#/components/schemas/DateTimeMs"
         msg:
           description: Message containing information about the computation process.
           type: string
         limit:
           description: Model's limits at the time of the computation process.
           allOf:
-            - $ref: '#/components/schemas/ResComputationLimits'
+            - $ref: "#/components/schemas/ResComputationLimits"
       required:
         - id
         - timestamp
@@ -3121,7 +3138,7 @@ components:
         model:
           description: Information about model computations.
           allOf:
-            - $ref: '#/components/schemas/ResComputationComponents'
+            - $ref: "#/components/schemas/ResComputationComponents"
         cpu_time_check_stored:
           description: >-
             The number of milliseconds the CPU was used to carry out checks which are done before
@@ -3305,23 +3322,23 @@ components:
           description: Components which were computed, ordered by descending processor time.
           type: array
           items:
-            $ref: '#/components/schemas/ResComputedComponent'
+            $ref: "#/components/schemas/ResComputedComponent"
         computing:
           description: >-
             Components which were currently computing at the time the computation was stopped.
           type: array
           items:
-            $ref: '#/components/schemas/ResComputingComponent'
+            $ref: "#/components/schemas/ResComputingComponent"
         errors:
           description: Component Errors.
           type: array
           items:
-            $ref: '#/components/schemas/ResErrorComponent'
+            $ref: "#/components/schemas/ResErrorComponent"
         warnings:
           description: Component Warnings.
           type: array
           items:
-            $ref: '#/components/schemas/ResWarningComponent'
+            $ref: "#/components/schemas/ResWarningComponent"
       required:
         - computed
         - computing
@@ -3332,7 +3349,7 @@ components:
       type: object
       properties:
         components:
-          $ref: '#/components/schemas/ResComputationComponent'
+          $ref: "#/components/schemas/ResComputationComponent"
         count_success:
           description: Count of successful computations for the given loaded instance of the model.
           type: integer
@@ -3347,7 +3364,7 @@ components:
           type: array
           items:
             allOf:
-              - $ref: '#/components/schemas/Uuid'
+              - $ref: "#/components/schemas/Uuid"
       required:
         - components
     ResComputationStatus: *CommonsComputationStatus
@@ -3386,7 +3403,7 @@ components:
             time a model gets uploaded. Might be undefined because this property was introduced in
             summer 2020 and does not exist for outputs of older models.
           allOf:
-            - $ref: '#/components/schemas/Uuid'
+            - $ref: "#/components/schemas/Uuid"
         name:
           description: Name of the output.
           type: string
@@ -3397,7 +3414,7 @@ components:
           description: Information about which chunks exist in the asset/sdTF.
           type: array
           items:
-            $ref: '#/components/schemas/ResOutputChunk'
+            $ref: "#/components/schemas/ResOutputChunk"
         dependency:
           description: List of IDs of parameters influencing this output.
           type: array
@@ -3406,7 +3423,7 @@ components:
         group:
           title: ResOutputDefinitionGroup
           allOf:
-            - $ref: '#/components/schemas/CommonsGroup'
+            - $ref: "#/components/schemas/CommonsGroup"
             - description: Group information of an output definition.
         order:
           description: Ordering of the output in client applications.
@@ -3434,7 +3451,7 @@ components:
     ResOutput:
       description: Output definition WITH results as exposed on the API.
       allOf:
-        - $ref: '#/components/schemas/ResOutputDefinition'
+        - $ref: "#/components/schemas/ResOutputDefinition"
         - type: object
           properties:
             version:
@@ -3461,7 +3478,7 @@ components:
                 not finished computation for this output version.
               type: array
               items:
-                $ref: '#/components/schemas/ResOutputContent'
+                $ref: "#/components/schemas/ResOutputContent"
             bbmin:
               description: Optional bounding box, minimum corner.
               type: array
@@ -3480,11 +3497,11 @@ components:
             status_computation:
               description: Status of the computation which resulted in the output version.
               allOf:
-                - $ref: '#/components/schemas/ResComputationStatus'
+                - $ref: "#/components/schemas/ResComputationStatus"
             status_collect:
               description: Status of collecting results for the output version.
               allOf:
-                - $ref: '#/components/schemas/ResComputationStatus'
+                - $ref: "#/components/schemas/ResComputationStatus"
           required:
             - version
     ResOutputContent:
@@ -3524,7 +3541,7 @@ components:
         data:
           description: Used for types `material` and `data`.
           allOf:
-            - $ref: '#/components/schemas/AnyValue'
+            - $ref: "#/components/schemas/AnyValue"
         contentType:
           description: Optional Content-Type for parts of type `asset`.
           type: string
@@ -3563,25 +3580,25 @@ components:
     ResOutputOrDefinition:
       description: Either a full output or it's definition.
       oneOf:
-        - $ref: '#/components/schemas/ResOutput'
-        - $ref: '#/components/schemas/ResOutputDefinition'
+        - $ref: "#/components/schemas/ResOutput"
+        - $ref: "#/components/schemas/ResOutputDefinition"
     ResSettings:
       description: Definition of settings.
       type: object
       properties:
         auth:
-          $ref: '#/components/schemas/ResAuthorizationSettings'
+          $ref: "#/components/schemas/ResAuthorizationSettings"
         compute:
-          $ref: '#/components/schemas/ResComputeSettings'
+          $ref: "#/components/schemas/ResComputeSettings"
         model:
-          $ref: '#/components/schemas/ResModelSettings'
+          $ref: "#/components/schemas/ResModelSettings"
     ResAuthorizationSettings:
       type: object
       properties:
         ticket:
-          $ref: '#/components/schemas/ResTicketAuthorization'
+          $ref: "#/components/schemas/ResTicketAuthorization"
         token:
-          $ref: '#/components/schemas/ResTokenAuthorization'
+          $ref: "#/components/schemas/ResTokenAuthorization"
     ResTicketAuthorization:
       type: object
       properties:
@@ -3609,7 +3626,7 @@ components:
           description: List of allowed auth-groups.
           type: array
           items:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         require_iframe:
           description: Enforces iframe embedding instead of direct embedding.
           type: boolean
@@ -3696,7 +3713,7 @@ components:
         trust:
           description: Controls whether failed computations will be retried.
           type: string
-          pattern: '^(none|full)?$'
+          pattern: "^(none|full)?$"
       required:
         - deny_scripts
         - ftype
@@ -3726,11 +3743,11 @@ components:
         minions:
           description: System information about the Geometry Minions.
           allOf:
-            - $ref: '#/components/schemas/ResMinionInfo'
+            - $ref: "#/components/schemas/ResMinionInfo"
         workers:
           description: System information about the Geometry Workers.
           allOf:
-            - $ref: '#/components/schemas/ResWorkerInfo'
+            - $ref: "#/components/schemas/ResWorkerInfo"
     ResMinionInfo:
       description: Holds system information of all currently running Geometry Minion services.
       type: object
@@ -3739,12 +3756,12 @@ components:
           description: Information per instance. A directory of process-IDs and process data.
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/ResMinionProcess'
+            $ref: "#/components/schemas/ResMinionProcess"
         tasks:
           description: Aggregated task information. A directory of task types and task data.
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/ResMinionTask'
+            $ref: "#/components/schemas/ResMinionTask"
       required:
         - instances
         - tasks
@@ -3756,7 +3773,7 @@ components:
           description: Information about completed tasks, listed per task type.
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/ResMinionTask'
+            $ref: "#/components/schemas/ResMinionTask"
       required:
         - tasks
     ResMinionTask:
@@ -3790,7 +3807,7 @@ components:
         latest:
           description: Timestamp of the latest task completion.
           allOf:
-            - $ref: '#/components/schemas/DateTimeMs'
+            - $ref: "#/components/schemas/DateTimeMs"
         count:
           description: The number of aggregated items.
           type: integer
@@ -3813,7 +3830,7 @@ components:
         plugins:
           description: Holds information of all installed and allowed Grasshopper plugins.
           allOf:
-            - $ref: '#/components/schemas/ResWorkerPlugins'
+            - $ref: "#/components/schemas/ResWorkerPlugins"
         rhinoVersion:
           description: Version of the Rhino application.
           type: string
@@ -3833,12 +3850,12 @@ components:
           description: Contains information about all installed Grasshopper plugins.
           type: array
           items:
-            $ref: '#/components/schemas/ResInstalledWorkerPlugin'
+            $ref: "#/components/schemas/ResInstalledWorkerPlugin"
         allowed:
           description: Contains the model checking configuration for the Grasshopper plugins.
           type: array
           items:
-            $ref: '#/components/schemas/ResAllowedWorkerPlugin'
+            $ref: "#/components/schemas/ResAllowedWorkerPlugin"
         inconsistent:
           description: Contains information about plugin inconsistencies.
           type: array
@@ -3973,14 +3990,14 @@ components:
             the listed components are allowed, overruling the list in `disallowedComponents`.
           type: array
           items:
-            $ref: '#/components/schemas/ResWorkerPluginComponent'
+            $ref: "#/components/schemas/ResWorkerPluginComponent"
         disallowedComponents:
           description: >-
             List of plugin components which may not be used. This list might be overruled by
             `allowedComponents`.
           type: array
           items:
-            $ref: '#/components/schemas/ResWorkerPluginComponent'
+            $ref: "#/components/schemas/ResWorkerPluginComponent"
       required:
         - id
         - name
@@ -4012,7 +4029,7 @@ components:
         error:
           description: The type of the error.
           allOf:
-            - $ref: '#/components/schemas/ResErrorType'
+            - $ref: "#/components/schemas/ResErrorType"
         desc:
           description: General description of the error type.
           type: string
@@ -4105,7 +4122,7 @@ paths:
   #---------------------------------------------------------------------------#
   #- Analytics                                                               -#
   #---------------------------------------------------------------------------#
-  '/api/v2/analytics/session/model':
+  "/api/v2/analytics/session/model":
     put:
       operationId: GetModelStatistics
       tags:
@@ -4119,23 +4136,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqModelStatistics'
+              $ref: "#/components/schemas/ReqModelStatistics"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResGetModelStatistics'
+                $ref: "#/components/schemas/ResGetModelStatistics"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/analytics/credit-metrics':
+  "/api/v2/analytics/credit-metrics":
     put:
       operationId: GetCreditMetrics
       tags:
@@ -4151,27 +4168,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqCreditMetrics'
+              $ref: "#/components/schemas/ReqCreditMetrics"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResGetCreditMetrics'
+                $ref: "#/components/schemas/ResGetCreditMetrics"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
 
   #---------------------------------------------------------------------------#
   #- AR-Scene                                                                -#
   #---------------------------------------------------------------------------#
-  '/api/v2/ar-scene/{sceneId}':
+  "/api/v2/ar-scene/{sceneId}":
     head:
       operationId: GetArSceneMetadata
       tags:
@@ -4194,9 +4211,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security: []
-  '/api/v2/ar-scene/{sceneId}/gltf':
+  "/api/v2/ar-scene/{sceneId}/gltf":
     get:
       operationId: DownloadArSceneGltf
       tags:
@@ -4215,15 +4232,15 @@ paths:
           content:
             application/octet-stream:
               schema:
-                $ref: '#/components/schemas/OctetStream'
+                $ref: "#/components/schemas/OctetStream"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security: []
-  '/api/v2/ar-scene/{sceneId}/usdz':
+  "/api/v2/ar-scene/{sceneId}/usdz":
     get:
       operationId: DownloadArSceneUsdz
       tags:
@@ -4242,7 +4259,7 @@ paths:
           content:
             application/octet-stream:
               schema:
-                $ref: '#/components/schemas/OctetStream'
+                $ref: "#/components/schemas/OctetStream"
         302:
           description: Redirect to a temporary download link.
         default:
@@ -4250,13 +4267,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security: []
 
   #---------------------------------------------------------------------------#
   #- Assets                                                                  -#
   #---------------------------------------------------------------------------#
-  '/api/v2/session/{sessionId}/export/{assetDataEncrypted}':
+  "/api/v2/session/{sessionId}/export/{assetDataEncrypted}":
     get:
       operationId: DownloadExport
       tags:
@@ -4268,29 +4285,29 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: assetDataEncrypted
           in: path
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64Data'
+            $ref: "#/components/schemas/Base64Data"
       responses:
         200:
           description: Success.
           content:
             application/octet-stream:
               schema:
-                $ref: '#/components/schemas/OctetStream'
+                $ref: "#/components/schemas/OctetStream"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/output/{assetDataEncrypted}':
+  "/api/v2/session/{sessionId}/output/{assetDataEncrypted}":
     get:
       operationId: DownloadOutput
       tags:
@@ -4302,29 +4319,29 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: assetDataEncrypted
           in: path
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64Data'
+            $ref: "#/components/schemas/Base64Data"
       responses:
         206:
           description: Success.
           content:
             application/octet-stream:
               schema:
-                $ref: '#/components/schemas/OctetStream'
+                $ref: "#/components/schemas/OctetStream"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/texture/{assetDataEncrypted}':
+  "/api/v2/session/{sessionId}/texture/{assetDataEncrypted}":
     get:
       operationId: DownloadTexture
       tags:
@@ -4336,29 +4353,29 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: assetDataEncrypted
           in: path
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64Data'
+            $ref: "#/components/schemas/Base64Data"
       responses:
         200:
           description: Success.
           content:
             application/octet-stream:
               schema:
-                $ref: '#/components/schemas/OctetStream'
+                $ref: "#/components/schemas/OctetStream"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/gltf/{assetDataEncrypted}':
+  "/api/v2/session/{sessionId}/gltf/{assetDataEncrypted}":
     get:
       operationId: DownloadGltf
       tags:
@@ -4370,29 +4387,29 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: assetDataEncrypted
           in: path
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64Data'
+            $ref: "#/components/schemas/Base64Data"
       responses:
         200:
           description: Success.
           content:
             application/octet-stream:
               schema:
-                $ref: '#/components/schemas/OctetStream'
+                $ref: "#/components/schemas/OctetStream"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/usdz/{assetDataEncrypted}':
+  "/api/v2/session/{sessionId}/usdz/{assetDataEncrypted}":
     get:
       operationId: DownloadUsdz
       tags:
@@ -4404,13 +4421,13 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: assetDataEncrypted
           in: path
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64Data'
+            $ref: "#/components/schemas/Base64Data"
       responses:
         302:
           description: Redirect to a temporary download link.
@@ -4419,10 +4436,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/image':
+  "/api/v2/session/{sessionId}/image":
     get:
       operationId: DownloadImage
       tags:
@@ -4434,29 +4451,29 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: url
           in: query
           description: Specify the Base64-encoded image URL.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64Data'
+            $ref: "#/components/schemas/Base64Data"
       responses:
         200:
           description: Success.
           content:
             application/octet-stream:
               schema:
-                $ref: '#/components/schemas/OctetStream'
+                $ref: "#/components/schemas/OctetStream"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/download/{assetDataEncrypted}':
+  "/api/v2/download/{assetDataEncrypted}":
     get:
       operationId: DownloadAsset
       tags:
@@ -4470,26 +4487,26 @@ paths:
           description: Encrypted asset data information.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64Data'
+            $ref: "#/components/schemas/Base64Data"
       responses:
         200:
           description: Success.
           content:
             application/octet-stream:
               schema:
-                $ref: '#/components/schemas/OctetStream'
+                $ref: "#/components/schemas/OctetStream"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security: []
 
   #---------------------------------------------------------------------------#
   #- Auth                                                                    -#
   #---------------------------------------------------------------------------#
-  '/.well-known/jwks.json':
+  "/.well-known/jwks.json":
     get:
       operationId: GetJsonWebKeySets
       tags:
@@ -4507,13 +4524,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security: []
 
   #---------------------------------------------------------------------------#
   #- Authorization Group                                                     -#
   #---------------------------------------------------------------------------#
-  '/api/v2/auth_group':
+  "/api/v2/auth_group":
     post:
       operationId: CreateAuthorizationGroup
       tags:
@@ -4529,27 +4546,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqAuthorizationGroup'
+              $ref: "#/components/schemas/ReqAuthorizationGroup"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCreateAuthorizationGroup'
+                $ref: "#/components/schemas/ResCreateAuthorizationGroup"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
 
   #---------------------------------------------------------------------------#
   #- Export                                                                  -#
   #---------------------------------------------------------------------------#
-  '/api/v2/session/{sessionId}/export':
+  "/api/v2/session/{sessionId}/export":
     put:
       operationId: ComputeExports
       tags:
@@ -4565,29 +4582,29 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqExport'
+              $ref: "#/components/schemas/ReqExport"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResComputeExports'
+                $ref: "#/components/schemas/ResComputeExports"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/export/cache':
+  "/api/v2/session/{sessionId}/export/cache":
     put:
       operationId: GetCachedExports
       tags:
@@ -4603,29 +4620,29 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqExportOrCache'
+              $ref: "#/components/schemas/ReqExportOrCache"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResGetCachedExports'
+                $ref: "#/components/schemas/ResGetCachedExports"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}/export':
+  "/api/v2/model/{modelId}/export":
     patch:
       operationId: UpdateExportDefinitions
       tags:
@@ -4640,29 +4657,29 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqExportDefinitions'
+              $ref: "#/components/schemas/ReqExportDefinitions"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResUpdateExportDefinitions'
+                $ref: "#/components/schemas/ResUpdateExportDefinitions"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/export/{exportId}/list':
+  "/api/v2/session/{sessionId}/export/{exportId}/list":
     get:
       operationId: ListExportVersions
       tags:
@@ -4677,7 +4694,7 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: exportId
           in: path
           description: Export ID.
@@ -4689,13 +4706,13 @@ paths:
           description: Filter export versions by `status_computation`.
           required: false
           schema:
-            $ref: '#/components/schemas/QueryComputationStatus'
+            $ref: "#/components/schemas/QueryComputationStatus"
         - name: statusCollect
           in: query
           description: Filter export versions by `status_collect`.
           required: false
           schema:
-            $ref: '#/components/schemas/QueryComputationStatus'
+            $ref: "#/components/schemas/QueryComputationStatus"
         - name: offset
           in: query
           description: Continuation token for pagination.
@@ -4708,20 +4725,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResListExportVersions'
+                $ref: "#/components/schemas/ResListExportVersions"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
 
   #---------------------------------------------------------------------------#
   #- File                                                                    -#
   #---------------------------------------------------------------------------#
-  '/api/v2/session/{sessionId}/file/{paramId}/list':
+  "/api/v2/session/{sessionId}/file/{paramId}/list":
     get:
       operationId: ListFiles
       tags:
@@ -4736,13 +4753,13 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: paramId
           in: path
           description: Parameter ID of the file asset.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: offset
           in: query
           description: Continuation token for pagination.
@@ -4755,16 +4772,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResListFiles'
+                $ref: "#/components/schemas/ResListFiles"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/file/{paramId}/{fileId}':
+  "/api/v2/session/{sessionId}/file/{paramId}/{fileId}":
     head:
       operationId: GetFileMetadata
       tags:
@@ -4776,19 +4793,19 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: paramId
           in: path
           description: Parameter ID of the file asset.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: fileId
           in: path
           description: ID of the file asset.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: The file-asset with the given ID was found.
@@ -4799,7 +4816,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
     get:
@@ -4816,32 +4833,32 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: paramId
           in: path
           description: Parameter ID of the file asset.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: fileId
           in: path
           description: ID of the file asset.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/octet-stream:
               schema:
-                $ref: '#/components/schemas/OctetStream'
+                $ref: "#/components/schemas/OctetStream"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
     delete:
@@ -4858,35 +4875,35 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: paramId
           in: path
           description: Parameter ID of the file asset.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: fileId
           in: path
           description: ID of the file asset.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResDeleteFile'
+                $ref: "#/components/schemas/ResDeleteFile"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/file/upload':
+  "/api/v2/session/{sessionId}/file/upload":
     post:
       operationId: UploadFile
       tags:
@@ -4901,33 +4918,33 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqFileUpload'
+              $ref: "#/components/schemas/ReqFileUpload"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResUploadFile'
+                $ref: "#/components/schemas/ResUploadFile"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
 
   #---------------------------------------------------------------------------#
   #- gltf                                                                    -#
   #---------------------------------------------------------------------------#
-  '/api/v2/session/{sessionId}/gltf':
+  "/api/v2/session/{sessionId}/gltf":
     post:
       operationId: UploadGltf
       tags:
@@ -4939,39 +4956,39 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: conversion
           in: query
           description: Specify to convert the uploaded glTF.
           required: false
           schema:
-            $ref: '#/components/schemas/QueryGltfConversion'
+            $ref: "#/components/schemas/QueryGltfConversion"
       requestBody:
         required: true
         content:
           model/gltf-binary:
             schema:
-              $ref: '#/components/schemas/OctetStream'
+              $ref: "#/components/schemas/OctetStream"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResUploadGltf'
+                $ref: "#/components/schemas/ResUploadGltf"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
 
   #---------------------------------------------------------------------------#
   #- Log                                                                     -#
   #---------------------------------------------------------------------------#
-  '/api/v2/session/{sessionId}/log/message':
+  "/api/v2/session/{sessionId}/log/message":
     post:
       operationId: LogMessage
       tags:
@@ -4983,34 +5000,33 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqLogMessage'
+              $ref: "#/components/schemas/ReqLogMessage"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResLogMessage'
+                $ref: "#/components/schemas/ResLogMessage"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-
 
   #---------------------------------------------------------------------------#
   #- Model                                                                   -#
   #---------------------------------------------------------------------------#
-  '/api/v2/model/{modelId}/config':
+  "/api/v2/model/{modelId}/config":
     get:
       operationId: GetModelConfig
       tags:
@@ -5025,20 +5041,20 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResGetModelConfig'
+                $ref: "#/components/schemas/ResGetModelConfig"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
     post:
@@ -5055,26 +5071,26 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqConfigure'
+              $ref: "#/components/schemas/ReqConfigure"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCreateModelConfig'
+                $ref: "#/components/schemas/ResCreateModelConfig"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
     patch:
@@ -5093,29 +5109,29 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqConfigure'
+              $ref: "#/components/schemas/ReqConfigure"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResUpdateModelConfig'
+                $ref: "#/components/schemas/ResUpdateModelConfig"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/list':
+  "/api/v2/model/list":
     get:
       operationId: ListModels
       tags:
@@ -5129,7 +5145,7 @@ paths:
           description: Filter models by `stat`.
           required: false
           schema:
-            $ref: '#/components/schemas/QueryModelStatus'
+            $ref: "#/components/schemas/QueryModelStatus"
         - name: offset
           in: query
           description: Continuation token for pagination.
@@ -5142,16 +5158,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResListModels'
+                $ref: "#/components/schemas/ResListModels"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}':
+  "/api/v2/model/{modelId}":
     get:
       operationId: GetModel
       tags:
@@ -5175,20 +5191,20 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResGetModel'
+                $ref: "#/components/schemas/ResGetModel"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
     put:
@@ -5210,26 +5226,26 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqModel'
+              $ref: "#/components/schemas/ReqModel"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResUpdateModel'
+                $ref: "#/components/schemas/ResUpdateModel"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
     delete:
@@ -5248,23 +5264,23 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResDeleteModel'
+                $ref: "#/components/schemas/ResDeleteModel"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model':
+  "/api/v2/model":
     post:
       operationId: CreateModel
       tags:
@@ -5287,23 +5303,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqModel'
+              $ref: "#/components/schemas/ReqModel"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCreateModel'
+                $ref: "#/components/schemas/ResCreateModel"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}/file/download':
+  "/api/v2/model/{modelId}/file/download":
     get:
       operationId: DownloadModelFile
       tags:
@@ -5318,23 +5334,23 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/octet-stream:
               schema:
-                $ref: '#/components/schemas/OctetStream'
+                $ref: "#/components/schemas/OctetStream"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}/computations':
+  "/api/v2/model/{modelId}/computations":
     get:
       operationId: GetModelComputations
       tags:
@@ -5349,7 +5365,7 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: order
           in: query
           description: |-
@@ -5358,7 +5374,7 @@ paths:
             _Default:_ `desc`
           required: false
           schema:
-            $ref: '#/components/schemas/QueryOrder'
+            $ref: "#/components/schemas/QueryOrder"
         - name: timestamp_from
           in: query
           description: |-
@@ -5367,7 +5383,7 @@ paths:
             _Default:_ `0`
           required: false
           schema:
-            $ref: '#/components/schemas/DateTimeMs'
+            $ref: "#/components/schemas/DateTimeMs"
         - name: timestamp_to
           in: query
           description: |-
@@ -5376,7 +5392,7 @@ paths:
             _Default:_ `infinity`
           required: false
           schema:
-            $ref: '#/components/schemas/DateTimeMs'
+            $ref: "#/components/schemas/DateTimeMs"
         - name: status
           in: query
           description: |-
@@ -5385,7 +5401,7 @@ paths:
             _Default:_ `*`
           required: false
           schema:
-            $ref: '#/components/schemas/QueryComputationStatisticsStatus'
+            $ref: "#/components/schemas/QueryComputationStatisticsStatus"
         - name: type
           in: query
           description: |-
@@ -5394,7 +5410,7 @@ paths:
             _Default:_ `*`
           required: false
           schema:
-            $ref: '#/components/schemas/QueryComputationType'
+            $ref: "#/components/schemas/QueryComputationType"
         - name: limit
           in: query
           description: |-
@@ -5427,16 +5443,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResGetModelComputations'
+                $ref: "#/components/schemas/ResGetModelComputations"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}/cleanup/export':
+  "/api/v2/model/{modelId}/cleanup/export":
     post:
       operationId: CleanupExports
       tags:
@@ -5451,35 +5467,35 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: untilLastSeen
           in: query
           description: Delete all components that have been used last at or before this timestamp.
           required: true
           schema:
-            $ref: '#/components/schemas/AnyDateTime'
+            $ref: "#/components/schemas/AnyDateTime"
       responses:
         200:
           description: Cleanup successfully processed.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCleanupExports'
+                $ref: "#/components/schemas/ResCleanupExports"
         202:
           description: Cleanup started but not finished yet.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCleanupExports'
+                $ref: "#/components/schemas/ResCleanupExports"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}/cleanup/output':
+  "/api/v2/model/{modelId}/cleanup/output":
     post:
       operationId: CleanupOutputs
       tags:
@@ -5494,35 +5510,35 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: untilLastSeen
           in: query
           description: Delete all components that have been used last at or before this timestamp.
           required: true
           schema:
-            $ref: '#/components/schemas/AnyDateTime'
+            $ref: "#/components/schemas/AnyDateTime"
       responses:
         200:
           description: Cleanup successfully processed.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCleanupOutputs'
+                $ref: "#/components/schemas/ResCleanupOutputs"
         202:
           description: Cleanup started but not finished yet.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCleanupOutputs'
+                $ref: "#/components/schemas/ResCleanupOutputs"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}/cleanup/texture':
+  "/api/v2/model/{modelId}/cleanup/texture":
     post:
       operationId: CleanupTextures
       tags:
@@ -5537,64 +5553,64 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: untilLastSeen
           in: query
           description: Delete all components that have been used last at or before this timestamp.
           required: true
           schema:
-            $ref: '#/components/schemas/AnyDateTime'
+            $ref: "#/components/schemas/AnyDateTime"
       responses:
         200:
           description: Cleanup successfully processed.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCleanupTextures'
+                $ref: "#/components/schemas/ResCleanupTextures"
         202:
           description: Cleanup started but not finished yet.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCleanupTextures'
+                $ref: "#/components/schemas/ResCleanupTextures"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}/cleanup/status':
+  "/api/v2/model/{modelId}/cleanup/status":
     get:
       operationId: GetCleanupStatus
       tags:
         - model
       summary: Get the status of all running model cleanup processes.
-      description: ''
+      description: ""
       parameters:
         - name: modelId
           in: path
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResGetCleanupStatus'
+                $ref: "#/components/schemas/ResGetCleanupStatus"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}/parameter/defval':
+  "/api/v2/model/{modelId}/parameter/defval":
     patch:
       operationId: UpdateParameterDefaultValues
       tags:
@@ -5611,29 +5627,29 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqCustomization'
+              $ref: "#/components/schemas/ReqCustomization"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResUpdateParameterDefaultValues'
+                $ref: "#/components/schemas/ResUpdateParameterDefaultValues"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}/parameter':
+  "/api/v2/model/{modelId}/parameter":
     patch:
       operationId: UpdateParameterDefinitions
       tags:
@@ -5648,33 +5664,33 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqParameterDefinitions'
+              $ref: "#/components/schemas/ReqParameterDefinitions"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResUpdateParameterDefinitions'
+                $ref: "#/components/schemas/ResUpdateParameterDefinitions"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
 
   #---------------------------------------------------------------------------#
   #- Output                                                                  -#
   #---------------------------------------------------------------------------#
-  '/api/v2/session/{sessionId}/output':
+  "/api/v2/session/{sessionId}/output":
     put:
       operationId: ComputeOutputs
       tags:
@@ -5689,29 +5705,29 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqCustomization'
+              $ref: "#/components/schemas/ReqCustomization"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResComputeOutputs'
+                $ref: "#/components/schemas/ResComputeOutputs"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/output/cache':
+  "/api/v2/session/{sessionId}/output/cache":
     put:
       operationId: GetCachedOutputs
       tags:
@@ -5726,29 +5742,29 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqCustomizationOrCache'
+              $ref: "#/components/schemas/ReqCustomizationOrCache"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResGetCachedOutputs'
+                $ref: "#/components/schemas/ResGetCachedOutputs"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}/output':
+  "/api/v2/model/{modelId}/output":
     patch:
       operationId: UpdateOutputDefinitions
       tags:
@@ -5763,29 +5779,29 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqOutputDefinitions'
+              $ref: "#/components/schemas/ReqOutputDefinitions"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResUpdateOutputDefinitions'
+                $ref: "#/components/schemas/ResUpdateOutputDefinitions"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/output/{outputId}/list':
+  "/api/v2/session/{sessionId}/output/{outputId}/list":
     get:
       operationId: ListOutputVersions
       tags:
@@ -5800,7 +5816,7 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: outputId
           in: path
           description: Output ID.
@@ -5812,13 +5828,13 @@ paths:
           description: Filter output versions by `status_computation`.
           required: false
           schema:
-            $ref: '#/components/schemas/QueryComputationStatus'
+            $ref: "#/components/schemas/QueryComputationStatus"
         - name: statusCollect
           in: query
           description: Filter output versions by `status_collect`.
           required: false
           schema:
-            $ref: '#/components/schemas/QueryComputationStatus'
+            $ref: "#/components/schemas/QueryComputationStatus"
         - name: offset
           in: query
           description: Continuation token for pagination.
@@ -5831,20 +5847,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResListOutputVersions'
+                $ref: "#/components/schemas/ResListOutputVersions"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
 
   #---------------------------------------------------------------------------#
   #- Script                                                                  -#
   #---------------------------------------------------------------------------#
-  '/api/v2/script/{scriptId}/confirm':
+  "/api/v2/script/{scriptId}/confirm":
     get:
       operationId: ConfirmScript
       tags:
@@ -5859,7 +5875,7 @@ paths:
           description: Script ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
@@ -5872,10 +5888,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - CredentialsAuth: []
-  '/api/v2/script/{scriptId}/deny':
+  "/api/v2/script/{scriptId}/deny":
     get:
       operationId: DenyScript
       tags:
@@ -5890,7 +5906,7 @@ paths:
           description: Script ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
@@ -5903,14 +5919,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - CredentialsAuth: []
 
   #---------------------------------------------------------------------------#
   #- sdtf                                                                    -#
   #---------------------------------------------------------------------------#
-  '/api/v2/session/{sessionId}/sdtf/{namespace}/list':
+  "/api/v2/session/{sessionId}/sdtf/{namespace}/list":
     get:
       operationId: ListSdtfs
       tags:
@@ -5925,7 +5941,7 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: namespace
           in: path
           description: Namespace of the sdTF asset.
@@ -5944,16 +5960,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResListSdtfs'
+                $ref: "#/components/schemas/ResListSdtfs"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/sdtf/{namespace}/{sdtfId}':
+  "/api/v2/session/{sessionId}/sdtf/{namespace}/{sdtfId}":
     get:
       operationId: DownloadSdtf
       tags:
@@ -5968,7 +5984,7 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: namespace
           in: path
           description: Namespace of the sdTF asset.
@@ -5980,20 +5996,20 @@ paths:
           description: ID of the sdTF asset.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/octet-stream:
               schema:
-                $ref: '#/components/schemas/OctetStream'
+                $ref: "#/components/schemas/OctetStream"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
     delete:
@@ -6010,7 +6026,7 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: namespace
           in: path
           description: Namespace of the sdTF asset.
@@ -6022,23 +6038,23 @@ paths:
           description: ID of the sdTF asset.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResDeleteSdtf'
+                $ref: "#/components/schemas/ResDeleteSdtf"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/sdtf/upload':
+  "/api/v2/session/{sessionId}/sdtf/upload":
     post:
       operationId: UploadSdtf
       tags:
@@ -6053,7 +6069,7 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
@@ -6063,27 +6079,27 @@ paths:
               description: Body of a sdTF upload request.
               type: array
               items:
-                $ref: '#/components/schemas/ReqSdtfDefinition'
+                $ref: "#/components/schemas/ReqSdtfDefinition"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResUploadSdtf'
+                $ref: "#/components/schemas/ResUploadSdtf"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
 
   #---------------------------------------------------------------------------#
   #- Session                                                                 -#
   #---------------------------------------------------------------------------#
-  '/api/v2/model/{modelId}/session':
+  "/api/v2/model/{modelId}/session":
     post:
       operationId: CreateSessionByModel
       tags:
@@ -6107,29 +6123,29 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: false
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqCustomizationOrExport'
+              $ref: "#/components/schemas/ReqCustomizationOrExport"
       responses:
         201:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCreateSessionByModel'
+                $ref: "#/components/schemas/ResCreateSessionByModel"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/ticket/{ticketId}':
+  "/api/v2/ticket/{ticketId}":
     post:
       operationId: CreateSessionByTicket
       tags:
@@ -6152,28 +6168,28 @@ paths:
           description: Encrypted ticket.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64Data'
+            $ref: "#/components/schemas/Base64Data"
       requestBody:
         required: false
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqCustomizationOrExport'
+              $ref: "#/components/schemas/ReqCustomizationOrExport"
       responses:
         201:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCreateSessionByTicket'
+                $ref: "#/components/schemas/ResCreateSessionByTicket"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security: []
-  '/api/v2/session/{sessionId}/default':
+  "/api/v2/session/{sessionId}/default":
     get:
       operationId: GetSessionDefaults
       tags:
@@ -6192,23 +6208,23 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResGetSessionDefaults'
+                $ref: "#/components/schemas/ResGetSessionDefaults"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/session/{sessionId}/close':
+  "/api/v2/session/{sessionId}/close":
     post:
       operationId: CloseSession
       tags:
@@ -6220,23 +6236,23 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCloseSession'
+                $ref: "#/components/schemas/ResCloseSession"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/model/{modelId}/ticket':
+  "/api/v2/model/{modelId}/ticket":
     post:
       operationId: CreateTicket
       tags:
@@ -6259,29 +6275,29 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqTicket'
+              $ref: "#/components/schemas/ReqTicket"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResCreateTicket'
+                $ref: "#/components/schemas/ResCreateTicket"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/ticket/{ticketEncrypted}':
+  "/api/v2/ticket/{ticketEncrypted}":
     get:
       operationId: DecryptTicket
       tags:
@@ -6305,21 +6321,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResDecryptTicket'
+                $ref: "#/components/schemas/ResDecryptTicket"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-
 
   #---------------------------------------------------------------------------#
   #- System                                                                  -#
   #---------------------------------------------------------------------------#
-  '/api/v2/system/model/{modelId}':
+  "/api/v2/system/model/{modelId}":
     delete:
       operationId: EraseModel
       tags:
@@ -6336,46 +6351,46 @@ paths:
           description: Model ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResDeleteModel'
+                $ref: "#/components/schemas/ResDeleteModel"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
-  '/api/v2/system/minions/info':
+  "/api/v2/system/minions/info":
     get:
       operationId: GetMinionsInfo
       tags:
         - system
       summary: Get system information about the Geometry Minions.
-      description: 'Subject-Restriction: __backend__.'
+      description: "Subject-Restriction: __backend__."
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResGetMinionsInfo'
+                $ref: "#/components/schemas/ResGetMinionsInfo"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
           CredentialsAuth: []
-  '/api/v2/system/workers/info':
+  "/api/v2/system/workers/info":
     get:
       operationId: GetWorkersInfo
       tags:
@@ -6388,23 +6403,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResGetWorkersInfo'
+                $ref: "#/components/schemas/ResGetWorkersInfo"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
           CredentialsAuth: []
-  '/api/v2/system/sign/cdn/{endpoint}/{encodedUri}':
+  "/api/v2/system/sign/cdn/{endpoint}/{encodedUri}":
     get:
       operationId: CreateSignedUrl
       tags:
         - system
       summary: Create a signed URL for the specified endpoint and target.
-      description: 'Subject-Restriction: __backend__.'
+      description: "Subject-Restriction: __backend__."
       parameters:
         - name: endpoint
           in: path
@@ -6417,7 +6432,7 @@ paths:
           description: Base64 encoded target URI.
           required: true
           schema:
-            $ref: '#/components/schemas/Base64Data'
+            $ref: "#/components/schemas/Base64Data"
       responses:
         200:
           description: Success.
@@ -6430,14 +6445,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
 
   #---------------------------------------------------------------------------#
   #- Texture                                                                 -#
   #---------------------------------------------------------------------------#
-  '/api/v2/session/{sessionId}/texture/list':
+  "/api/v2/session/{sessionId}/texture/list":
     get:
       operationId: ListTextures
       tags:
@@ -6452,7 +6467,7 @@ paths:
           description: Session ID.
           required: true
           schema:
-            $ref: '#/components/schemas/Uuid'
+            $ref: "#/components/schemas/Uuid"
         - name: offset
           in: query
           description: Continuation token for pagination.
@@ -6465,12 +6480,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResListTextures'
+                $ref: "#/components/schemas/ResListTextures"
         default:
           description: Unexpected error. See `message` for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResError'
+                $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
