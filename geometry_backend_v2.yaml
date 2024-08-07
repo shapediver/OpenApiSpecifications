@@ -189,22 +189,6 @@ components:
         - type: array
           items: {}
         - type: object
-    AtLeastOneUuid:
-      description: Either a single UUID or an array of UUIDs.
-      oneOf:
-        - $ref: "#/components/schemas/Uuid"
-        - type: array
-          items:
-            $ref: "#/components/schemas/Uuid"
-          minItems: 1
-    AtLeastOneAnyDateExtended:
-      description: Either a single extended date or an array of extended dates.
-      oneOf:
-        - $ref: "#/components/schemas/AnyDateExtended"
-        - type: array
-          items:
-            $ref: "#/components/schemas/AnyDateExtended"
-          minItems: 1
 
     #-------------------------------------------------------------------------#
     #- Common data structures                                                -#
@@ -443,12 +427,17 @@ components:
             type: object
             properties:
               modelid:
-                $ref: "#/components/schemas/AtLeastOneUuid"
+                type: array
+                items:
+                  $ref: "#/components/schemas/Uuid"
               timestamp:
                 description: >-
+                  Either a single extended date or an array of extended dates.
+
                   Multiple timestamps are aggregated and result in a single statistic object.
-                allOf:
-                  - $ref: "#/components/schemas/AtLeastOneAnyDateExtended"
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnyDateExtended"
               timestamp_from:
                 description: >-
                   Allows to define the beginning of a time range, instead of specifying individual
@@ -473,7 +462,9 @@ components:
           type: object
           properties:
             modelIds:
-              $ref: "#/components/schemas/AtLeastOneUuid"
+              type: array
+              items:
+                $ref: "#/components/schemas/Uuid"
           required:
             - modelIds
         - title: ReqUserCreditMetricId
@@ -481,7 +472,9 @@ components:
           type: object
           properties:
             userIds:
-              $ref: "#/components/schemas/AtLeastOneUuid"
+              type: array
+              items:
+                $ref: "#/components/schemas/Uuid"
           required:
             - userIds
         - title: ReqOrganizationCreditMetricId
@@ -489,7 +482,9 @@ components:
           type: object
           properties:
             orgIds:
-              $ref: "#/components/schemas/AtLeastOneUuid"
+              type: array
+              items:
+                $ref: "#/components/schemas/Uuid"
           required:
             - orgIds
         - title: ReqSystemCreditMetricId
@@ -505,9 +500,13 @@ components:
           type: object
           properties:
             modelIds:
-              $ref: "#/components/schemas/AtLeastOneUuid"
+              type: array
+              items:
+                $ref: "#/components/schemas/Uuid"
             userIds:
-              $ref: "#/components/schemas/AtLeastOneUuid"
+              type: array
+              items:
+                $ref: "#/components/schemas/Uuid"
           required:
             - modelIds
             - userIds
@@ -516,9 +515,13 @@ components:
           type: object
           properties:
             modelIds:
-              $ref: "#/components/schemas/AtLeastOneUuid"
+              type: array
+              items:
+                $ref: "#/components/schemas/Uuid"
             orgIds:
-              $ref: "#/components/schemas/AtLeastOneUuid"
+              type: array
+              items:
+                $ref: "#/components/schemas/Uuid"
           required:
             - modelIds
             - orgIds
@@ -541,9 +544,12 @@ components:
                 $ref: "#/components/schemas/ReqAnyCreditMetricId"
               timestamp:
                 description: >-
+                  Either a single extended date or an array of extended dates.
+
                   Multiple timestamps are aggregated and result in a single credit metrics object.
-                allOf:
-                  - $ref: "#/components/schemas/AtLeastOneAnyDateExtended"
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnyDateExtended"
               timestamp_from:
                 description: >-
                   Allows to define the beginning of a time range, instead of specifying individual
@@ -2388,8 +2394,8 @@ components:
     ResExportOrDefinition:
       description: Either a full export or it's definition.
       oneOf:
-        - $ref: "#/components/schemas/ResExport"
         - $ref: "#/components/schemas/ResExportDefinition"
+        - $ref: "#/components/schemas/ResExport"
     ResList:
       description: ShapeDiver API response of a list-request.
       type: object
@@ -2820,10 +2826,12 @@ components:
         - S_VECTOR
         - BOOL
         - COLOR
+        - DRAWING
         - EVEN
         - FILE
         - FLOAT
         - INT
+        - INTERACTION
         - ODD
         - STRING
         - STRINGLIST
@@ -3580,8 +3588,8 @@ components:
     ResOutputOrDefinition:
       description: Either a full output or it's definition.
       oneOf:
-        - $ref: "#/components/schemas/ResOutput"
         - $ref: "#/components/schemas/ResOutputDefinition"
+        - $ref: "#/components/schemas/ResOutput"
     ResSettings:
       description: Definition of settings.
       type: object
