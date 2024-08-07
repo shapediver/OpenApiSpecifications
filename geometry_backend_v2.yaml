@@ -1009,6 +1009,34 @@ components:
       required:
         - analytics
         - version
+    ResGetUserCreditMetrics:
+      allOf:
+        - $ref: "#/components/schemas/ResPartAnalytics"
+        - $ref: "#/components/schemas/ResPartVersion"
+      required:
+        - analytics
+        - version
+    ResGetOrganizationCreditMetrics:
+      allOf:
+        - $ref: "#/components/schemas/ResPartAnalytics"
+        - $ref: "#/components/schemas/ResPartVersion"
+      required:
+        - analytics
+        - version
+    ResGetModelUserCreditMetrics:
+      allOf:
+        - $ref: "#/components/schemas/ResPartAnalytics"
+        - $ref: "#/components/schemas/ResPartVersion"
+      required:
+        - analytics
+        - version
+    ResGetModelOrganizationCreditMetrics:
+      allOf:
+        - $ref: "#/components/schemas/ResPartAnalytics"
+        - $ref: "#/components/schemas/ResPartVersion"
+      required:
+        - analytics
+        - version
     ResCreateAuthorizationGroup:
       allOf:
         - $ref: "#/components/schemas/ResPartAuthorizationGroup"
@@ -2096,7 +2124,7 @@ components:
                 Count of computations per computation time expressed in started 10-second chunks.
               type: object
               additionalProperties:
-                type: string
+                type: integer
           required:
             - count
             - credits
@@ -2184,7 +2212,7 @@ components:
                 Count of computations per computation time expressed in started 10-second chunks.
               type: object
               additionalProperties:
-                type: string
+                type: integer
           required:
             - count
             - credits
@@ -4184,6 +4212,146 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ResGetCreditMetrics"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security:
+        - JwtAuth: []
+  "/api/v2/analytics/credit-metrics/timestamp/{timestamp}/user":
+    get:
+      operationId: GetUserCreditMetrics
+      tags:
+        - analytics
+      summary: Get credit metrics of all users active at timestamp.
+      description: |-
+        Subject-Restriction: __backend__.
+
+        Permissions: 
+        * `analytics.model.get.*` - __required__.
+      parameters:
+        - in: path
+          name: timestamp
+          schema:
+            type: string
+          required: true
+          description: Timestamp of activity in format YYYY, YYYYMM, YYYYMMDD, or YYYYMMDDHH.
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResGetUserCreditMetrics"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security:
+        - JwtAuth: []
+  "/api/v2/analytics/credit-metrics/timestamp/{timestamp}/org":
+    get:
+      operationId: GetOrganizationCreditMetrics
+      tags:
+        - analytics
+      summary: Get credit metrics of all organizations with users active at timestamp.
+      description: |-
+        Subject-Restriction: __backend__.
+
+        Permissions: 
+        * `analytics.model.get.*` - __required__.
+      parameters:
+        - in: path
+          name: timestamp
+          schema:
+            type: string
+          required: true
+          description: Timestamp of activity in format YYYY, YYYYMM, YYYYMMDD, or YYYYMMDDHH.
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResGetOrganizationCreditMetrics"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security:
+        - JwtAuth: []
+  "/api/v2/analytics/credit-metrics/timestamp/{timestamp}/user/{userId}":
+    get:
+      operationId: GetModelUserCreditMetrics
+      tags:
+        - analytics
+      summary: Get model credit metrics of the user at timestamp.
+      description: |-
+        Permissions: 
+        * `analytics.model.get.*` - __required__.
+      parameters:
+        - in: path
+          name: timestamp
+          schema:
+            type: string
+          required: true
+          description: Timestamp of activity in format YYYY, YYYYMM, YYYYMMDD, or YYYYMMDDHH.
+        - in: path
+          name: userId
+          schema:
+            type: string
+          required: true
+          description: ID of the user.
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResGetModelUserCreditMetrics"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security:
+        - JwtAuth: []
+  "/api/v2/analytics/credit-metrics/timestamp/{timestamp}/org/{orgId}":
+    get:
+      operationId: GetModelOrganizationCreditMetrics
+      tags:
+        - analytics
+      summary: Get model credit metrics of the organization at timestamp.
+      description: |-
+        Permissions: 
+        * `analytics.model.get.*` - __required__.
+      parameters:
+        - in: path
+          name: timestamp
+          schema:
+            type: string
+          required: true
+          description: Timestamp of activity in format YYYY, YYYYMM, YYYYMMDD, or YYYYMMDDHH.
+        - in: path
+          name: orgId
+          schema:
+            type: string
+          required: true
+          description: ID of the organization.
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResGetModelOrganizationCreditMetrics"
         default:
           description: Unexpected error. See `message` for more details.
           content:
