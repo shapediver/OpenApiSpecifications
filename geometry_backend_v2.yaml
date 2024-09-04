@@ -26,6 +26,7 @@ tags:
   - name: gltf
   - name: log
   - name: model
+  - name: model-state
   - name: output
     externalDocs:
       url: https://help.shapediver.com/doc/outputs-on-the-api
@@ -262,6 +263,42 @@ components:
         - CONFIRMED
         - DENIED
         - DELETED
+    CommonsBasicParameter:
+      description: Definition of a basic ShapeDiver parameter.
+      oneOf:
+        - type: string
+        - type: number
+        - type: boolean
+    CommonsStypeParameter:
+      description: Definition of the value to use for s-type parameters.
+      type: object
+      properties:
+        value:
+          description: Optional embedded value. If this is set the asset is ignored.
+          type: string
+        asset:
+          title: CommmonsParameterAsset
+          description: Reference to the s-type parameter asset to be used.
+          type: object
+          properties:
+            id:
+              description: String ID of the asset.
+              type: string
+            chunk:
+              title: CommonsParameterChunk
+              description: >-
+                Describing which chunk of the s-type asset to use. When not specified, the
+                chunk of an asset gets chosen based on parameter ID and name.
+              type: object
+              properties:
+                id:
+                  description: ID of the chunk to be used.
+                  type: string
+                name:
+                  description: Name attribute of the chunk to be used.
+                  type: string
+          required:
+            - id
     CommonsTicket:
       description: Authorization ticket.
       type: object
@@ -565,58 +602,23 @@ components:
             required:
               - id
     ReqParameterValue:
-      description: |-
-        The value of parameter.
-
-        Supported types:
-        * Basic parameter (`ReqBasicParameter`)
-        * S-type parameter (`ReqStypeParameter`)
+      description: The value of a single model parameter.
       oneOf:
-        - title: ReqBasicParameter
-          description: Definition of a basic ShapeDiver parameter.
-          oneOf:
-            - type: string
-            - type: number
-            - type: boolean
-        - title: ReqStypeParameter
-          description: Definition of the value to use for s-type parameters.
-          type: object
-          properties:
-            value:
-              description: Optional embedded value. If this is set the asset is ignored.
-              type: string
-            asset:
-              title: ReqParameterAsset
-              description: Reference to the s-type parameter asset to be used.
-              type: object
-              properties:
-                id:
-                  description: String ID of the asset.
-                  type: string
-                chunk:
-                  title: ReqParameterChunk
-                  description: >-
-                    Describing which chunk of the s-type asset to use. When not specified, the
-                    chunk of an asset gets chosen based on parameter ID and name.
-                  type: object
-                  properties:
-                    id:
-                      description: ID of the chunk to be used.
-                      type: string
-                    name:
-                      description: Name attribute of the chunk to be used.
-                      type: string
-              required:
-                - id
+        - $ref: "#/components/schemas/CommonsBasicParameter"
+        - $ref: "#/components/schemas/CommonsStypeParameter"
     ReqCustomization:
       description: |-
-        Body of a customization request, a directory of parameter key and values.
+        A directory of parameter keys and values.
 
         Supported parameter keys are as follows, whereby the parameter resolution is done in the
         same order as the keys are listed:
         * `id`
         * `name`
         * `displayname`
+
+        Supported parameter values are:
+        * Basic parameter (`CommonsBasicParameter`)
+        * S-type parameter (`CommonsStypeParameter`)
       type: object
       additionalProperties:
         $ref: "#/components/schemas/ReqParameterValue"
@@ -748,6 +750,29 @@ components:
       oneOf:
         - $ref: "#/components/schemas/ReqCustomization"
         - $ref: "#/components/schemas/ReqExport"
+    ReqModelState:
+      description: Description of a Model-State.
+      type: object
+      properties:
+        parameters:
+          $ref: "#/components/schemas/ReqCustomization"
+        data:
+          description: Optional untyped data that can be used to store additional information.
+          type: object
+          additionalProperties: true
+        image:
+          description: >-
+            Details of the Model-State image file. If provided, the response will include a URL
+            for uploading the file.
+          allOf:
+            - $ref: "#/components/schemas/ReqFileDefinition"
+        arSceneId:
+          description: >-
+            The ID of an existing AR scene associated with this model. If provided, the scene's
+            glTF and USDZ data will be duplicated into the newly created Model-State.
+          type: string
+      required:
+        - parameters
     ReqModelFileType:
       description: Supported Grasshopper file types for models.
       type: string
@@ -942,9 +967,10 @@ components:
           description: |-
             Name of the file to be uploaded.
 
-            When this property is set, then the actual file upload request must contain a
-            Content-Disposition HTTP header with the value "attachment; filename=`{filename}`".
-            Otherwise, a signature mismatch will occur.
+            If this property is set, the file upload request must include a `Content-Disposition`
+            HTTP header with the format `attachment; filename="{filename}"`. Failure to do so will
+            result in a signature mismatch. For convenience, the response will provide a
+            preformatted HTTP header value that can be used directly.
           type: string
         format:
           description: Content-Type (MIME type) of the file to be uploaded.
@@ -1238,6 +1264,61 @@ components:
         - computations
         - pagination
         - version
+    ResGetModelState:
+      allOf:
+        - $ref: "#/components/schemas/ResPartModelState"
+        - $ref: "#/components/schemas/ResPartVersion"
+      required:
+        - modelState
+        - version
+    ResGetModelStateData:
+      allOf:
+        - $ref: "#/components/schemas/ResPartModelStateData"
+        - $ref: "#/components/schemas/ResPartVersion"
+      required:
+        - modelState
+        - version
+    ResCreateModelState:
+      allOf:
+        - title: ResPartAsset
+          type: object
+          properties:
+            asset:
+              title: ResModelStateAsset
+              description: Model-State image asset.
+              allOf:
+                - $ref: "#/components/schemas/ResAsset"
+                - type: object
+                  required:
+                    - modelState
+        - $ref: "#/components/schemas/ResPartModelState"
+        - $ref: "#/components/schemas/ResPartVersion"
+      required:
+        - modelState
+        - version
+    ResListModelStates:
+      allOf:
+        - title: ResPartList
+          type: object
+          properties:
+            list:
+              title: ResModelStateList
+              allOf:
+                - $ref: "#/components/schemas/ResList"
+                - type: object
+                  required:
+                    - modelState
+        - $ref: "#/components/schemas/ResPartPagination"
+        - $ref: "#/components/schemas/ResPartVersion"
+      required:
+        - list
+        - pagination
+        - version
+    ResDeleteModelState:
+      allOf:
+        - $ref: "#/components/schemas/ResPartVersion"
+      required:
+        - version
     ResCleanupExports:
       allOf:
         - $ref: "#/components/schemas/ResPartVersion"
@@ -1360,6 +1441,7 @@ components:
         - $ref: "#/components/schemas/ResPartFile"
         - $ref: "#/components/schemas/ResPartMessage"
         - $ref: "#/components/schemas/ResPartModel"
+        - $ref: "#/components/schemas/ResPartModelStateData"
         - $ref: "#/components/schemas/ResPartOutputs"
         - $ref: "#/components/schemas/ResPartParameters"
         - $ref: "#/components/schemas/ResPartSessionId"
@@ -1369,6 +1451,7 @@ components:
         - $ref: "#/components/schemas/ResPartVersion"
         - $ref: "#/components/schemas/ResPartViewer"
         - $ref: "#/components/schemas/ResPartViewerSettingsVersion"
+        - $ref: "#/components/schemas/ResPartWarnings"
       required:
         - actions
         - file
@@ -1387,6 +1470,7 @@ components:
         - $ref: "#/components/schemas/ResPartFile"
         - $ref: "#/components/schemas/ResPartMessage"
         - $ref: "#/components/schemas/ResPartModel"
+        - $ref: "#/components/schemas/ResPartModelStateData"
         - $ref: "#/components/schemas/ResPartOutputs"
         - $ref: "#/components/schemas/ResPartParameters"
         - $ref: "#/components/schemas/ResPartSessionId"
@@ -1396,6 +1480,7 @@ components:
         - $ref: "#/components/schemas/ResPartVersion"
         - $ref: "#/components/schemas/ResPartViewer"
         - $ref: "#/components/schemas/ResPartViewerSettingsVersion"
+        - $ref: "#/components/schemas/ResPartWarnings"
       required:
         - actions
         - file
@@ -1527,6 +1612,17 @@ components:
         message:
           description: Contains urgent information about the system.
           type: string
+    ResPartWarnings:
+      type: object
+      properties:
+        warnings:
+          description: >-
+            An array of warnings encountered during request processing. These warnings indicate
+            potential issues or non-critical conditions but did not prevent the request from being
+            successfully processed.
+          type: array
+          items:
+            type: string
     ResPartTicket:
       type: object
       properties:
@@ -1668,6 +1764,20 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ResModelComputation"
+    ResPartModelState:
+      type: object
+      properties:
+        modelState:
+          description: Model-State information.
+          allOf:
+            - $ref: "#/components/schemas/ResModelState"
+    ResPartModelStateData:
+      type: object
+      properties:
+        modelState:
+          description: Model-State information.
+          allOf:
+            - $ref: "#/components/schemas/ResModelStateData"
     ResPartPagination:
       type: object
       properties:
@@ -2242,8 +2352,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ResAssetDefinition"
+        modelState:
+          description: The asset-definition of a Model-State image.
+          allOf:
+            - $ref: "#/components/schemas/ResAssetDefinition"
     ResAssetDefinition:
-      description: Result part for the response to an upload request for file/sdTF parameters.
+      description: Result part for the response to an asset upload request.
       type: object
       properties:
         id:
@@ -2447,6 +2561,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ResModel"
+        modelState:
+          description: A directory of Model-States.
+          type: array
+          items:
+            $ref: "#/components/schemas/ResModelStateInfo"
         output:
           description: A directory of output versions.
           type: array
@@ -3100,6 +3219,82 @@ components:
         - timestamp_req
         - timestamp_req_iso
         - timestamp_resp
+    ResModelState:
+      description: Definition of a Model-State.
+      allOf:
+        - $ref: "#/components/schemas/ResModelStateData"
+        - type: object
+          properties:
+            id:
+              description: ID of the Model-State.
+              type: string
+            modelId:
+              description: ID of the ShapeDiver model.
+              allOf:
+                - $ref: "#/components/schemas/Uuid"
+            createdate:
+              description: Timestamp of creation of the Model-State.
+              allOf:
+                - $ref: "#/components/schemas/DateTimeIso"
+            imageUrl:
+              description: The URL of the Model-State image.
+              type: string
+          required:
+            - id
+            - modelId
+            - createdate
+    ResModelStateData:
+      description: Parameter and additional data of a Model-State.
+      type: object
+      properties:
+        parameters:
+          description: A directory of parameter IDs and values.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ResParameterValue"
+        data:
+          description: Optional untyped data that holds additional information.
+          type: object
+          additionalProperties: true
+      required:
+        - parameters
+    ResModelStateInfo:
+      description: Basic information about a Model-State.
+      type: object
+      properties:
+        id:
+          description: ID of the Model-State.
+          type: string
+        parameters:
+          description: A directory of parameter IDs and values.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ResParameterValue"
+        hasImage:
+          description: Indicates whether the Model-State includes an image.
+          type: boolean
+        hasGltf:
+          description: Indicates whether the Model-State includes a glTF asset.
+          type: boolean
+        hasUsdz:
+          description: Indicates whether the Model-State includes a USDZ asset.
+          type: boolean
+      required:
+        - id
+        - parameters
+        - hasImage
+        - hasGltf
+        - hasUsdz
+    ResParameterValue:
+      description: >-
+        The value of a single model parameter.
+
+        Supported parameter values are:
+        * Basic parameter (`CommonsBasicParameter`)
+        * S-type parameter (`CommonsStypeParameter`)
+      oneOf:
+        - $ref: "#/components/schemas/CommonsBasicParameter"
+        - $ref: "#/components/schemas/CommonsStypeParameter"
     ResModelComputationStats:
       description: Stats of a computation request.
       type: object
@@ -4373,19 +4568,19 @@ paths:
       operationId: GetArSceneMetadata
       tags:
         - ar-scene
-      summary: Checks the existence of an AR scene.
+      summary: Verifies whether an AR scene exists or if a Model-State is linked to an AR scene.
       parameters:
         - name: sceneId
           in: path
-          description: AR scene ID.
+          description: ID of the AR scene or Model-State.
           required: true
           schema:
             type: string
       responses:
         200:
-          description: The AR scene with the given ID was found.
+          description: The AR scene was found or the Model-State is linked to an AR scene.
         404:
-          description: The AR scene with the given ID does not exist.
+          description: The AR scene does not exist or the Model-State is not linked to an AR scene.
         default:
           description: Unexpected error. See `message` for more details.
           content:
@@ -4398,11 +4593,11 @@ paths:
       operationId: DownloadArSceneGltf
       tags:
         - ar-scene
-      summary: Downloads the glTF asset of an AR scene.
+      summary: Downloads the glTF asset of an AR scene or a Model-State that is linked to an AR scene.
       parameters:
         - name: sceneId
           in: path
-          description: AR scene ID.
+          description: ID of the AR scene or Model-State.
           required: true
           schema:
             type: string
@@ -4425,11 +4620,11 @@ paths:
       operationId: DownloadArSceneUsdz
       tags:
         - ar-scene
-      summary: Downloads the USDZ asset of an AR scene.
+      summary: Downloads the USDZ asset of an AR scene or a Model-State that is linked to an AR scene.
       parameters:
         - name: sceneId
           in: path
-          description: AR scene ID.
+          description: ID of the AR scene or Model-State.
           required: true
           schema:
             type: string
@@ -5868,6 +6063,238 @@ paths:
         - JwtAuth: []
 
   #---------------------------------------------------------------------------#
+  #- Model-State                                                             -#
+  #---------------------------------------------------------------------------#
+  "/api/v2/model-state/{modelStateId}":
+    head:
+      operationId: GetModelStateMetadata
+      tags:
+        - model-state
+      summary: Checks the existence of a Model-State.
+      parameters:
+        - name: modelStateId
+          in: path
+          description: Model-State ID.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: The Model-State with the given ID was found.
+        404:
+          description: The Model-State with the given ID does not exist.
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security: []
+    get:
+      operationId: GetModelState
+      tags:
+        - model-state
+      summary: Get a Model-State.
+      parameters:
+        - name: modelStateId
+          in: path
+          description: Model-State ID.
+          required: true
+          schema:
+            $ref: "#/components/schemas/Uuid"
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResGetModelState"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security:
+        - JwtAuth: []
+    delete:
+      operationId: DeleteModelState
+      tags:
+        - model-state
+      summary: Delete a Model-State.
+      description: |-
+        Subject-Restriction: __backend__.
+      parameters:
+        - name: modelStateId
+          in: path
+          description: Model-State ID.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResDeleteModelState"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security:
+        - JwtAuth: []
+  "/api/v2/model-state/{modelStateId}/data":
+    get:
+      operationId: GetModelStateData
+      tags:
+        - model-state
+      summary: Get a Model-State's parameter and additional data.
+      parameters:
+        - name: modelStateId
+          in: path
+          description: Model-State ID.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResGetModelStateData"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+  "/api/v2/model-state/{modelStateId}/image":
+    head:
+      operationId: GetModelStateImageMetadata
+      tags:
+        - model-state
+      summary: Checks if the Model-State has an image.
+      parameters:
+        - name: modelStateId
+          in: path
+          description: Model-State ID.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: The Model-State has an image.
+        404:
+          description: The Model-State does not have an image.
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security: []
+    get:
+      operationId: DownloadModelStateImage
+      tags:
+        - model-state
+      summary: Downloads the Model-State image.
+      parameters:
+        - name: modelStateId
+          in: path
+          description: Model-State ID.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success.
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/OctetStream"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security: []
+  "/api/v2/model-state/model/{modelId}/list":
+    get:
+      operationId: ListModelStates
+      tags:
+        - model-state
+      summary: List Model-States of a ShapeDiver model.
+      description: |-
+        Subject-Restriction: __backend__.
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID.
+          required: true
+          schema:
+            type: string
+        - name: offset
+          in: query
+          description: Continuation token for pagination.
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResListModelStates"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security:
+        - JwtAuth: []
+  "/api/v2/session/{sessionId}/model-state":
+    post:
+      operationId: CreateModelState
+      tags:
+        - model-state
+      summary: Create new Model-State.
+      parameters:
+        - name: sessionId
+          in: path
+          description: Session ID.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReqModelState"
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResCreateModelState"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security:
+        - JwtAuth: []
+
+  #---------------------------------------------------------------------------#
   #- Output                                                                  -#
   #---------------------------------------------------------------------------#
   "/api/v2/session/{sessionId}/output":
@@ -6304,6 +6731,22 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/Uuid"
+        - name: modelStateId
+          in: query
+          description: ID of the Model-State to apply.
+          required: false
+          schema:
+            type: string
+        - name: strictValidation
+          in: query
+          description: |-
+            When `false`, any Model-State parameter that cannot be applied to the model is ignored.
+            However, when set to `true`, any validation error will result in an error response.
+
+            Defaults to `false`.
+          required: false
+          schema:
+            type: boolean
       requestBody:
         required: false
         content:
@@ -6349,6 +6792,22 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/Base64Data"
+        - name: modelStateId
+          in: query
+          description: ID of the Model-State to apply.
+          required: false
+          schema:
+            type: string
+        - name: strictValidation
+          in: query
+          description: |-
+            When `false`, any Model-State parameter that cannot be applied to the model is ignored.
+            However, when set to `true`, any validation error will result in an error response.
+
+            Defaults to `false`.
+          required: false
+          schema:
+            type: boolean
       requestBody:
         required: false
         content:
