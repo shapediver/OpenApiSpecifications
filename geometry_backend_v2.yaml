@@ -793,6 +793,11 @@ components:
           type: array
           items:
             type: string
+        allowed_libraries:
+          description: List of allowed Grasshopper libraries.
+          type: array
+          items:
+            type: string
         auth_groups:
           description: List of allowed auth-groups.
           type: array
@@ -2671,6 +2676,11 @@ components:
       description: Definition of a ShapeDiver model.
       type: object
       properties:
+        allowed_libraries:
+          description: List of allowed Grasshopper libraries.
+          type: array
+          items:
+            type: string
         backlinkurl:
           description: Link to view the model on the ShapeDiver Platform.
           type: string
