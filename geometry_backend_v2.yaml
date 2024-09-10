@@ -5704,6 +5704,35 @@ paths:
                 $ref: "#/components/schemas/ResError"
       security:
         - JwtAuth: []
+  "/api/v2/model/{modelId}/restore":
+    put:
+      operationId: RestoreModel
+      tags:
+        - model
+      summary: Restore a soft-deleted model.
+      description: "Subject-Restriction: __backend__."
+      parameters:
+        - name: modelId
+          in: path
+          description: Model ID.
+          required: true
+          schema:
+            $ref: "#/components/schemas/Uuid"
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResDeleteModel"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security:
+        - JwtAuth: []
   "/api/v2/model/{modelId}/file/download":
     get:
       operationId: DownloadModelFile
@@ -7002,7 +7031,7 @@ paths:
           schema:
             $ref: "#/components/schemas/Uuid"
       responses:
-        200:
+        202:
           description: Success.
           content:
             application/json:
