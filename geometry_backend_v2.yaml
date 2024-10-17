@@ -489,6 +489,8 @@ components:
                   - $ref: "#/components/schemas/AnyDateExtended"
             required:
               - modelid
+      required:
+        - parameters
     ReqAnyCreditMetricId:
       description: >-
         Either a single or multiple IDs. Multiple IDs are aggregated and result in a single credit
@@ -601,6 +603,8 @@ components:
                   - $ref: "#/components/schemas/AnyDateExtended"
             required:
               - id
+      required:
+        - parameters
     ReqParameterValue:
       description: The value of a single model parameter.
       oneOf:
@@ -850,9 +854,11 @@ components:
             parameter values.
           type: integer
           minimum: 0
-        webhook_token:
-          description: Allows to control whether the model's Grasshopper file can contain scripts.
-          type: boolean
+        max_texture_size:
+          description: >-
+            Allows to configure the maximum number of bytes allowed for a single texture.
+          type: integer
+          minimum: 0
         max_wait_time:
           description: >-
             Maximum time a computation request may stay waiting before a further worker goes ahead
@@ -920,6 +926,12 @@ components:
           description: >-
             The webhook-url for updating the platform backend about model status changes.
           type: string
+        webhook_token:
+          description: The webhook-token for authentication used by the webhook-url.
+          type: string
+        deny_scripts:
+          description: Allows to control whether the model's Grasshopper file can contain scripts.
+          type: boolean
       required:
         - pub
     ReqParameterDefinitions:
@@ -1020,6 +1032,67 @@ components:
       type: string
       enum: [model/vnd.sdtf]
       x-enum-varnames: [MODEL_SDTF]
+
+    #-------------------------------------------------------------------------#
+    #- Response helper data structures                                       -#
+    #-------------------------------------------------------------------------#
+    # Root response object holding all possible properties.
+    ResBase:
+      allOf:
+        - type: object
+          required:
+            - version
+        - $ref: "#/components/schemas/ResBaseAsset"
+        - $ref: "#/components/schemas/ResBaseList"
+        - $ref: "#/components/schemas/ResBaseModelState"
+        - $ref: "#/components/schemas/ResBaseSystem"
+        - $ref: "#/components/schemas/ResPartActions"
+        - $ref: "#/components/schemas/ResPartAnalytics"
+        - $ref: "#/components/schemas/ResPartAuthorizationGroup"
+        - $ref: "#/components/schemas/ResPartCleanup"
+        - $ref: "#/components/schemas/ResPartDecryptedTicket"
+        - $ref: "#/components/schemas/ResPartExports"
+        - $ref: "#/components/schemas/ResPartFile"
+        - $ref: "#/components/schemas/ResPartGltfUpload"
+        - $ref: "#/components/schemas/ResPartMessage"
+        - $ref: "#/components/schemas/ResPartModel"
+        - $ref: "#/components/schemas/ResPartModelComputation"
+        - $ref: "#/components/schemas/ResPartOutputs"
+        - $ref: "#/components/schemas/ResPartPagination"
+        - $ref: "#/components/schemas/ResPartParameters"
+        - $ref: "#/components/schemas/ResPartPlugins"
+        - $ref: "#/components/schemas/ResPartSessionId"
+        - $ref: "#/components/schemas/ResPartSetting"
+        - $ref: "#/components/schemas/ResPartStatistic"
+        - $ref: "#/components/schemas/ResPartTemplates"
+        - $ref: "#/components/schemas/ResPartTicket"
+        - $ref: "#/components/schemas/ResPartVersion"
+        - $ref: "#/components/schemas/ResPartViewer"
+        - $ref: "#/components/schemas/ResPartViewerSettingsVersion"
+        - $ref: "#/components/schemas/ResPartWarnings"
+    ResBaseAsset:
+      type: object
+      properties:
+        asset:
+          $ref: "#/components/schemas/ResAsset"
+    ResBaseList:
+      type: object
+      properties:
+        list:
+          $ref: "#/components/schemas/ResList"
+    ResBaseModelState:
+      type: object
+      properties:
+        modelState:
+          title: ResModelStateOrData
+          oneOf:
+            - $ref: "#/components/schemas/ResModelState"
+            - $ref: "#/components/schemas/ResModelStateData"
+    ResBaseSystem:
+      type: object
+      properties:
+        system:
+          $ref: "#/components/schemas/ResSystem"
 
     #-------------------------------------------------------------------------#
     #- Main response data structures                                         -#
@@ -2670,7 +2743,7 @@ components:
           properties: {}
       required:
         - name
-        - titel
+        - title
         - data
     ResModel:
       description: Definition of a ShapeDiver model.
@@ -4151,21 +4224,21 @@ components:
           description: >-
             Gets whether this library is a Grasshopper core library. Core libraries are installed
             along with Grasshopper and thus should always be available anywhere.
-          type: string
+          type: boolean
         license:
           description: |-
             The license type of the plugin.
 
             See the [documentation](https://developer.rhino3d.com/api/grasshopper/html/T_Grasshopper_Kernel_GH_LibraryLicense.htm)
             for more information.
-          type: string
+          type: number
         loadingMechanism:
           description: |-
             The mechanism used to load the plugin.
 
             See the [documentation](https://developer.rhino3d.com/api/grasshopper/html/T_Grasshopper_Kernel_GH_LoadingMechanism.htm)
             for more information.
-          type: string
+          type: number
         location:
           description: Installation path of the Grasshopper plugin.
           type: string
@@ -4204,6 +4277,9 @@ components:
         description:
           description: Link to a website related to the plugin.
           type: string
+        href:
+          description: Link to a website related to the plugin.
+          type: string
         allowFallbackToAssemblyVersion:
           description: |-
             When `true` then `GH_AssemblyInfo.AssemblyVersion` may be used instead of
@@ -4228,7 +4304,9 @@ components:
           description: >-
             List of previous plugin IDs supported by this plugin version. This is used for the
             obscure case of the plugin developer changing the plugin ID.
-          type: string
+          type: array
+          items:
+            type: string
         allowedComponents:
           description: >-
             List of plugin components that are explicitly allowed. When this property is set, only
@@ -4331,6 +4409,7 @@ components:
         - ERROR_UNAUTHORIZED
         - ILLEGAL_ARGUMENT_ERROR
         - JWT_VALIDATION_ERROR
+        - METHOD_NOT_ALLOWED_ERROR
         - MODEL_VALIDATION_ERROR
         - NOT_ACCEPTABLE
         - NOT_FOUND_ERROR
