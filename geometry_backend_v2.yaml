@@ -263,13 +263,13 @@ components:
         - CONFIRMED
         - DENIED
         - DELETED
-    CommonsBasicParameter:
+    CommonsBasicParameter: &CommonsBasicParameter
       description: Definition of a basic ShapeDiver parameter.
       oneOf:
         - type: string
         - type: number
         - type: boolean
-    CommonsStypeParameter:
+    CommonsStypeParameter: &CommonsStypeParameter
       description: Definition of the value to use for s-type parameters.
       type: object
       properties:
@@ -605,11 +605,15 @@ components:
               - id
       required:
         - parameters
+    ReqBasicParameter:
+      <<: *CommonsBasicParameter
+    ReqStypeParameter:
+      <<: *CommonsStypeParameter
     ReqParameterValue:
       description: The value of a single model parameter.
       oneOf:
-        - $ref: "#/components/schemas/CommonsBasicParameter"
-        - $ref: "#/components/schemas/CommonsStypeParameter"
+        - $ref: "#/components/schemas/ReqBasicParameter"
+        - $ref: "#/components/schemas/ReqStypeParameter"
     ReqCustomization:
       description: |-
         A directory of parameter keys and values.
@@ -621,8 +625,8 @@ components:
         * `displayname`
 
         Supported parameter values are:
-        * Basic parameter (`CommonsBasicParameter`)
-        * S-type parameter (`CommonsStypeParameter`)
+        * Basic parameter (`ReqBasicParameter`)
+        * S-type parameter (`ReqStypeParameter`)
       type: object
       additionalProperties:
         $ref: "#/components/schemas/ReqParameterValue"
@@ -3368,16 +3372,20 @@ components:
         - hasImage
         - hasGltf
         - hasUsdz
+    ResBasicParameter:
+      <<: *CommonsBasicParameter
+    ResStypeParameter:
+      <<: *CommonsStypeParameter
     ResParameterValue:
       description: >-
         The value of a single model parameter.
 
         Supported parameter values are:
-        * Basic parameter (`CommonsBasicParameter`)
-        * S-type parameter (`CommonsStypeParameter`)
+        * Basic parameter (`ResBasicParameter`)
+        * S-type parameter (`ResStypeParameter`)
       oneOf:
-        - $ref: "#/components/schemas/CommonsBasicParameter"
-        - $ref: "#/components/schemas/CommonsStypeParameter"
+        - $ref: "#/components/schemas/ResBasicParameter"
+        - $ref: "#/components/schemas/ResStypeParameter"
     ResModelComputationStats:
       description: Stats of a computation request.
       type: object
