@@ -244,6 +244,16 @@ components:
       required:
         - id
         - name
+    CommonsModelBlockingReasons: &CommonsModelBlockingReasons
+      description: Reasons why the model may be blocked.
+      type: object
+      properties:
+        creditLimit:
+          description: The model owner's credit limit has been exceeded.
+          type: boolean
+        owner:
+          description: The model has been blocked explicitly by its owner.
+          type: boolean
     CommonsModelStatus: &CommonsModelStatus
       description: Status of a model.
       type: string
@@ -814,6 +824,9 @@ components:
         backendaccess:
           description: Should backend access to the model be allowed.
           type: boolean
+        blockingReasons:
+          title: ReqModelBlockingReasons
+          <<: *CommonsModelBlockingReasons
         filename:
           description: Original name of the model's grasshopper file.
           type: string
@@ -4062,6 +4075,20 @@ components:
         cdn_supported:
           description: Indicates if the model supports CDN-based asset URLs.
           type: boolean
+        blockingReasons:
+          title: ResModelBlockingReasons
+          allOf:
+            - $ref: "#/components/schemas/CommonsModelBlockingReasons"
+            - type: object
+              properties:
+                pluginPermission:
+                  description: >-
+                    The model uses a Grasshopper plugin that is not allowed for the owner.
+                  type: boolean
+              required:
+                - creditLimit
+                - owner
+                - pluginPermission
     ResSystem:
       description: ShapeDiver API response of system-request.
       type: object
