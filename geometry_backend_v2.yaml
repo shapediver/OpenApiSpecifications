@@ -3305,6 +3305,9 @@ components:
           description: Model's limits at the time of the computation process.
           allOf:
             - $ref: "#/components/schemas/ResComputationLimits"
+        credits:
+          description: The number of credits that are charged for this computation.
+          type: number
       required:
         - id
         - timestamp
