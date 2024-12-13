@@ -949,8 +949,6 @@ components:
         deny_scripts:
           description: Allows to control whether the model's Grasshopper file can contain scripts.
           type: boolean
-      required:
-        - pub
     ReqParameterDefinitions:
       description: >-
         Definition of model parameters. A directory of parameter-IDs and parameter-definitions.
