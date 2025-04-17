@@ -5093,6 +5093,16 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/Uuid"
+        - name: ignoreUnknownParams
+          in: query
+          description: |-
+            Allow relaxed validation of parameter identifiers. When set to `true`, unrecognized
+            parameters will be ignored rather than causing an error.
+
+            Defaults to `false`.
+          required: false
+          schema:
+            type: boolean
       requestBody:
         required: true
         content:
@@ -6167,6 +6177,16 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/Uuid"
+        - name: ignoreUnknownParams
+          in: query
+          description: |-
+            Allow relaxed validation of parameter identifiers. When set to `true`, unrecognized
+            parameters will be ignored rather than causing an error.
+
+            Defaults to `false`.
+          required: false
+          schema:
+            type: boolean
       requestBody:
         required: true
         content:
@@ -6436,6 +6456,16 @@ paths:
           required: true
           schema:
             type: string
+        - name: ignoreUnknownParams
+          in: query
+          description: |-
+            Allow relaxed validation of parameter identifiers. When set to `true`, unrecognized
+            parameters will be ignored rather than causing an error.
+
+            Defaults to `false`.
+          required: false
+          schema:
+            type: boolean
       requestBody:
         required: true
         content:
@@ -6477,6 +6507,16 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/Uuid"
+        - name: ignoreUnknownParams
+          in: query
+          description: |-
+            Allow relaxed validation of parameter identifiers. When set to `true`, unrecognized
+            parameters will be ignored rather than causing an error.
+
+            Defaults to `false`.
+          required: false
+          schema:
+            type: boolean
       requestBody:
         required: true
         content:
@@ -6901,6 +6941,16 @@ paths:
           required: false
           schema:
             type: string
+        - name: ignoreUnknownParams
+          in: query
+          description: |-
+            Allow relaxed validation of parameter identifiers. When set to `true`, unrecognized
+            parameters will be ignored rather than causing an error.
+
+            Defaults to `false`.
+          required: false
+          schema:
+            type: boolean
         - name: strictValidation
           in: query
           description: |-
@@ -6962,6 +7012,16 @@ paths:
           required: false
           schema:
             type: string
+        - name: ignoreUnknownParams
+          in: query
+          description: |-
+            Allow relaxed validation of parameter identifiers. When set to `true`, unrecognized
+            parameters will be ignored rather than causing an error.
+
+            Defaults to `false`.
+          required: false
+          schema:
+            type: boolean
         - name: strictValidation
           in: query
           description: |-
