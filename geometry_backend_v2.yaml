@@ -7053,7 +7053,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ResError"
-      security: []
+      security:
+        - JwtAuth: []
   "/api/v2/session/{sessionId}/default":
     get:
       operationId: GetSessionDefaults
