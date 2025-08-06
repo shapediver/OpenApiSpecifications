@@ -83,7 +83,7 @@ components:
       example: 20240521
     Base64Data:
       type: string
-      format: byte
+      description: A base64-encoded string.
     FullDate:
       description: |-
         An ISO-8601 date, in numeric format.
