@@ -1680,6 +1680,23 @@ components:
       required:
         - system
         - version
+    ResGetScaleInCandidate:
+      allOf:
+        - title: ResPartSystem
+          type: object
+          properties:
+            system:
+              title: ResScaleInCandidate
+              description: Scale-in candidate system information.
+              allOf:
+                - $ref: "#/components/schemas/ResSystem"
+                - type: object
+                  required:
+                    - scaleInCandidate
+        - $ref: "#/components/schemas/ResPartVersion"
+      required:
+        - system
+        - version
     ResListTextures:
       allOf:
         - title: ResPartList
@@ -7295,6 +7312,27 @@ paths:
       security:
         - JwtAuth: []
           CredentialsAuth: []
+  "/api/v2/system/workers/scale-in-candidate":
+    get:
+      operationId: GetScaleInCandidate
+      tags:
+        - system
+      summary: Get a Geometry Worker that is a candidate for scaling in.
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResGetScaleInCandidate"
+        default:
+          description: Unexpected error. See `message` for more details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResError"
+      security:
+        - CredentialsAuth: []
   "/api/v2/system/sign/cdn/{endpoint}/{encodedUri}":
     get:
       operationId: CreateSignedUrl
