@@ -4111,6 +4111,10 @@ components:
           description: System information about the Geometry Workers.
           allOf:
             - $ref: "#/components/schemas/ResWorkerInfo"
+        scaleInCandidate:
+          description: Scale-in candidate information for worker instances.
+          allOf:
+            - $ref: "#/components/schemas/ResWorkerScaleInCandidate"
     ResMinionInfo:
       description: Holds system information of all currently running Geometry Minion services.
       type: object
@@ -4228,6 +4232,18 @@ components:
         - installed
         - allowed
         - inconsistent
+    ResWorkerScaleInCandidate:
+      description: Information about a recommended scale-in candidate.
+      type: object
+      properties:
+        success:
+          description: Indicates whether a scale-in candidate was successfully identified.
+          type: boolean
+        instanceId:
+          description: EC2 instance ID of the recommended scale-in candidate.
+          type: string
+      required:
+        - success
     ResInstalledWorkerPlugin:
       description: Contains information about all installed Grasshopper plugins.
       type: object
