@@ -6454,7 +6454,7 @@ paths:
           description: Model ID.
           required: true
           schema:
-            type: string
+            $ref: "#/components/schemas/Uuid"
         - name: offset
           in: query
           description: Continuation token for pagination.
@@ -6488,7 +6488,7 @@ paths:
           description: Session ID.
           required: true
           schema:
-            type: string
+            $ref: "#/components/schemas/Uuid"
         - name: ignoreUnknownParams
           in: query
           description: |-
