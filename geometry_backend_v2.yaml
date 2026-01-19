@@ -6318,7 +6318,7 @@ paths:
           description: Model-State ID.
           required: true
           schema:
-            $ref: "#/components/schemas/Uuid"
+            type: string
       responses:
         200:
           description: Success.
