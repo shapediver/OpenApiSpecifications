@@ -7,7 +7,7 @@ info:
     * host Grasshopper models in a secure, reliable, scalable, and performant way,
     * run computations of Grasshopper models,
     * and cache and output the results of computations and exports.
-  version: 1.14.1
+  version: 1.14.2
 
 externalDocs:
   description: ShapeDiver Help Center
@@ -1773,8 +1773,7 @@ components:
       properties:
         auth_group:
           description: The auth-group to use for ticked-based authentication.
-          allOf:
-            - $ref: "#/components/schemas/Uuid"
+          type: string
     ResPartActions:
       type: object
       properties:
@@ -2480,9 +2479,9 @@ components:
       type: object
       properties:
         id:
-          description: ID of the file to be uploaded.
-          allOf:
-            - $ref: "#/components/schemas/Uuid"
+          description: >-
+            ID of the file to be uploaded ('' in case the asset is not linked to any specific ID).
+          type: string
         href:
           description: >-
             href the file should be uploaded to (typically a time-limited pre-signed url).
