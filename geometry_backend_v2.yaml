@@ -249,6 +249,9 @@ components:
         owner:
           description: The model has been blocked explicitly by its owner.
           type: boolean
+        backendPermission:
+          description: The model owner has been restricted from accessing this backend system
+          type: boolean
     CommonsModelStatus: &CommonsModelStatus
       description: Status of a model.
       type: string
@@ -4079,6 +4082,7 @@ components:
               required:
                 - creditLimit
                 - owner
+                - backendPermission
                 - pluginPermission
     ResSystem:
       description: ShapeDiver API response of system-request.
