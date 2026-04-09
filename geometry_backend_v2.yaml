@@ -5563,6 +5563,32 @@ paths:
           required: true
           schema:
             type: string
+        - name: x-shapediver-noconvert
+          in: header
+          description: >-
+            When set to `true`, the config object is returned as stored, without any version
+            conversion applied. [Priority: 1]
+          required: false
+          schema:
+            type: boolean
+        - name: x-shapediver-useconfigversion
+          in: header
+          description: >-
+            When set to `true`, the returned config version will be of the same version as when the
+            config object has been created. In case the version number cannot be extracted from the
+            config object, this header is ignored. [Priority: 2]
+          required: false
+          schema:
+            type: string
+        - name: x-shapediver-buildversion
+          in: header
+          description: >-
+            When specified, converts the requested config object to the provided target version.
+            Otherwise, the config object is converted into the default version instead.
+            [Priority: 3]
+          required: false
+          schema:
+            type: string
       responses:
         200:
           description: Success.
