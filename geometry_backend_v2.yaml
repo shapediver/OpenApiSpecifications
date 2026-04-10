@@ -2545,6 +2545,16 @@ components:
         hidden:
           description: Controls whether the parameter should be hidden in the UI.
           type: boolean
+        typeId:
+          description: >-
+            Type-specific ID of the export. In case of exports defined by a single component, this
+            corresponds to the component’s uuid.
+          type: string
+        typeName:
+          description: >-
+            Type-specific name of the export. In case of exports defined by a single component, this
+            corresponds to the component’s name (NOT its nickname).
+          type: string
         version: # Required to distinguish from ResExport
           description: This property is never set.
           # FIXME: Workaround until OAS 3.1 - use `null` instead!
@@ -3770,6 +3780,16 @@ components:
         hidden:
           description: Controls whether the parameter should be hidden in the UI.
           type: boolean
+        typeId:
+          description: >-
+            Type-specific ID of the output. In case of outputs defined by a single component, this
+            corresponds to the component’s uuid.
+          type: string
+        typeName:
+          description: >-
+            Type-specific name of the output. In case of outputs defined by a single component, this
+            corresponds to the component’s name (NOT its nickname).
+          type: string
         version: # Required to distinguish from ResOutput
           description: This property is never set.
           # FIXME: Workaround until OAS 3.1 - use `null` instead!
